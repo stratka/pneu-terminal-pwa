@@ -2599,19 +2599,6 @@ async function init() {
   document.getElementById('btn-finish').onclick = showFinishDialog;
   document.getElementById('btn-admin').onclick = showAdmin;
   document.getElementById('btn-camera').onclick = capturePhoto;
-  document.getElementById('btn-export').onclick = async () => {
-    const expServices = await db.getKV('services', DEFAULT_SERVICES);
-    const expSettings = await db.getKV('settings', DEFAULT_SETTINGS);
-    const expPricing  = await db.getKV('pricing', DEFAULT_PRICING);
-    const expWizards  = await db.getKV('customWizards', []);
-    const cfg = { services: expServices, settings: expSettings, pricing: expPricing, customWizards: expWizards };
-    const blob = new Blob([JSON.stringify(cfg, null, 2)], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'config.json';
-    a.click();
-    URL.revokeObjectURL(a.href);
-  };
   document.getElementById('btn-update').onclick = async () => {
     if ('serviceWorker' in navigator) {
       const reg = await navigator.serviceWorker.getRegistration();
