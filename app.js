@@ -2417,10 +2417,20 @@ function showFullPhoto() {
 async function init() {
   await db.open();
 
-  services = await db.getKV('services', DEFAULT_SERVICES);
-  settings = await db.getKV('settings', DEFAULT_SETTINGS);
-  pricing  = await db.getKV('pricing', DEFAULT_PRICING);
-  customWizards = await db.getKV('customWizards', []);
+  // Nacist konfiguraci z config.json (server) — stejna pro vsechna zarizeni
+  try {
+    const cfg = await fetch('./config.json?v=' + Date.now()).then(r => r.json());
+    services = cfg.services || DEFAULT_SERVICES;
+    settings = cfg.settings || DEFAULT_SETTINGS;
+    pricing  = cfg.pricing || DEFAULT_PRICING;
+    customWizards = cfg.customWizards || [];
+  } catch(e) {
+    console.warn('config.json se nepodarilo nacist, pouzivam vychozi data:', e);
+    services = DEFAULT_SERVICES;
+    settings = DEFAULT_SETTINGS;
+    pricing  = DEFAULT_PRICING;
+    customWizards = [];
+  }
 
   // Nacist fonty pro PDF
   try {
