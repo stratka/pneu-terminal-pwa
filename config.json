@@ -1,107 +1,328 @@
 {
   "services": [
-    {"name":"Kompletni prezuti 4ks","price":0,"icon":"pneumatika","color":"#2196F3","type":"wizard_komplet"},
-    {"name":"Prezuti sada za sadu","price":0,"icon":"vyvazeni","color":"#4CAF50","type":"wizard_sada"},
-    {"name":"Vymena oleje","price":1200,"icon":"olej","color":"#9C27B0"},
-    {"name":"Oprava defektu","price":0,"icon":"vymena","color":"#F44336","type":"wizard_defekt"},
-    {"name":"Dilci ukony","price":0,"icon":"default","color":"#795548","type":"wizard_dilci"},
-    {"name":"Kontrola brzd","price":350,"icon":"brzdy","color":"#00BCD4"},
-    {"name":"Diagnostika","price":600,"icon":"diagnostika","color":"#795548"},
-    {"name":"Plneni klimatizace","price":900,"icon":"klima","color":"#607D8B"},
-    {"name":"Uskladneni pneu","price":500,"icon":"uskladneni","color":"#E91E63"}
+    {
+      "name": "Kompletni prezuti 4ks",
+      "price": 0,
+      "icon": "pneumatika",
+      "color": "#2196F3",
+      "type": "wizard_komplet"
+    },
+    {
+      "name": "Prezuti sada za sadu",
+      "price": 0,
+      "icon": "vyvazeni",
+      "color": "#4CAF50",
+      "type": "wizard_sada"
+    },
+    {
+      "name": "Vymena oleje",
+      "price": 1200,
+      "icon": "olej",
+      "color": "#9C27B0"
+    },
+    {
+      "name": "Oprava defektu",
+      "price": 0,
+      "icon": "vymena",
+      "color": "#F44336",
+      "type": "wizard_defekt"
+    },
+    {
+      "name": "Dilci ukony",
+      "price": 0,
+      "icon": "default",
+      "color": "#795548",
+      "type": "wizard_dilci"
+    },
+    {
+      "name": "Kontrola brzd",
+      "price": 350,
+      "icon": "brzdy",
+      "color": "#00BCD4"
+    },
+    {
+      "name": "Diagnostika",
+      "price": 600,
+      "icon": "diagnostika",
+      "color": "#795548"
+    },
+    {
+      "name": "Plneni klimatizace",
+      "price": 900,
+      "icon": "klima",
+      "color": "#607D8B"
+    },
+    {
+      "name": "Uskladneni pneu",
+      "price": 500,
+      "icon": "uskladneni",
+      "color": "#E91E63"
+    }
   ],
   "settings": {
-    "firma":"Pneuservis s.r.o.",
-    "ico":"12345678",
-    "dic":"CZ12345678",
-    "adresa":"Hlavni 123, 110 00 Praha",
-    "telefon":"+420 123 456 789",
-    "email":"info@pneuservis.cz",
-    "banka_iban":"CZ6508000000192000145399",
-    "banka_bic":"GIBACZPX",
-    "mena":"CZK",
-    "dph_sazba":21,
-    "admin_password_hash":"650fe8a2661c68441c056f5c680a09a445ba87d1462c8e686c6533c6183d343d",
-    "camera_url":""
+    "firma": "Pneuservis s.r.o.",
+    "ico": "12345678",
+    "dic": "CZ12345678",
+    "adresa": "Hlavni 123, 110 00 Praha",
+    "telefon": "+420 123 456 789",
+    "email": "info@pneuservis.cz",
+    "banka_iban": "CZ6508000000192000145399",
+    "banka_bic": "GIBACZPX",
+    "mena": "CZK",
+    "dph_sazba": 21,
+    "admin_password_hash": "650fe8a2661c68441c056f5c680a09a445ba87d1462c8e686c6533c6183d343d",
+    "camera_url": ""
   },
   "pricing": {
-    "komplet":{
-      "Osobni (plech)":{"R16":1000,"R17":1100},
-      "Osobni (ALU)":{"R16":1200,"R17":1300,"R18":1400,"R19":1500,"R20":1700},
-      "RunFlat / Profil < 50":{"R16":2000,"R17":2200,"R18":2400,"R19":2600,"R20":2700}
-    },
-    "sada":{
-      "Standardni":{"R16":800,"R17":900,"R18":1000,"R19":1100,"R20":1200,"R21":1300,"R22":1400}
-    },
-    "defekt":{
-      "Defekt do 6mm":300,
-      "Defekt od 6mm (hribkem)":500,
-      "Defekt v bocnici (hribkem)":600,
-      "Netesnost kolem rafku":400
-    },
-    "dilci":{
-      "rozmerove":{
-        "Demontaz + montaz 1ks disku z vozu":{"R16":100,"R17":100,"R18":100,"R19":125,"R20":150,"R21":200,"R22":250},
-        "Demontaz 1ks pneumatiky z disku":{"R16":100,"R17":100,"R18":150,"R19":150,"R20":200},
-        "Montaz 1ks pneumatiky na disk":{"R16":100,"R17":100,"R18":150,"R19":150,"R20":200}
+    "komplet": {
+      "Osobni (plech)": {
+        "R16": 1000,
+        "R17": 1100
       },
-      "suv_multiplier":2,
-      "pevne":{
-        "TPMS":[
-          {"name":"Diagnostika TPMS","price":250},
-          {"name":"Programovani a vymena 1ks TPMS","price":1000}
+      "Osobni (ALU)": {
+        "R16": 1200,
+        "R17": 1300,
+        "R18": 1400,
+        "R19": 1500,
+        "R20": 1700
+      },
+      "RunFlat / Profil < 50": {
+        "R16": 2000,
+        "R17": 2200,
+        "R18": 2400,
+        "R19": 2600,
+        "R20": 2700
+      }
+    },
+    "sada": {
+      "Standardni": {
+        "R16": 800,
+        "R17": 900,
+        "R18": 1000,
+        "R19": 1100,
+        "R20": 1200,
+        "R21": 1300,
+        "R22": 1400
+      }
+    },
+    "defekt": {
+      "Defekt do 6mm": 300,
+      "Defekt od 6mm (hribkem)": 500,
+      "Defekt v bocnici (hribkem)": 600,
+      "Netesnost kolem rafku": 400
+    },
+    "dilci": {
+      "rozmerove": {
+        "Demontaz + montaz 1ks disku z vozu": {
+          "R16": 100,
+          "R17": 100,
+          "R18": 100,
+          "R19": 125,
+          "R20": 150,
+          "R21": 200,
+          "R22": 250
+        },
+        "Demontaz 1ks pneumatiky z disku": {
+          "R16": 100,
+          "R17": 100,
+          "R18": 150,
+          "R19": 150,
+          "R20": 200
+        },
+        "Montaz 1ks pneumatiky na disk": {
+          "R16": 100,
+          "R17": 100,
+          "R18": 150,
+          "R19": 150,
+          "R20": 200
+        }
+      },
+      "suv_multiplier": 2,
+      "pevne": {
+        "TPMS": [
+          {
+            "name": "Diagnostika TPMS",
+            "price": 250
+          },
+          {
+            "name": "Programovani a vymena 1ks TPMS",
+            "price": 1000
+          }
         ],
-        "Vyvazeni":[
-          {"name":"Vyvazeni 1ks pneumatiky","price":100},
-          {"name":"Pouziti zateze max 100g","price":50}
+        "Vyvazeni": [
+          {
+            "name": "Vyvazeni 1ks pneumatiky",
+            "price": 100
+          },
+          {
+            "name": "Pouziti zateze max 100g",
+            "price": 50
+          }
         ],
-        "Manipulace":[
-          {"name":"Prevzeti 1ks pneu k likvidaci","price":25},
-          {"name":"Sleva prezuti 4ks bez vyvazeni","price":-150}
+        "Manipulace": [
+          {
+            "name": "Prevzeti 1ks pneu k likvidaci",
+            "price": 25
+          },
+          {
+            "name": "Sleva prezuti 4ks bez vyvazeni",
+            "price": -150
+          }
         ],
-        "Olej a filtry":[
-          {"name":"Vymena oleje a filtru","price":1000},
-          {"name":"Vymena filtru (vzduch)","price":300},
-          {"name":"Vymena filtru (kabina/palivo)","price":500},
-          {"name":"Vymena akumulatoru","price":300}
+        "Olej a filtry": [
+          {
+            "name": "Vymena oleje a filtru",
+            "price": 1000
+          },
+          {
+            "name": "Vymena filtru (vzduch)",
+            "price": 300
+          },
+          {
+            "name": "Vymena filtru (kabina/palivo)",
+            "price": 500
+          },
+          {
+            "name": "Vymena akumulatoru",
+            "price": 300
+          }
         ],
-        "Brzdy":[
-          {"name":"Vymena kotoucu + desticky (naprava)","price":1000},
-          {"name":"Vymena brzd. desticek","price":750},
-          {"name":"Udrzba brzd","price":750}
+        "Brzdy": [
+          {
+            "name": "Vymena kotoucu + desticky (naprava)",
+            "price": 1000
+          },
+          {
+            "name": "Vymena brzd. desticek",
+            "price": 750
+          },
+          {
+            "name": "Udrzba brzd",
+            "price": 750
+          }
         ],
-        "Klimatizace R134a":[
-          {"name":"Plneni klima 0-150g","price":500},
-          {"name":"Plneni klima 151-400g","price":1000},
-          {"name":"Plneni klima 401-600g","price":1500},
-          {"name":"Kontrola tesnosti klima","price":300}
+        "Klimatizace R134a": [
+          {
+            "name": "Plneni klima 0-150g",
+            "price": 500
+          },
+          {
+            "name": "Plneni klima 151-400g",
+            "price": 1000
+          },
+          {
+            "name": "Plneni klima 401-600g",
+            "price": 1500
+          },
+          {
+            "name": "Kontrola tesnosti klima",
+            "price": 300
+          }
         ],
-        "Kontrola pred koupi":[
-          {"name":"Kontrola vozidla (provozovna)","price":3000},
-          {"name":"Kontrola vozidla (bazar)","price":4000},
-          {"name":"Kontrola vozidla (Ostrava)","price":4500}
+        "Kontrola pred koupi": [
+          {
+            "name": "Kontrola vozidla (provozovna)",
+            "price": 3000
+          },
+          {
+            "name": "Kontrola vozidla (bazar)",
+            "price": 4000
+          },
+          {
+            "name": "Kontrola vozidla (Ostrava)",
+            "price": 4500
+          }
         ],
-        "Cisteni interieru":[
-          {"name":"Cisteni 2h (drobne)","price":2000},
-          {"name":"Cisteni 3h (hrube)","price":3000},
-          {"name":"Cisteni 4h (velmi hrube)","price":4000},
-          {"name":"Cisteni ozonem","price":500}
+        "Cisteni interieru": [
+          {
+            "name": "Cisteni 2h (drobne)",
+            "price": 2000
+          },
+          {
+            "name": "Cisteni 3h (hrube)",
+            "price": 3000
+          },
+          {
+            "name": "Cisteni 4h (velmi hrube)",
+            "price": 4000
+          },
+          {
+            "name": "Cisteni ozonem",
+            "price": 500
+          }
         ],
-        "Testy":[
-          {"name":"Test brzdove kapaliny","price":200},
-          {"name":"Test akumulatoru a alternatoru","price":300},
-          {"name":"Cteni chyb z jednotky","price":300},
-          {"name":"Nacteni pameti zavad DTC","price":500}
+        "Testy": [
+          {
+            "name": "Test brzdove kapaliny",
+            "price": 200
+          },
+          {
+            "name": "Test akumulatoru a alternatoru",
+            "price": 300
+          },
+          {
+            "name": "Cteni chyb z jednotky",
+            "price": 300
+          },
+          {
+            "name": "Nacteni pameti zavad DTC",
+            "price": 500
+          }
         ],
-        "Ostatni":[
-          {"name":"Prirazka urgentni prace","price":500},
-          {"name":"Lepeni folii proti slunci","price":1500}
+        "Ostatni": [
+          {
+            "name": "Prirazka urgentni prace",
+            "price": 500
+          },
+          {
+            "name": "Lepeni folii proti slunci",
+            "price": 1500
+          }
         ]
       }
     },
-    "priplatek_suv":200,
-    "sleva_bez_vyvazeni":-150,
-    "sleva_pneu_od_nas":-250
+    "priplatek_suv": 200,
+    "sleva_bez_vyvazeni": -150,
+    "sleva_pneu_od_nas": -250
   },
-  "customWizards": []
+  "customWizards": [
+    {
+      "name": "Novy wizard",
+      "icon": "default",
+      "color": "#607d8b",
+      "tree": {
+        "label": "Hlavni",
+        "children": [
+          {
+            "label": "regergergerg",
+            "price": 300,
+            "icon": "",
+            "color": "#2196f3",
+            "children": []
+          },
+          {
+            "label": "rgergergerg6",
+            "price": 64,
+            "icon": "",
+            "color": "#2196f3",
+            "children": []
+          }
+        ]
+      },
+      "fields": [
+        {
+          "label": "reefe",
+          "type": "text",
+          "required": false
+        },
+        {
+          "label": "rfrefr",
+          "type": "text",
+          "required": false
+        }
+      ],
+      "protocol": false,
+      "signature": false
+    }
+  ]
 }
