@@ -3,6 +3,60 @@
    ========================================================================== */
 
 // ---------------------------------------------------------------------------
+// GitHub konfigurace
+// ---------------------------------------------------------------------------
+const GITHUB_REPO = 'stratka/pneu-terminal-pwa';
+const GITHUB_CONFIG_PATH = 'config.json';
+let GITHUB_TOKEN = localStorage.getItem('github_token') || '';
+
+async function pushConfigToGitHub() {
+  if (!GITHUB_TOKEN) {
+    GITHUB_TOKEN = prompt('Zadej GitHub token (ulozi se do prohlizece, zadavas jen jednou):');
+    if (!GITHUB_TOKEN) return false;
+    localStorage.setItem('github_token', GITHUB_TOKEN);
+  }
+
+  const cfg = JSON.stringify({ services, settings, pricing, customWizards }, null, 2);
+  const content = btoa(unescape(encodeURIComponent(cfg)));
+
+  // Ziskat aktualni SHA souboru
+  try {
+    const meta = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_CONFIG_PATH}`, {
+      headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
+    }).then(r => r.json());
+
+    const resp = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_CONFIG_PATH}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `token ${GITHUB_TOKEN}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        message: 'Aktualizace konfigurace z administrace',
+        content: content,
+        sha: meta.sha
+      })
+    });
+
+    if (!resp.ok) {
+      const err = await resp.json();
+      if (resp.status === 401) {
+        localStorage.removeItem('github_token');
+        GITHUB_TOKEN = '';
+        alert('Token neni platny. Zkus to znovu.');
+      } else {
+        alert('Chyba pri ukladani: ' + (err.message || resp.status));
+      }
+      return false;
+    }
+    return true;
+  } catch(e) {
+    alert('Chyba pripojeni: ' + e.message);
+    return false;
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Ikony
 // ---------------------------------------------------------------------------
 const SERVICE_ICONS = {
@@ -1683,6 +1737,9 @@ function openAdminPanel() {
       <button class="admin-tab" data-tab="invoices">Faktury</button>
       <button class="admin-tab" data-tab="password">Zmena hesla</button>
     </div>
+    <div style="text-align:right;margin:8px 0;">
+      <button class="btn btn-green" id="btn-push-github" style="font-size:15px;padding:10px 24px;">APLIKOVAT NA GITHUB</button>
+    </div>
     <div class="admin-content" id="admin-content"></div>
   `;
 
@@ -1698,6 +1755,21 @@ function openAdminPanel() {
   });
 
   renderAdminTab('services', div.querySelector('#admin-content'), overlay);
+
+  div.querySelector('#btn-push-github').onclick = async () => {
+    const btn = div.querySelector('#btn-push-github');
+    btn.textContent = 'UKLADAM...';
+    btn.disabled = true;
+    const ok = await pushConfigToGitHub();
+    if (ok) {
+      btn.textContent = 'ULOZENO ✓';
+      btn.style.background = '#27ae60';
+      setTimeout(() => { btn.textContent = 'APLIKOVAT NA GITHUB'; btn.disabled = false; }, 3000);
+    } else {
+      btn.textContent = 'APLIKOVAT NA GITHUB';
+      btn.disabled = false;
+    }
+  };
 }
 
 function renderAdminTab(tabName, container, overlay) {
@@ -2417,19 +2489,25 @@ function showFullPhoto() {
 async function init() {
   await db.open();
 
-  // Nacist konfiguraci z config.json (server) — stejna pro vsechna zarizeni
+  // Nacist konfiguraci — priorita: config.json ze serveru, fallback: IndexedDB, pak DEFAULT
+  let cfgLoaded = false;
   try {
-    const cfg = await fetch('./config.json?v=' + Date.now()).then(r => r.json());
-    services = cfg.services || DEFAULT_SERVICES;
-    settings = cfg.settings || DEFAULT_SETTINGS;
-    pricing  = cfg.pricing || DEFAULT_PRICING;
-    customWizards = cfg.customWizards || [];
-  } catch(e) {
-    console.warn('config.json se nepodarilo nacist, pouzivam vychozi data:', e);
-    services = DEFAULT_SERVICES;
-    settings = DEFAULT_SETTINGS;
-    pricing  = DEFAULT_PRICING;
-    customWizards = [];
+    const resp = await fetch('./config.json?v=' + Date.now());
+    if (resp.ok) {
+      const cfg = await resp.json();
+      services = cfg.services || DEFAULT_SERVICES;
+      settings = cfg.settings || DEFAULT_SETTINGS;
+      pricing  = cfg.pricing || DEFAULT_PRICING;
+      customWizards = cfg.customWizards || [];
+      cfgLoaded = true;
+    }
+  } catch(e) { console.warn('config.json se nepodarilo nacist:', e); }
+
+  if (!cfgLoaded) {
+    services = await db.getKV('services', DEFAULT_SERVICES);
+    settings = await db.getKV('settings', DEFAULT_SETTINGS);
+    pricing  = await db.getKV('pricing', DEFAULT_PRICING);
+    customWizards = await db.getKV('customWizards', []);
   }
 
   // Nacist fonty pro PDF
@@ -2460,6 +2538,19 @@ async function init() {
   document.getElementById('btn-finish').onclick = showFinishDialog;
   document.getElementById('btn-admin').onclick = showAdmin;
   document.getElementById('btn-camera').onclick = capturePhoto;
+  document.getElementById('btn-export').onclick = async () => {
+    const expServices = await db.getKV('services', DEFAULT_SERVICES);
+    const expSettings = await db.getKV('settings', DEFAULT_SETTINGS);
+    const expPricing  = await db.getKV('pricing', DEFAULT_PRICING);
+    const expWizards  = await db.getKV('customWizards', []);
+    const cfg = { services: expServices, settings: expSettings, pricing: expPricing, customWizards: expWizards };
+    const blob = new Blob([JSON.stringify(cfg, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'config.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
   document.getElementById('btn-update').onclick = async () => {
     if ('serviceWorker' in navigator) {
       const reg = await navigator.serviceWorker.getRegistration();
