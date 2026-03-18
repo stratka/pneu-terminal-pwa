@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#16213e">
+  <title>Pneuservis - Pokladna</title>
+  <link rel="manifest" href="./manifest.json">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <div id="header">
+    <h1>PNEUSERVIS - POKLADNA</h1>
+    <span id="spz-display"></span>
+    <button class="header-btn" id="btn-camera" style="background:#f39c12;" title="Vyfotit SPZ">📷</button>
+    <button class="header-btn btn-red" id="btn-admin">ADMINISTRACE</button>
+  </div>
+
+  <!-- Main -->
+  <div id="main">
+    <!-- Tiles -->
+    <div id="tiles-area"></div>
+
+    <!-- Cart -->
+    <div id="cart-panel">
+      <div id="cart-title">KOSIK</div>
+      <div id="cart-list"></div>
+      <div id="cart-buttons">
+        <button class="btn-red" id="btn-clear-cart">Vyprazdnit</button>
+      </div>
+      <div id="photo-area"></div>
+      <div id="cart-total">CELKEM: 0 Kc</div>
+      <button id="btn-finish">DOKONCIT A PLATIT</button>
+    </div>
+  </div>
+
+  <!-- Libs -->
+  <script src="./lib/jspdf.umd.min.js"></script>
+  <script src="./lib/qrcode.min.js"></script>
+  <!-- App -->
+  <script src="./app.js"></script>
+
+</body>
+</html>
