@@ -2460,6 +2460,17 @@ async function init() {
   document.getElementById('btn-finish').onclick = showFinishDialog;
   document.getElementById('btn-admin').onclick = showAdmin;
   document.getElementById('btn-camera').onclick = capturePhoto;
+  document.getElementById('btn-update').onclick = async () => {
+    if ('serviceWorker' in navigator) {
+      const reg = await navigator.serviceWorker.getRegistration();
+      if (reg) await reg.update();
+    }
+    if ('caches' in window) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map(k => caches.delete(k)));
+    }
+    window.location.reload();
+  };
 
   // Service Worker s automatickou aktualizaci
   if ('serviceWorker' in navigator) {
