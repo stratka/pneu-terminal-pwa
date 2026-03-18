@@ -51,23 +51,17 @@
       "price": 900,
       "icon": "klima",
       "color": "#607D8B"
-    },
-    {
-      "name": "Uskladneni pneu",
-      "price": 500,
-      "icon": "uskladneni",
-      "color": "#E91E63"
     }
   ],
   "settings": {
-    "firma": "Pneuservis s.r.o.",
-    "ico": "12345678",
-    "dic": "CZ12345678",
-    "adresa": "Hlavni 123, 110 00 Praha",
-    "telefon": "+420 123 456 789",
-    "email": "info@pneuservis.cz",
-    "banka_iban": "CZ6508000000192000145399",
-    "banka_bic": "GIBACZPX",
+    "firma": "Tomáš Stratil",
+    "ico": "70620555",
+    "dic": "",
+    "adresa": "U nové školy 1215/81",
+    "telefon": "+420 605 289 774",
+    "email": "ovapneu@gmail.com",
+    "banka_iban": "CZ7855000000001804781003",
+    "banka_bic": "RZBCCZPP",
     "mena": "CZK",
     "dph_sazba": 21,
     "admin_password_hash": "650fe8a2661c68441c056f5c680a09a445ba87d1462c8e686c6533c6183d343d",
@@ -287,42 +281,133 @@
   },
   "customWizards": [
     {
-      "name": "Novy wizard",
+      "name": "Uskladněni pneu",
       "icon": "default",
       "color": "#607d8b",
       "tree": {
         "label": "Hlavni",
         "children": [
           {
-            "label": "regergergerg",
-            "price": 300,
+            "label": "do 16'",
+            "price": 500,
             "icon": "",
             "color": "#2196f3",
-            "children": []
+            "children": [],
+            "final": true
           },
           {
-            "label": "rgergergerg6",
-            "price": 64,
+            "label": "17'",
+            "price": 600,
             "icon": "",
             "color": "#2196f3",
-            "children": []
+            "children": [],
+            "final": true
+          },
+          {
+            "label": "18'",
+            "price": 700,
+            "icon": "",
+            "color": "#2196f3",
+            "children": [],
+            "final": true
+          },
+          {
+            "label": "19'",
+            "price": 800,
+            "icon": "",
+            "color": "#2196f3",
+            "children": [],
+            "final": true
+          },
+          {
+            "label": "20'",
+            "price": 900,
+            "icon": "",
+            "color": "#2196f3",
+            "children": [],
+            "final": true
+          },
+          {
+            "label": "21",
+            "price": 1000,
+            "icon": "",
+            "color": "#2196f3",
+            "children": [],
+            "final": true
+          },
+          {
+            "label": "22",
+            "price": 1100,
+            "icon": "",
+            "color": "#2196f3",
+            "children": [],
+            "final": true
+          },
+          {
+            "label": "23",
+            "price": 1200,
+            "icon": "",
+            "color": "#2196f3",
+            "children": [],
+            "final": true
           }
         ]
       },
       "fields": [
         {
-          "label": "reefe",
+          "label": "Počet kusů",
           "type": "text",
+          "required": true
+        },
+        {
+          "label": "Alu",
+          "type": "checkbox",
           "required": false
         },
         {
-          "label": "rfrefr",
-          "type": "text",
+          "label": "Plech",
+          "type": "checkbox",
           "required": false
+        },
+        {
+          "label": "Gumy",
+          "type": "checkbox",
+          "required": false
+        },
+        {
+          "label": "Výrobce a rozměr",
+          "type": "text",
+          "required": true
+        },
+        {
+          "label": "Jméno a příjmení",
+          "type": "text",
+          "required": true
+        },
+        {
+          "label": "Telefon",
+          "type": "tel",
+          "required": true
+        },
+        {
+          "label": "SPZ",
+          "type": "text",
+          "required": true
         }
       ],
-      "protocol": false,
-      "signature": false
+      "protocol": true,
+      "signature": true,
+      "_runId": 1773850733130,
+      "_formData": {
+        "Počet kusů": "1",
+        "Alu": "Ano",
+        "Plech": "Ne",
+        "Gumy": "Ne",
+        "Výrobce a rozměr": "fgdfgfg",
+        "Jméno a příjmení": "fdgdgdfg",
+        "Telefon": "5465464",
+        "SPZ": "gdfgdf"
+      }
     }
   ]
 }
