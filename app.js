@@ -481,14 +481,20 @@ async function generateProtocolPDF(wizName, items, formData, signatureDataUrl) {
 
   const doc = createPDF();
 
+  // Poradove cislo - velke, tucne, vpravo
+  doc.setFont(undefined, 'bold');
+  doc.setFontSize(36);
+  doc.text(protoNo, 196, 22, { align: 'right' });
+
   // Hlavicka
+  doc.setFont(undefined, 'bold');
   doc.setFontSize(18);
-  doc.text('PŘEDÁVACÍ PROTOKOL', 105, 20, { align: 'center' });
+  doc.text('PŘEDÁVACÍ PROTOKOL', 14, 20);
+  doc.setFont(undefined, 'normal');
   doc.setFontSize(11);
-  doc.text(`Uskladnění kol / pneu`, 105, 28, { align: 'center' });
+  doc.text(`Uskladnění kol / pneu`, 14, 28);
   doc.setFontSize(10);
-  doc.text(`Číslo dokladu: ${protoNo}`, 105, 36, { align: 'center' });
-  doc.text(`Datum: ${today}`, 105, 42, { align: 'center' });
+  doc.text(`Datum: ${today}`, 14, 36);
 
   // Dodavatel
   let y = 54;
@@ -658,13 +664,15 @@ function iconChar(key) {
 // SPAYD QR
 // ---------------------------------------------------------------------------
 function generateSpayd(iban, amount, currency, message, vs) {
+  const cleanIban = iban.replace(/\s/g, '');
+  const bic = (settings.banka_bic || '').replace(/\s/g, '');
   const parts = ['SPD*1.0'];
-  parts.push(`ACC:${iban.replace(/\s/g,'')}`);
+  parts.push(`ACC:${cleanIban}${bic ? '+' + bic : ''}`);
   parts.push(`AM:${amount.toFixed(2)}`);
   parts.push(`CC:${currency}`);
   if (vs) parts.push(`X-VS:${vs}`);
   if (message) parts.push(`MSG:${message.substring(0,60)}`);
-  return parts.join('*');
+  return parts.join('*') + '*';
 }
 
 // ---------------------------------------------------------------------------
@@ -1204,13 +1212,22 @@ function runCustomWizard(wiz) {
     if (showFormHere) {
       headerHtml += `<div class="wiz-inline-form" style="display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;max-width:700px;margin:0 auto 8px;flex-shrink:0;">`;
       fields.forEach((f, i) => {
-        headerHtml += `<div style="display:flex;align-items:center;gap:4px;">
-          <label style="font-size:13px;color:var(--text-muted);white-space:nowrap;">${f.label}${f.required ? ' *' : ''}:</label>
-          <input type="${f.type || 'text'}" class="wiz-inline-input" data-idx="${i}"
-            value="${collectedFormData[f.label] || ''}"
-            style="padding:6px 8px;border-radius:6px;border:1px solid #444;background:#16213e;color:#fff;font-size:14px;width:160px;"
-            placeholder="${f.label}">
-        </div>`;
+        if (f.type === 'checkbox') {
+          headerHtml += `<div style="display:flex;align-items:center;gap:6px;">
+            <input type="checkbox" class="wiz-inline-input" data-idx="${i}"
+              ${collectedFormData[f.label] === 'Ano' ? 'checked' : ''}
+              style="width:20px;height:20px;cursor:pointer;">
+            <label style="font-size:13px;color:var(--text-muted);cursor:pointer;">${f.label}</label>
+          </div>`;
+        } else {
+          headerHtml += `<div style="display:flex;align-items:center;gap:4px;">
+            <label style="font-size:13px;color:var(--text-muted);white-space:nowrap;">${f.label}${f.required ? ' *' : ''}:</label>
+            <input type="${f.type || 'text'}" class="wiz-inline-input" data-idx="${i}"
+              value="${collectedFormData[f.label] || ''}"
+              style="padding:6px 8px;border-radius:6px;border:1px solid #444;background:#16213e;color:#fff;font-size:14px;width:160px;"
+              placeholder="${f.label}">
+          </div>`;
+        }
       });
       headerHtml += `</div>`;
     }
@@ -1340,13 +1357,17 @@ function runCustomWizard(wiz) {
     for (const inp of inputs) {
       const idx = parseInt(inp.dataset.idx);
       const f = fields[idx];
-      const val = inp.value.trim();
-      if (f.required && !val) {
-        alert(`Vyplnte pole: ${f.label}`);
-        inp.focus();
-        return false;
+      if (inp.type === 'checkbox') {
+        collectedFormData[f.label] = inp.checked ? 'Ano' : 'Ne';
+      } else {
+        const val = inp.value.trim();
+        if (f.required && !val) {
+          alert(`Vyplnte pole: ${f.label}`);
+          inp.focus();
+          return false;
+        }
+        if (val) collectedFormData[f.label] = val;
       }
-      if (val) collectedFormData[f.label] = val;
     }
     return true;
   }
@@ -1368,14 +1389,24 @@ function runCustomWizard(wiz) {
     formDiv.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;max-width:700px;margin:0 auto;';
 
     fields.forEach((f, i) => {
-      formDiv.innerHTML += `
-        <div style="margin-bottom:12px;">
-          <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:4px;">${f.label}${f.required ? ' *' : ''}:</label>
-          <input type="${f.type || 'text'}" class="wiz-form-input" data-idx="${i}"
-            value="${collectedFormData[f.label] || ''}"
-            style="width:100%;padding:10px;border-radius:6px;border:1px solid #444;background:#16213e;color:#fff;font-size:16px;"
-            placeholder="${f.label}">
-        </div>`;
+      if (f.type === 'checkbox') {
+        formDiv.innerHTML += `
+          <div style="margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+            <input type="checkbox" class="wiz-form-input" data-idx="${i}"
+              ${collectedFormData[f.label] === 'Ano' ? 'checked' : ''}
+              style="width:22px;height:22px;cursor:pointer;">
+            <label style="font-size:15px;color:var(--text-muted);cursor:pointer;">${f.label}</label>
+          </div>`;
+      } else {
+        formDiv.innerHTML += `
+          <div style="margin-bottom:12px;">
+            <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:4px;">${f.label}${f.required ? ' *' : ''}:</label>
+            <input type="${f.type || 'text'}" class="wiz-form-input" data-idx="${i}"
+              value="${collectedFormData[f.label] || ''}"
+              style="width:100%;padding:10px;border-radius:6px;border:1px solid #444;background:#16213e;color:#fff;font-size:16px;"
+              placeholder="${f.label}">
+          </div>`;
+      }
     });
 
     formDiv.innerHTML += `
@@ -1393,13 +1424,17 @@ function runCustomWizard(wiz) {
       for (const inp of inputs) {
         const idx = parseInt(inp.dataset.idx);
         const f = fields[idx];
-        const val = inp.value.trim();
-        if (f.required && !val) {
-          alert(`Vyplnte pole: ${f.label}`);
-          inp.focus();
-          return;
+        if (inp.type === 'checkbox') {
+          collectedFormData[f.label] = inp.checked ? 'Ano' : 'Ne';
+        } else {
+          const val = inp.value.trim();
+          if (f.required && !val) {
+            alert(`Vyplnte pole: ${f.label}`);
+            inp.focus();
+            return;
+          }
+          if (val) collectedFormData[f.label] = val;
         }
-        if (val) collectedFormData[f.label] = val;
       }
       applyFormData();
       overlay.remove();
@@ -1450,16 +1485,17 @@ function showFinishDialog() {
   }
 
   const total = getTotal();
-  const spayd = generateSpayd(
-    settings.banka_iban || '', total,
-    settings.mena || 'CZK', 'Pneuservis', ''
-  );
+  // VS = rok (2 cifry) + poradove cislo z counteru
+  const vsCounter = parseInt(localStorage.getItem('vs_counter') || '0') + 1;
+  localStorage.setItem('vs_counter', vsCounter);
+  const vs = `${new Date().getFullYear() % 100}${String(vsCounter).padStart(6, '0')}`;
 
   const div = document.createElement('div');
   div.className = 'finish-dialog';
   div.innerHTML = `
     <h2>DOKONCENI OBJEDNAVKY</h2>
     <div style="font-size:18px;font-weight:700;color:var(--accent-red);margin:10px 0;">Celkova castka: ${total} Kc</div>
+    <div style="font-size:13px;color:var(--text-muted);margin-bottom:6px;">VS: ${vs}</div>
     <div style="margin:14px 0;">
       <label style="font-size:14px;">SPZ vozidla:</label>
       <input type="text" id="finish-spz" value="${currentSpz}" maxlength="10" autocapitalize="characters" style="text-transform:uppercase;">
@@ -1469,23 +1505,41 @@ function showFinishDialog() {
     </div>
     <div style="margin:14px 0;">
       <div style="font-size:14px;margin-bottom:6px;">QR kod pro platbu:</div>
-      <div id="finish-qr" style="display:flex;justify-content:center;"></div>
+      <div style="display:flex;justify-content:center;">
+        <div id="finish-qr" style="background:#fff;padding:16px;border-radius:8px;display:inline-block;"></div>
+      </div>
       <div style="font-size:11px;color:var(--text-muted);font-style:italic;margin-top:4px;">(naskenujte v bankovni aplikaci)</div>
+      <div id="finish-spayd-debug" style="font-size:10px;color:#666;margin-top:6px;word-break:break-all;"></div>
     </div>
     <button class="btn btn-green" id="finish-confirm" style="font-size:16px;padding:14px 40px;margin-top:10px;">POTVRDIT</button>
   `;
 
   const { overlay } = openModal(div);
 
-  // QR
+  // QR - generovat s SPZ ve zprave
   const qrDiv = div.querySelector('#finish-qr');
-  if (typeof QRCode !== 'undefined') {
-    new QRCode(qrDiv, {
-      text: spayd, width: 200, height: 200,
-      colorDark: '#000000', colorLight: '#ffffff',
-      correctLevel: QRCode.CorrectLevel.M,
-    });
+  const debugDiv = div.querySelector('#finish-spayd-debug');
+
+  function regenerateQR() {
+    const spz = div.querySelector('#finish-spz').value.trim().toUpperCase();
+    const msg = spz ? `Pneuservis ${spz}` : 'Pneuservis';
+    const spayd = generateSpayd(
+      settings.banka_iban || '', total,
+      settings.mena || 'CZK', msg, vs
+    );
+    qrDiv.innerHTML = '';
+    debugDiv.textContent = spayd;
+    if (typeof QRCode !== 'undefined') {
+      new QRCode(qrDiv, {
+        text: spayd, width: 300, height: 300,
+        colorDark: '#000000', colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.H,
+      });
+    }
   }
+
+  regenerateQR();
+  div.querySelector('#finish-spz').addEventListener('input', regenerateQR);
 
   div.querySelector('#finish-confirm').onclick = async () => {
     const spz = div.querySelector('#finish-spz').value.trim().toUpperCase();
@@ -2224,6 +2278,7 @@ function renderAdminWizards(container) {
             <option value="text" ${f.type==='text'?'selected':''}>Text</option>
             <option value="number" ${f.type==='number'?'selected':''}>Cislo</option>
             <option value="tel" ${f.type==='tel'?'selected':''}>Telefon</option>
+            <option value="checkbox" ${f.type==='checkbox'?'selected':''}>Checkbox</option>
           </select>
           <label style="font-size:11px;color:#aaa;cursor:pointer;display:flex;align-items:center;gap:3px;">
             <input type="checkbox" class="wf-req" ${f.required?'checked':''}>Povinne
@@ -2550,25 +2605,34 @@ function showFullPhoto() {
 async function init() {
   await db.open();
 
-  // Nacist konfiguraci — priorita: config.json ze serveru, fallback: IndexedDB, pak DEFAULT
-  let cfgLoaded = false;
-  try {
-    const resp = await fetch('./config.json?v=' + Date.now());
-    if (resp.ok) {
-      const cfg = await resp.json();
-      services = cfg.services || DEFAULT_SERVICES;
-      settings = cfg.settings || DEFAULT_SETTINGS;
-      pricing  = cfg.pricing || DEFAULT_PRICING;
-      customWizards = cfg.customWizards || [];
-      cfgLoaded = true;
-    }
-  } catch(e) { console.warn('config.json se nepodarilo nacist:', e); }
+  // Nacist konfiguraci:
+  // - localhost (PC) = vzdy IndexedDB (lokalni zmeny)
+  // - github.io (tablet) = vzdy config.json z GitHubu
+  const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
 
-  if (!cfgLoaded) {
+  if (isLocal) {
+    // PC — pouzit IndexedDB
     services = await db.getKV('services', DEFAULT_SERVICES);
     settings = await db.getKV('settings', DEFAULT_SETTINGS);
     pricing  = await db.getKV('pricing', DEFAULT_PRICING);
     customWizards = await db.getKV('customWizards', []);
+  } else {
+    // Tablet (github.io) — vzdy config.json
+    try {
+      const resp = await fetch('./config.json?v=' + Date.now());
+      if (resp.ok) {
+        const cfg = await resp.json();
+        services = cfg.services || DEFAULT_SERVICES;
+        settings = cfg.settings || DEFAULT_SETTINGS;
+        pricing  = cfg.pricing || DEFAULT_PRICING;
+        customWizards = cfg.customWizards || [];
+      } else { throw new Error('not ok'); }
+    } catch(e) {
+      services = DEFAULT_SERVICES;
+      settings = DEFAULT_SETTINGS;
+      pricing  = DEFAULT_PRICING;
+      customWizards = [];
+    }
   }
 
   // Nacist fonty pro PDF
