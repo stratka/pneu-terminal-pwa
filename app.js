@@ -2461,9 +2461,26 @@ async function init() {
   document.getElementById('btn-admin').onclick = showAdmin;
   document.getElementById('btn-camera').onclick = capturePhoto;
 
-  // Service Worker
+  // Service Worker s automatickou aktualizaci
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js').catch(() => {});
+    const reg = await navigator.serviceWorker.register('./sw.js').catch(() => null);
+    if (reg) {
+      // Zkontrolovat aktualizaci hned
+      reg.update().catch(() => {});
+      // Kdyz se najde novy SW, automaticky reload
+      reg.addEventListener('updatefound', () => {
+        const newSW = reg.installing;
+        if (newSW) {
+          newSW.addEventListener('statechange', () => {
+            if (newSW.state === 'activated') {
+              window.location.reload();
+            }
+          });
+        }
+      });
+      // Kontrolovat aktualizace kazdych 60 sekund
+      setInterval(() => reg.update().catch(() => {}), 60000);
+    }
   }
 }
 
