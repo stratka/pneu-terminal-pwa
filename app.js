@@ -19,11 +19,17 @@ async function pushConfigToGitHub() {
   const cfg = JSON.stringify({ services, settings, pricing, customWizards }, null, 2);
   const content = btoa(unescape(encodeURIComponent(cfg)));
 
-  // Ziskat aktualni SHA souboru
+  // Ziskat aktualni SHA souboru a ulozit zalohu
   try {
     const meta = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_CONFIG_PATH}`, {
       headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
     }).then(r => r.json());
+
+    // Ulozit predchozi verzi jako zalohu
+    if (meta.content) {
+      localStorage.setItem('config_backup', atob(meta.content));
+      localStorage.setItem('config_backup_time', new Date().toLocaleString('cs-CZ'));
+    }
 
     const resp = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_CONFIG_PATH}`, {
       method: 'PUT',
@@ -54,6 +60,49 @@ async function pushConfigToGitHub() {
     alert('Chyba pripojeni: ' + e.message);
     return false;
   }
+}
+
+async function revertConfigOnGitHub() {
+  const backup = localStorage.getItem('config_backup');
+  const backupTime = localStorage.getItem('config_backup_time') || '?';
+  if (!backup) { alert('Zadna zaloha neni k dispozici.'); return false; }
+  if (!confirm(`Vratit konfiguraci z: ${backupTime}?`)) return false;
+
+  if (!GITHUB_TOKEN) {
+    GITHUB_TOKEN = prompt('Zadej GitHub token:');
+    if (!GITHUB_TOKEN) return false;
+    localStorage.setItem('github_token', GITHUB_TOKEN);
+  }
+
+  const content = btoa(unescape(encodeURIComponent(backup)));
+  try {
+    const meta = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_CONFIG_PATH}`, {
+      headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
+    }).then(r => r.json());
+
+    const resp = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_CONFIG_PATH}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `token ${GITHUB_TOKEN}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        message: 'Vraceni predchozi konfigurace',
+        content: content,
+        sha: meta.sha
+      })
+    });
+    if (!resp.ok) { alert('Chyba pri vraceni.'); return false; }
+
+    // Nacist vracena data do aplikace
+    const cfg = JSON.parse(backup);
+    services = cfg.services || services;
+    settings = cfg.settings || settings;
+    pricing = cfg.pricing || pricing;
+    customWizards = cfg.customWizards || customWizards;
+    renderTiles(); renderCart();
+    return true;
+  } catch(e) { alert('Chyba: ' + e.message); return false; }
 }
 
 // ---------------------------------------------------------------------------
@@ -1737,7 +1786,8 @@ function openAdminPanel() {
       <button class="admin-tab" data-tab="invoices">Faktury</button>
       <button class="admin-tab" data-tab="password">Zmena hesla</button>
     </div>
-    <div style="text-align:right;margin:8px 0;">
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin:8px 0;">
+      <button class="btn btn-red" id="btn-revert-github" style="font-size:13px;padding:8px 16px;">⏪ VRATIT POSLEDNI ZMENU</button>
       <button class="btn btn-green" id="btn-push-github" style="font-size:15px;padding:10px 24px;">APLIKOVAT NA GITHUB</button>
     </div>
     <div class="admin-content" id="admin-content"></div>
@@ -1756,6 +1806,17 @@ function openAdminPanel() {
 
   renderAdminTab('services', div.querySelector('#admin-content'), overlay);
 
+  div.querySelector('#btn-revert-github').onclick = async () => {
+    const btn = div.querySelector('#btn-revert-github');
+    btn.disabled = true;
+    const ok = await revertConfigOnGitHub();
+    if (ok) {
+      btn.textContent = 'VRACENO ✓';
+      setTimeout(() => { btn.textContent = '⏪ VRATIT POSLEDNI ZMENU'; btn.disabled = false; }, 3000);
+    } else {
+      btn.disabled = false;
+    }
+  };
   div.querySelector('#btn-push-github').onclick = async () => {
     const btn = div.querySelector('#btn-push-github');
     btn.textContent = 'UKLADAM...';
