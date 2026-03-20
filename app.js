@@ -1573,10 +1573,12 @@ function runCustomWizard(wiz) {
           transition:transform 0.1s; position:relative;
         `;
 
-        // Hvezdicka pro pripnuti — jen pro listove uzly s cenou (ne multiply)
-        const canPin = cPrice && (child.final || (!child.children || !child.children.length)) && !child.multiply;
+        // Hvezdicka pro pripnuti — na vsechny dlazdice (ne multiply)
+        const canPin = !child.multiply;
         const pinSource = `custom:${wiz.name}`;
-        const pinName = `${wiz.name} | ${cLabel}`;
+        const accTotal = accumulated.reduce((s, a) => s + a.price, 0) + cPrice;
+        const pinName = cLabel;
+        const pinPrice = accTotal > 0 ? accTotal : cPrice;
         let starHtml = '';
         if (canPin) {
           const pinned = isPinned(pinSource, pinName);
@@ -1595,7 +1597,7 @@ function runCustomWizard(wiz) {
         if (starEl) {
           starEl.onclick = (e) => {
             e.stopPropagation();
-            togglePin(pinSource, pinName, cPrice, child.icon || wiz.icon, tileColor);
+            togglePin(pinSource, pinName, pinPrice, child.icon || wiz.icon, tileColor);
             const nowPinned = isPinned(pinSource, pinName);
             starEl.textContent = nowPinned ? '⭐' : '☆';
             starEl.style.opacity = nowPinned ? '1' : '0.4';
