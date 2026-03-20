@@ -881,7 +881,7 @@ function renderCart() {
     list.appendChild(div);
   }
 
-  document.getElementById('cart-total').textContent = `CELKEM: ${total}`;
+  document.getElementById('btn-finish').textContent = `DOKONCIT A PLATIT | ${total} Kc`;
 }
 
 // ---------------------------------------------------------------------------
