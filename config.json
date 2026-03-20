@@ -1698,6 +1698,35 @@
         "Telefon": "5465464",
         "SPZ": "gdfgdf"
       }
+    },
+    {
+      "name": "Novy wizard",
+      "icon": "default",
+      "color": "#607D8B",
+      "tree": {
+        "label": "Hlavni",
+        "children": [
+          {
+            "label": "Rodina",
+            "price": -100,
+            "icon": "",
+            "color": "#2196f3",
+            "children": [],
+            "percent": true,
+            "final": true
+          },
+          {
+            "label": "Záchrané složky",
+            "price": -10,
+            "icon": "",
+            "color": "#2196f3",
+            "children": [],
+            "final": true,
+            "percent": true
+          }
+        ]
+      },
+      "fields": []
     }
   ],
   "pinnedItems": [
