@@ -1302,6 +1302,24 @@
             "price": 0
           },
           {
+            "label": "TPMS",
+            "children": [
+              {
+                "label": "Diagnostika TPMS",
+                "price": 250,
+                "final": true,
+                "children": []
+              },
+              {
+                "label": "Programovani a vymena 1ks TPMS",
+                "price": 1000,
+                "final": true,
+                "children": []
+              }
+            ],
+            "color": "#9C27B0"
+          },
+          {
             "label": "Vyvazeni",
             "children": [
               {
@@ -1452,6 +1470,36 @@
             "color": "#795548"
           },
           {
+            "label": "Cisteni interieru",
+            "children": [
+              {
+                "label": "Cisteni 2h (drobne)",
+                "price": 2000,
+                "final": true,
+                "children": []
+              },
+              {
+                "label": "Cisteni 3h (hrube)",
+                "price": 3000,
+                "final": true,
+                "children": []
+              },
+              {
+                "label": "Cisteni 4h (velmi hrube)",
+                "price": 4000,
+                "final": true,
+                "children": []
+              },
+              {
+                "label": "Cisteni ozonem",
+                "price": 500,
+                "final": true,
+                "children": []
+              }
+            ],
+            "color": "#E91E63"
+          },
+          {
             "label": "Klimatizace R134a",
             "children": [
               {
@@ -1516,58 +1564,10 @@
               }
             ],
             "color": "#455A64"
-          },
-          {
-            "label": "Cisteni interieru",
-            "children": [
-              {
-                "label": "Cisteni 2h (drobne)",
-                "price": 2000,
-                "final": true,
-                "children": []
-              },
-              {
-                "label": "Cisteni 3h (hrube)",
-                "price": 3000,
-                "final": true,
-                "children": []
-              },
-              {
-                "label": "Cisteni 4h (velmi hrube)",
-                "price": 4000,
-                "final": true,
-                "children": []
-              },
-              {
-                "label": "Cisteni ozonem",
-                "price": 500,
-                "final": true,
-                "children": []
-              }
-            ],
-            "color": "#E91E63"
-          },
-          {
-            "label": "TPMS",
-            "children": [
-              {
-                "label": "Diagnostika TPMS",
-                "price": 250,
-                "final": true,
-                "children": []
-              },
-              {
-                "label": "Programovani a vymena 1ks TPMS",
-                "price": 1000,
-                "final": true,
-                "children": []
-              }
-            ],
-            "color": "#9C27B0"
           }
         ]
       },
-      "_runId": 1774014374289,
+      "_runId": 1774014680988,
       "fields": []
     },
     {
