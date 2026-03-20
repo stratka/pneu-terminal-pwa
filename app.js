@@ -2191,6 +2191,7 @@ function openAdminPanel() {
     <div style="display:flex;justify-content:flex-end;gap:8px;margin:8px 0;">
       <button class="btn btn-red" id="btn-revert-github" style="font-size:13px;padding:8px 16px;">⏪ VRATIT POSLEDNI ZMENU</button>
       <button class="btn btn-blue" id="btn-save-local" style="font-size:15px;padding:10px 24px;">ULOZIT</button>
+      <button class="btn" id="btn-share-pins" style="font-size:13px;padding:8px 16px;background:#FF9800;">SDILET PINY</button>
       <button class="btn btn-green" id="btn-push-github" style="font-size:15px;padding:10px 24px;">APLIKOVAT NA GITHUB</button>
     </div>
     <div class="admin-content" id="admin-content"></div>
@@ -2233,6 +2234,20 @@ function openAdminPanel() {
     renderTiles();
     btn.textContent = 'ULOZENO ✓';
     setTimeout(() => { btn.textContent = 'ULOZIT'; btn.disabled = false; }, 2000);
+  };
+  div.querySelector('#btn-share-pins').onclick = async () => {
+    const btn = div.querySelector('#btn-share-pins');
+    btn.disabled = true;
+    btn.textContent = 'SDILIM...';
+    // Pushne config vcetne pinnedItems na GitHub
+    const ok = await pushConfigToGitHub();
+    if (ok) {
+      btn.textContent = 'SDILENO ✓';
+      setTimeout(() => { btn.textContent = 'SDILET PINY'; btn.disabled = false; }, 2000);
+    } else {
+      btn.textContent = 'SDILET PINY';
+      btn.disabled = false;
+    }
   };
   div.querySelector('#btn-push-github').onclick = async () => {
     const btn = div.querySelector('#btn-push-github');
@@ -3010,6 +3025,7 @@ async function init() {
       settings = cfg.settings || DEFAULT_SETTINGS;
       pricing  = cfg.pricing || DEFAULT_PRICING;
       customWizards = cfg.customWizards || [];
+      var sharedPins = cfg.pinnedItems || [];
       configLoaded = true;
       // Ulozit do IndexedDB jako offline cache
       await Promise.all([
@@ -3029,8 +3045,17 @@ async function init() {
     customWizards = await db.getKV('customWizards', []);
   }
 
-  // Pripnute polozky vzdy lokalne (kazde zarizeni ma sve)
-  pinnedItems = await db.getKV('pinnedItems', []);
+  // Pripnute polozky: lokalni + sdilene z GitHubu
+  const localPins = await db.getKV('pinnedItems', []);
+  pinnedItems = [...localPins];
+  if (configLoaded && sharedPins.length) {
+    for (const sp of sharedPins) {
+      if (!pinnedItems.some(p => p.source === sp.source && p.name === sp.name)) {
+        pinnedItems.push(sp);
+      }
+    }
+    await db.setKV('pinnedItems', pinnedItems);
+  }
 
   // Nacist fonty pro PDF
   try {
