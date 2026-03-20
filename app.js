@@ -1799,8 +1799,9 @@ function showFinishDialog() {
 
   const div = document.createElement('div');
   div.className = 'finish-dialog';
+  div.style.cssText = 'max-height:90vh;overflow-y:auto;';
   div.innerHTML = `
-    <h2>DOKONCENI OBJEDNAVKY</h2>
+    <h2 style="margin:0 0 6px;">DOKONCENI OBJEDNAVKY</h2>
     <div style="font-size:18px;font-weight:700;color:var(--accent-red);margin:6px 0;">Celkova castka: ${total} Kc</div>
     <div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">VS: ${vs}</div>
     <div style="margin:8px 0;">
@@ -1813,7 +1814,7 @@ function showFinishDialog() {
     <div style="margin:8px 0;">
       <div style="font-size:13px;margin-bottom:4px;">QR kod pro platbu:</div>
       <div style="display:flex;justify-content:center;">
-        <div id="finish-qr" style="background:#fff;padding:8px;border-radius:8px;display:inline-block;"></div>
+        <div id="finish-qr" style="background:#fff;padding:8px;border-radius:8px;display:inline-block;max-width:180px;max-height:180px;overflow:hidden;"></div>
       </div>
       <div style="font-size:11px;color:var(--text-muted);font-style:italic;margin-top:4px;">(naskenujte v bankovni aplikaci)</div>
       <div id="finish-spayd-debug" style="font-size:10px;color:#666;margin-top:6px;word-break:break-all;"></div>
@@ -1838,10 +1839,15 @@ function showFinishDialog() {
     debugDiv.textContent = spayd;
     if (typeof QRCode !== 'undefined') {
       new QRCode(qrDiv, {
-        text: spayd, width: 180, height: 180,
+        text: spayd, width: 150, height: 150,
         colorDark: '#000000', colorLight: '#ffffff',
-        correctLevel: QRCode.CorrectLevel.H,
+        correctLevel: QRCode.CorrectLevel.M,
       });
+      // Omezit velikost vygenerovaneho obrazku
+      const img = qrDiv.querySelector('img');
+      if (img) { img.style.maxWidth = '150px'; img.style.maxHeight = '150px'; }
+      const canvas = qrDiv.querySelector('canvas');
+      if (canvas) { canvas.style.maxWidth = '150px'; canvas.style.maxHeight = '150px'; }
     }
   }
 
