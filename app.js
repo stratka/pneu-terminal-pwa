@@ -692,9 +692,13 @@ function getTotal() {
     t += services[idx].price * qty;
   }
   for (const item of customItems) {
-    t += item.price * item.qty;
+    if (!item._percent) t += item.price * item.qty;
   }
-  return t;
+  // Procentualni slevy aplikovat na mezisoučet
+  for (const item of customItems) {
+    if (item._percent) t += Math.round(t * item.price / 100);
+  }
+  return Math.max(0, t);
 }
 
 function iconChar(key) {
@@ -861,11 +865,13 @@ function collectTreePrices(node) {
 function renderCart() {
   const list = document.getElementById('cart-list');
   list.innerHTML = '';
-  let total = 0;
+  let subtotal = 0;
 
+  // Bezne polozky (ne procentualni)
   customItems.forEach((item, i) => {
+    if (item._percent) return;
     const lineTotal = item.price * item.qty;
-    total += lineTotal;
+    subtotal += lineTotal;
     const div = document.createElement('div');
     div.className = 'cart-item';
     div.innerHTML = `<span class="cart-item-name">${item.name}</span><span class="cart-item-price">${lineTotal} Kc</span>`;
@@ -876,7 +882,7 @@ function renderCart() {
   for (const [idx, qty] of Object.entries(cart)) {
     const svc = services[idx];
     const lineTotal = svc.price * qty;
-    total += lineTotal;
+    subtotal += lineTotal;
     const div = document.createElement('div');
     div.className = 'cart-item';
     div.innerHTML = `<span class="cart-item-name">${svc.name} x${qty}</span><span class="cart-item-price">${lineTotal} Kc</span>`;
@@ -888,6 +894,21 @@ function renderCart() {
     list.appendChild(div);
   }
 
+  // Procentualni slevy na konci
+  let total = subtotal;
+  customItems.forEach((item, i) => {
+    if (!item._percent) return;
+    const discount = Math.round(subtotal * item.price / 100);
+    total += discount;
+    const div = document.createElement('div');
+    div.className = 'cart-item';
+    div.style.color = '#e74c3c';
+    div.innerHTML = `<span class="cart-item-name">${item.name} (${item.price}%)</span><span class="cart-item-price">${discount} Kc</span>`;
+    div.onclick = () => { customItems.splice(i, 1); renderCart(); };
+    list.appendChild(div);
+  });
+
+  total = Math.max(0, total);
   document.getElementById('btn-finish').innerHTML = `<div style="font-size:28px;">${total} Kc</div><div>DOKONCIT A PLATIT</div>`;
 }
 
@@ -1628,7 +1649,7 @@ function runCustomWizard(wiz, startPath) {
             return;
           }
 
-          if (cPrice) newAcc.push({ label: cLabel, price: cPrice });
+          if (cPrice) newAcc.push({ label: cLabel, price: cPrice, percent: !!child.percent });
 
           if (child.children && child.children.length && !child.final) {
             showStep(child, newAcc, newPath, cLabel, level + 1);
@@ -1768,9 +1789,10 @@ function runCustomWizard(wiz, startPath) {
   }
 
   function finishItem(accumulated, path) {
+    const hasPercent = accumulated.some(a => a.percent);
     const totalPrice = accumulated.reduce((s, a) => s + a.price, 0);
     const nameParts = [wiz.name, ...path];
-    let detail = accumulated.map(a => `${a.label}: ${a.price} Kc`).join(', ');
+    let detail = accumulated.map(a => `${a.label}: ${a.price}${a.percent ? '%' : ' Kc'}`).join(', ');
     // Pridat formularova data do detailu
     const fieldEntries = Object.entries(collectedFormData);
     if (fieldEntries.length) {
@@ -1781,6 +1803,7 @@ function runCustomWizard(wiz, startPath) {
       price: totalPrice,
       qty: 1,
       detail,
+      _percent: hasPercent,
       _wizId: wiz._runId,
       formData: { ...collectedFormData },
     });
@@ -2618,6 +2641,9 @@ function renderAdminWizards(container) {
         <label style="font-size:11px;color:#f39c12;cursor:pointer;display:flex;align-items:center;gap:3px;" title="Po kliknuti ukonci wizard a prida do kosiku">
           <input type="checkbox" class="node-final" ${node.final?'checked':''}> Koncove
         </label>
+        <label style="font-size:11px;color:#e74c3c;cursor:pointer;display:flex;align-items:center;gap:3px;" title="Cena je v procentech (sleva z kosiku)">
+          <input type="checkbox" class="node-percent" ${node.percent?'checked':''}> %
+        </label>
         <label style="font-size:11px;color:#1abc9c;cursor:pointer;display:flex;align-items:center;gap:3px;" title="Pta se na mnozstvi a vynasobi cenu">
           <input type="checkbox" class="node-multiply" ${node.multiply?'checked':''}> Mnozstvi
         </label>
@@ -2667,6 +2693,8 @@ function renderAdminWizards(container) {
     iconSelect.onchange = () => { syncNode(); saveAndRenderQuiet(); };
     colorInput.onchange = () => { syncNode(); saveAndRenderQuiet(); };
     finalCheck.onchange = () => { node.final = finalCheck.checked; saveAndRender(); };
+    const percentCheck = div.querySelector('.node-percent');
+    percentCheck.onchange = () => { node.percent = percentCheck.checked; saveAndRender(); };
     const multiplyCheck = div.querySelector('.node-multiply');
     multiplyCheck.onchange = () => { node.multiply = multiplyCheck.checked; if (!node.unit) node.unit = 'ks'; saveAndRender(); };
     const unitInput = div.querySelector('.node-unit');
