@@ -2296,6 +2296,9 @@ function renderAdminPricing(container) {
 // ---------------------------------------------------------------------------
 // Admin: Vlastni wizardy (stromovy editor)
 // ---------------------------------------------------------------------------
+// Stav sbaleni uzlu stromu (persistuje mezi renderovani)
+const _treeCollapsed = new Set();
+
 function renderAdminWizards(container) {
   let selectedWizIdx = -1;
 
@@ -2512,9 +2515,14 @@ function renderAdminWizards(container) {
     const hasChildren = node.children && node.children.length > 0;
     const levelLabel = level || 1;
     const typeHint = hasChildren ? `→ otevre ${levelLabel+1}. obrazovku` : (node.price ? `→ prida ${node.price} Kc do kosiku` : '→ koncovy uzel');
+    const nodeId = `${wiz.name}_${parentChildIdx}_${levelLabel}_${node.label}`;
+    const isCollapsed = _treeCollapsed.has(nodeId);
+    const toggleIcon = hasChildren ? (isCollapsed ? '▶' : '▼') : '•';
+    const childCount = hasChildren ? ` (${node.children.length})` : '';
 
     div.innerHTML = `
       <div class="tree-node-header">
+        <span class="node-toggle" style="font-size:12px;cursor:${hasChildren?'pointer':'default'};min-width:16px;user-select:none;color:${hasChildren?'#fff':'#555'};" title="${hasChildren?'Rozbalit/sbalit':''}">${toggleIcon}</span>
         <span style="font-size:10px;color:#888;min-width:20px;">${levelLabel}.</span>
         <input type="text" value="${node.label || ''}" placeholder="Nazev dlazdice" class="node-label">
         <input type="number" value="${node.price || 0}" placeholder="Cena" class="node-price" style="width:80px;" title="Cena pri kliknuti (scita se)">
@@ -2537,9 +2545,22 @@ function renderAdminWizards(container) {
           <button style="background:#2196F3;" class="node-add-child" title="Pridat podmoznost (dalsi obrazovka)">+ Poduzl</button>
           <button style="background:#e74c3c;" class="node-remove" title="Smazat">X</button>
         </div>
-        <span style="font-size:10px;color:#888;font-style:italic;">${typeHint}${node.final ? ' | KONCI wizard' : ''}</span>
+        <span style="font-size:10px;color:#888;font-style:italic;">${typeHint}${node.final ? ' | KONCI wizard' : ''}${childCount}</span>
       </div>
     `;
+
+    // Toggle rozbalit/sbalit
+    const toggleEl = div.querySelector('.node-toggle');
+    if (hasChildren) {
+      toggleEl.onclick = () => {
+        if (_treeCollapsed.has(nodeId)) {
+          _treeCollapsed.delete(nodeId);
+        } else {
+          _treeCollapsed.add(nodeId);
+        }
+        saveAndRender();
+      };
+    }
 
     // Auto-save pri zmene
     const labelInput = div.querySelector('.node-label');
@@ -2597,8 +2618,8 @@ function renderAdminWizards(container) {
 
     parentEl.appendChild(div);
 
-    // Deti
-    if (node.children && node.children.length) {
+    // Deti — jen pokud neni sbaleny
+    if (node.children && node.children.length && !isCollapsed) {
       const childrenDiv = document.createElement('div');
       childrenDiv.className = 'tree-children';
       div.appendChild(childrenDiv);
