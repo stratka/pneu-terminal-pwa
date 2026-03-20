@@ -230,7 +230,7 @@
     {
       "name": "Kompletni prezuti 4ks",
       "icon": "pneumatika",
-      "color": "#2196F3",
+      "color": "#2196f3",
       "tree": {
         "label": "Typ disku",
         "children": [
@@ -244,24 +244,10 @@
                   {
                     "label": "Osobni vuz",
                     "price": 0,
-                    "children": [
-                      {
-                        "label": "Pneu od nas ANO",
-                        "price": -250,
-                        "final": true,
-                        "children": [],
-                        "color": "#27ae60"
-                      },
-                      {
-                        "label": "Pneu od nas NE",
-                        "price": 0,
-                        "final": true,
-                        "children": [],
-                        "color": "#e74c3c"
-                      }
-                    ],
+                    "children": [],
                     "color": "#27ae60",
-                    "icon": ""
+                    "icon": "",
+                    "final": true
                   },
                   {
                     "label": "SUV / VAN / EV",
@@ -283,7 +269,8 @@
                       }
                     ],
                     "color": "#e67e22",
-                    "icon": ""
+                    "icon": "",
+                    "final": true
                   }
                 ]
               },
@@ -294,22 +281,7 @@
                   {
                     "label": "Osobni vuz",
                     "price": 0,
-                    "children": [
-                      {
-                        "label": "Pneu od nas ANO",
-                        "price": -250,
-                        "final": true,
-                        "children": [],
-                        "color": "#27ae60"
-                      },
-                      {
-                        "label": "Pneu od nas NE",
-                        "price": 0,
-                        "final": true,
-                        "children": [],
-                        "color": "#e74c3c"
-                      }
-                    ],
+                    "children": [],
                     "color": "#27ae60",
                     "icon": ""
                   },
@@ -350,44 +322,14 @@
                   {
                     "label": "Osobni vuz",
                     "price": 0,
-                    "children": [
-                      {
-                        "label": "Pneu od nas ANO",
-                        "price": -250,
-                        "final": true,
-                        "children": [],
-                        "color": "#27ae60"
-                      },
-                      {
-                        "label": "Pneu od nas NE",
-                        "price": 0,
-                        "final": true,
-                        "children": [],
-                        "color": "#e74c3c"
-                      }
-                    ],
+                    "children": [],
                     "color": "#27ae60",
                     "icon": ""
                   },
                   {
                     "label": "SUV / VAN / EV",
                     "price": 200,
-                    "children": [
-                      {
-                        "label": "Pneu od nas ANO",
-                        "price": -250,
-                        "final": true,
-                        "children": [],
-                        "color": "#27ae60"
-                      },
-                      {
-                        "label": "Pneu od nas NE",
-                        "price": 0,
-                        "final": true,
-                        "children": [],
-                        "color": "#e74c3c"
-                      }
-                    ],
+                    "children": [],
                     "color": "#e67e22",
                     "icon": ""
                   }
@@ -400,44 +342,14 @@
                   {
                     "label": "Osobni vuz",
                     "price": 0,
-                    "children": [
-                      {
-                        "label": "Pneu od nas ANO",
-                        "price": -250,
-                        "final": true,
-                        "children": [],
-                        "color": "#27ae60"
-                      },
-                      {
-                        "label": "Pneu od nas NE",
-                        "price": 0,
-                        "final": true,
-                        "children": [],
-                        "color": "#e74c3c"
-                      }
-                    ],
+                    "children": [],
                     "color": "#27ae60",
                     "icon": ""
                   },
                   {
                     "label": "SUV / VAN / EV",
                     "price": 200,
-                    "children": [
-                      {
-                        "label": "Pneu od nas ANO",
-                        "price": -250,
-                        "final": true,
-                        "children": [],
-                        "color": "#27ae60"
-                      },
-                      {
-                        "label": "Pneu od nas NE",
-                        "price": 0,
-                        "final": true,
-                        "children": [],
-                        "color": "#e74c3c"
-                      }
-                    ],
+                    "children": [],
                     "color": "#e67e22",
                     "icon": ""
                   }
@@ -450,44 +362,14 @@
                   {
                     "label": "Osobni vuz",
                     "price": 0,
-                    "children": [
-                      {
-                        "label": "Pneu od nas ANO",
-                        "price": -250,
-                        "final": true,
-                        "children": [],
-                        "color": "#27ae60"
-                      },
-                      {
-                        "label": "Pneu od nas NE",
-                        "price": 0,
-                        "final": true,
-                        "children": [],
-                        "color": "#e74c3c"
-                      }
-                    ],
+                    "children": [],
                     "color": "#27ae60",
                     "icon": ""
                   },
                   {
                     "label": "SUV / VAN / EV",
                     "price": 200,
-                    "children": [
-                      {
-                        "label": "Pneu od nas ANO",
-                        "price": -250,
-                        "final": true,
-                        "children": [],
-                        "color": "#27ae60"
-                      },
-                      {
-                        "label": "Pneu od nas NE",
-                        "price": 0,
-                        "final": true,
-                        "children": [],
-                        "color": "#e74c3c"
-                      }
-                    ],
+                    "children": [],
                     "color": "#e67e22",
                     "icon": ""
                   }
@@ -500,44 +382,14 @@
                   {
                     "label": "Osobni vuz",
                     "price": 0,
-                    "children": [
-                      {
-                        "label": "Pneu od nas ANO",
-                        "price": -250,
-                        "final": true,
-                        "children": [],
-                        "color": "#27ae60"
-                      },
-                      {
-                        "label": "Pneu od nas NE",
-                        "price": 0,
-                        "final": true,
-                        "children": [],
-                        "color": "#e74c3c"
-                      }
-                    ],
+                    "children": [],
                     "color": "#27ae60",
                     "icon": ""
                   },
                   {
                     "label": "SUV / VAN / EV",
                     "price": 200,
-                    "children": [
-                      {
-                        "label": "Pneu od nas ANO",
-                        "price": -250,
-                        "final": true,
-                        "children": [],
-                        "color": "#27ae60"
-                      },
-                      {
-                        "label": "Pneu od nas NE",
-                        "price": 0,
-                        "final": true,
-                        "children": [],
-                        "color": "#e74c3c"
-                      }
-                    ],
+                    "children": [],
                     "color": "#e67e22",
                     "icon": ""
                   }
@@ -550,44 +402,14 @@
                   {
                     "label": "Osobni vuz",
                     "price": 0,
-                    "children": [
-                      {
-                        "label": "Pneu od nas ANO",
-                        "price": -250,
-                        "final": true,
-                        "children": [],
-                        "color": "#27ae60"
-                      },
-                      {
-                        "label": "Pneu od nas NE",
-                        "price": 0,
-                        "final": true,
-                        "children": [],
-                        "color": "#e74c3c"
-                      }
-                    ],
+                    "children": [],
                     "color": "#27ae60",
                     "icon": ""
                   },
                   {
                     "label": "SUV / VAN / EV",
                     "price": 200,
-                    "children": [
-                      {
-                        "label": "Pneu od nas ANO",
-                        "price": -250,
-                        "final": true,
-                        "children": [],
-                        "color": "#27ae60"
-                      },
-                      {
-                        "label": "Pneu od nas NE",
-                        "price": 0,
-                        "final": true,
-                        "children": [],
-                        "color": "#e74c3c"
-                      }
-                    ],
+                    "children": [],
                     "color": "#e67e22",
                     "icon": ""
                   }
@@ -606,44 +428,14 @@
                   {
                     "label": "Osobni vuz",
                     "price": 0,
-                    "children": [
-                      {
-                        "label": "Pneu od nas ANO",
-                        "price": -250,
-                        "final": true,
-                        "children": [],
-                        "color": "#27ae60"
-                      },
-                      {
-                        "label": "Pneu od nas NE",
-                        "price": 0,
-                        "final": true,
-                        "children": [],
-                        "color": "#e74c3c"
-                      }
-                    ],
+                    "children": [],
                     "color": "#27ae60",
                     "icon": ""
                   },
                   {
                     "label": "SUV / VAN / EV",
                     "price": 200,
-                    "children": [
-                      {
-                        "label": "Pneu od nas ANO",
-                        "price": -250,
-                        "final": true,
-                        "children": [],
-                        "color": "#27ae60"
-                      },
-                      {
-                        "label": "Pneu od nas NE",
-                        "price": 0,
-                        "final": true,
-                        "children": [],
-                        "color": "#e74c3c"
-                      }
-                    ],
+                    "children": [],
                     "color": "#e67e22",
                     "icon": ""
                   }
@@ -656,44 +448,14 @@
                   {
                     "label": "Osobni vuz",
                     "price": 0,
-                    "children": [
-                      {
-                        "label": "Pneu od nas ANO",
-                        "price": -250,
-                        "final": true,
-                        "children": [],
-                        "color": "#27ae60"
-                      },
-                      {
-                        "label": "Pneu od nas NE",
-                        "price": 0,
-                        "final": true,
-                        "children": [],
-                        "color": "#e74c3c"
-                      }
-                    ],
+                    "children": [],
                     "color": "#27ae60",
                     "icon": ""
                   },
                   {
                     "label": "SUV / VAN / EV",
                     "price": 200,
-                    "children": [
-                      {
-                        "label": "Pneu od nas ANO",
-                        "price": -250,
-                        "final": true,
-                        "children": [],
-                        "color": "#27ae60"
-                      },
-                      {
-                        "label": "Pneu od nas NE",
-                        "price": 0,
-                        "final": true,
-                        "children": [],
-                        "color": "#e74c3c"
-                      }
-                    ],
+                    "children": [],
                     "color": "#e67e22",
                     "icon": ""
                   }
@@ -706,44 +468,14 @@
                   {
                     "label": "Osobni vuz",
                     "price": 0,
-                    "children": [
-                      {
-                        "label": "Pneu od nas ANO",
-                        "price": -250,
-                        "final": true,
-                        "children": [],
-                        "color": "#27ae60"
-                      },
-                      {
-                        "label": "Pneu od nas NE",
-                        "price": 0,
-                        "final": true,
-                        "children": [],
-                        "color": "#e74c3c"
-                      }
-                    ],
+                    "children": [],
                     "color": "#27ae60",
                     "icon": ""
                   },
                   {
                     "label": "SUV / VAN / EV",
                     "price": 200,
-                    "children": [
-                      {
-                        "label": "Pneu od nas ANO",
-                        "price": -250,
-                        "final": true,
-                        "children": [],
-                        "color": "#27ae60"
-                      },
-                      {
-                        "label": "Pneu od nas NE",
-                        "price": 0,
-                        "final": true,
-                        "children": [],
-                        "color": "#e74c3c"
-                      }
-                    ],
+                    "children": [],
                     "color": "#e67e22",
                     "icon": ""
                   }
@@ -756,44 +488,14 @@
                   {
                     "label": "Osobni vuz",
                     "price": 0,
-                    "children": [
-                      {
-                        "label": "Pneu od nas ANO",
-                        "price": -250,
-                        "final": true,
-                        "children": [],
-                        "color": "#27ae60"
-                      },
-                      {
-                        "label": "Pneu od nas NE",
-                        "price": 0,
-                        "final": true,
-                        "children": [],
-                        "color": "#e74c3c"
-                      }
-                    ],
+                    "children": [],
                     "color": "#27ae60",
                     "icon": ""
                   },
                   {
                     "label": "SUV / VAN / EV",
                     "price": 200,
-                    "children": [
-                      {
-                        "label": "Pneu od nas ANO",
-                        "price": -250,
-                        "final": true,
-                        "children": [],
-                        "color": "#27ae60"
-                      },
-                      {
-                        "label": "Pneu od nas NE",
-                        "price": 0,
-                        "final": true,
-                        "children": [],
-                        "color": "#e74c3c"
-                      }
-                    ],
+                    "children": [],
                     "color": "#e67e22",
                     "icon": ""
                   }
@@ -806,44 +508,14 @@
                   {
                     "label": "Osobni vuz",
                     "price": 0,
-                    "children": [
-                      {
-                        "label": "Pneu od nas ANO",
-                        "price": -250,
-                        "final": true,
-                        "children": [],
-                        "color": "#27ae60"
-                      },
-                      {
-                        "label": "Pneu od nas NE",
-                        "price": 0,
-                        "final": true,
-                        "children": [],
-                        "color": "#e74c3c"
-                      }
-                    ],
+                    "children": [],
                     "color": "#27ae60",
                     "icon": ""
                   },
                   {
                     "label": "SUV / VAN / EV",
                     "price": 200,
-                    "children": [
-                      {
-                        "label": "Pneu od nas ANO",
-                        "price": -250,
-                        "final": true,
-                        "children": [],
-                        "color": "#27ae60"
-                      },
-                      {
-                        "label": "Pneu od nas NE",
-                        "price": 0,
-                        "final": true,
-                        "children": [],
-                        "color": "#e74c3c"
-                      }
-                    ],
+                    "children": [],
                     "color": "#e67e22",
                     "icon": ""
                   }
@@ -853,7 +525,13 @@
             "color": "#FF9800"
           }
         ]
-      }
+      },
+      "_runId": 1774009694060,
+      "_formData": {},
+      "fields": [],
+      "priceLabel": "",
+      "protocol": false,
+      "signature": false
     },
     {
       "name": "Prezuti sada za sadu",
@@ -1244,7 +922,9 @@
             "color": "#9C27B0"
           }
         ]
-      }
+      },
+      "_runId": 1774008846513,
+      "_formData": {}
     },
     {
       "name": "Dilci ukony",
