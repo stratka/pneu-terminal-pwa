@@ -1541,7 +1541,8 @@
             "color": "#455A64"
           }
         ]
-      }
+      },
+      "_runId": 1774013453193
     },
     {
       "name": "Uskladněni pneu",
@@ -1673,5 +1674,16 @@
       }
     }
   ],
-  "pinnedItems": []
+  "pinnedItems": [
+    {
+      "name": "Olej a filtry",
+      "price": 0,
+      "icon": "default",
+      "color": "#FF9800",
+      "source": "custom:Dilci ukony",
+      "treePath": [
+        "Olej a filtry"
+      ]
+    }
+  ]
 }
