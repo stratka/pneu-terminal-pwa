@@ -3031,26 +3031,10 @@ async function init() {
     window.location.reload();
   };
 
-  // Service Worker s automatickou aktualizaci
+  // Service Worker — pouze registrace, zadna automaticka aktualizace
+  // Aktualizace probiha jen po kliknuti na tlacitko aktualizace
   if ('serviceWorker' in navigator) {
-    const reg = await navigator.serviceWorker.register('./sw.js').catch(() => null);
-    if (reg) {
-      // Zkontrolovat aktualizaci hned
-      reg.update().catch(() => {});
-      // Kdyz se najde novy SW, automaticky reload
-      reg.addEventListener('updatefound', () => {
-        const newSW = reg.installing;
-        if (newSW) {
-          newSW.addEventListener('statechange', () => {
-            if (newSW.state === 'activated') {
-              window.location.reload();
-            }
-          });
-        }
-      });
-      // Kontrolovat aktualizace kazdych 60 sekund
-      setInterval(() => reg.update().catch(() => {}), 60000);
-    }
+    await navigator.serviceWorker.register('./sw.js').catch(() => null);
   }
 }
 
