@@ -135,13 +135,8 @@ const TILE_COLORS = [
 const DEFAULT_SERVICES = [
   {name:"Kompletni prezuti 4ks",price:0,icon:"pneumatika",color:"#2196F3",type:"wizard_komplet"},
   {name:"Prezuti sada za sadu",price:0,icon:"vyvazeni",color:"#4CAF50",type:"wizard_sada"},
-  {name:"Vymena oleje",price:1200,icon:"olej",color:"#9C27B0"},
   {name:"Oprava defektu",price:0,icon:"vymena",color:"#F44336",type:"wizard_defekt"},
   {name:"Dilci ukony",price:0,icon:"default",color:"#795548",type:"wizard_dilci"},
-  {name:"Kontrola brzd",price:350,icon:"brzdy",color:"#00BCD4"},
-  {name:"Diagnostika",price:600,icon:"diagnostika",color:"#795548"},
-  {name:"Plneni klimatizace",price:900,icon:"klima",color:"#607D8B"},
-  {name:"Uskladneni pneu",price:500,icon:"uskladneni",color:"#E91E63"},
 ];
 
 const DEFAULT_SETTINGS = {
@@ -195,12 +190,14 @@ const DEFAULT_PRICING = {
         {name:"Sleva prezuti 4ks bez vyvazeni",price:-150},
       ],
       "Olej a filtry":[
+        {name:"Vymena oleje komplet",price:1200},
         {name:"Vymena oleje a filtru",price:1000},
         {name:"Vymena filtru (vzduch)",price:300},
         {name:"Vymena filtru (kabina/palivo)",price:500},
         {name:"Vymena akumulatoru",price:300},
       ],
       "Brzdy":[
+        {name:"Kontrola brzd",price:350},
         {name:"Vymena kotoucu + desticky (naprava)",price:1000},
         {name:"Vymena brzd. desticek",price:750},
         {name:"Udrzba brzd",price:750},
@@ -216,7 +213,11 @@ const DEFAULT_PRICING = {
         {name:"Cisteni 4h (velmi hrube)",price:4000},
         {name:"Cisteni ozonem",price:500},
       ],
+      "Klimatizace R134a":[
+        {name:"Plneni klimatizace",price:900},
+      ],
       "Testy":[
+        {name:"Diagnostika",price:600},
         {name:"Test brzdove kapaliny",price:200},
         {name:"Test akumulatoru a alternatoru",price:300},
         {name:"Cteni chyb z jednotky",price:300},

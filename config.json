@@ -15,12 +15,6 @@
       "type": "wizard_sada"
     },
     {
-      "name": "Vymena oleje",
-      "price": 1200,
-      "icon": "olej",
-      "color": "#9C27B0"
-    },
-    {
       "name": "Oprava defektu",
       "price": 0,
       "icon": "vymena",
@@ -33,24 +27,6 @@
       "icon": "default",
       "color": "#795548",
       "type": "wizard_dilci"
-    },
-    {
-      "name": "Kontrola brzd",
-      "price": 350,
-      "icon": "brzdy",
-      "color": "#00BCD4"
-    },
-    {
-      "name": "Diagnostika",
-      "price": 600,
-      "icon": "diagnostika",
-      "color": "#795548"
-    },
-    {
-      "name": "Plneni klimatizace",
-      "price": 900,
-      "icon": "klima",
-      "color": "#607D8B"
     }
   ],
   "settings": {
@@ -165,6 +141,10 @@
         ],
         "Olej a filtry": [
           {
+            "name": "Vymena oleje komplet",
+            "price": 1200
+          },
+          {
             "name": "Vymena oleje a filtru",
             "price": 1000
           },
@@ -182,6 +162,10 @@
           }
         ],
         "Brzdy": [
+          {
+            "name": "Kontrola brzd",
+            "price": 350
+          },
           {
             "name": "Vymena kotoucu + desticky (naprava)",
             "price": 1000
@@ -227,7 +211,17 @@
             "price": 500
           }
         ],
+        "Klimatizace R134a": [
+          {
+            "name": "Plneni klimatizace",
+            "price": 900
+          }
+        ],
         "Testy": [
+          {
+            "name": "Diagnostika",
+            "price": 600
+          },
           {
             "name": "Test brzdove kapaliny",
             "price": 200
