@@ -100,7 +100,6 @@ async function revertConfigOnGitHub() {
     settings = cfg.settings || settings;
     pricing = cfg.pricing || pricing;
     customWizards = cfg.customWizards || customWizards;
-    pinnedItems = cfg.pinnedItems || pinnedItems;
     renderTiles(); renderCart();
     return true;
   } catch(e) { alert('Chyba: ' + e.message); return false; }
@@ -3011,7 +3010,6 @@ async function init() {
       settings = cfg.settings || DEFAULT_SETTINGS;
       pricing  = cfg.pricing || DEFAULT_PRICING;
       customWizards = cfg.customWizards || [];
-      pinnedItems = cfg.pinnedItems || [];
       configLoaded = true;
       // Ulozit do IndexedDB jako offline cache
       await Promise.all([
@@ -3019,7 +3017,6 @@ async function init() {
         db.setKV('settings', settings),
         db.setKV('pricing', pricing),
         db.setKV('customWizards', customWizards),
-        db.setKV('pinnedItems', pinnedItems),
       ]);
     }
   } catch(e) { /* offline nebo chyba site */ }
@@ -3030,8 +3027,10 @@ async function init() {
     settings = await db.getKV('settings', DEFAULT_SETTINGS);
     pricing  = await db.getKV('pricing', DEFAULT_PRICING);
     customWizards = await db.getKV('customWizards', []);
-    pinnedItems = await db.getKV('pinnedItems', []);
   }
+
+  // Pripnute polozky vzdy lokalne (kazde zarizeni ma sve)
+  pinnedItems = await db.getKV('pinnedItems', []);
 
   // Nacist fonty pro PDF
   try {
