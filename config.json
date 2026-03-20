@@ -1700,9 +1700,9 @@
       }
     },
     {
-      "name": "Novy wizard",
+      "name": "Slevy",
       "icon": "default",
-      "color": "#607D8B",
+      "color": "#607d8b",
       "tree": {
         "label": "Hlavni",
         "children": [
@@ -1726,7 +1726,10 @@
           }
         ]
       },
-      "fields": []
+      "fields": [],
+      "priceLabel": "",
+      "protocol": false,
+      "signature": false
     }
   ],
   "pinnedItems": [
