@@ -2150,10 +2150,9 @@ function openAdminPanel() {
   div.innerHTML = `
     <h2>ADMINISTRACE</h2>
     <div class="admin-tabs">
-      <button class="admin-tab active" data-tab="services">Sluzby</button>
+      <button class="admin-tab active" data-tab="wizards">Wizardy</button>
       <button class="admin-tab" data-tab="firm">Udaje firmy</button>
       <button class="admin-tab" data-tab="pricing">Ceniky prezuti</button>
-      <button class="admin-tab" data-tab="wizards">Vlastni wizardy</button>
       <button class="admin-tab" data-tab="orders">Zakazky</button>
       <button class="admin-tab" data-tab="invoices">Faktury</button>
       <button class="admin-tab" data-tab="blank_protocol">Prazdny protokol</button>
@@ -2177,7 +2176,7 @@ function openAdminPanel() {
     };
   });
 
-  renderAdminTab('services', div.querySelector('#admin-content'), overlay);
+  renderAdminTab('wizards', div.querySelector('#admin-content'), overlay);
 
   div.querySelector('#btn-revert-github').onclick = async () => {
     const btn = div.querySelector('#btn-revert-github');
@@ -2208,179 +2207,13 @@ function openAdminPanel() {
 
 function renderAdminTab(tabName, container, overlay) {
   container.innerHTML = '';
-  if (tabName === 'services') renderAdminServices(container, overlay);
-  else if (tabName === 'firm') renderAdminFirm(container);
+  if (tabName === 'firm') renderAdminFirm(container);
   else if (tabName === 'pricing') renderAdminPricing(container);
   else if (tabName === 'wizards') renderAdminWizards(container);
   else if (tabName === 'orders') renderAdminOrders(container);
   else if (tabName === 'invoices') renderAdminInvoices(container);
   else if (tabName === 'blank_protocol') renderAdminBlankProtocol(container);
   else if (tabName === 'password') renderAdminPassword(container);
-}
-
-function renderAdminServices(container, overlay) {
-  let selectedIdx = -1;
-
-  container.innerHTML = `
-    <div style="display:flex;gap:16px;">
-      <div style="flex:1;">
-        <div style="font-weight:700;margin-bottom:6px;">Sluzby:</div>
-        <div class="admin-svc-list" id="admin-svc-list"></div>
-      </div>
-      <div style="width:300px;">
-        <div style="font-weight:700;margin-bottom:6px;">Uprava sluzby:</div>
-        <div class="admin-field"><label>Nazev:</label><input type="text" id="adm-name"></div>
-        <div class="admin-field"><label>Cena (Kc):</label><input type="number" id="adm-price"></div>
-        <div class="admin-field" id="adm-wizard-info" style="font-size:11px;color:#e67e22;font-style:italic;"></div>
-        <div class="admin-field"><label>Ikona:</label><div class="icon-picker" id="adm-icons"></div></div>
-        <div class="admin-field">
-          <label>Barva dlazdice:</label>
-          <div><span class="color-preview" id="adm-color-preview"></span>
-          <input type="color" id="adm-color" style="vertical-align:middle;"></div>
-        </div>
-        <div style="display:flex;gap:6px;margin-top:12px;">
-          <button class="btn btn-green" id="adm-save">Ulozit</button>
-          <button class="btn btn-blue" id="adm-add">Pridat novou</button>
-          <button class="btn btn-red" id="adm-delete">Smazat</button>
-        </div>
-      </div>
-    </div>
-  `;
-
-  // Icon picker
-  const iconPicker = container.querySelector('#adm-icons');
-  let selectedIcon = 'default';
-  function renderIcons() {
-    iconPicker.innerHTML = '';
-    for (const [key, char] of Object.entries(SERVICE_ICONS)) {
-      const el = document.createElement('div');
-      el.className = 'icon-option' + (key === selectedIcon ? ' selected' : '');
-      el.textContent = char;
-      el.onclick = () => { selectedIcon = key; renderIcons(); };
-      iconPicker.appendChild(el);
-    }
-  }
-  renderIcons();
-
-  // Color
-  const colorInput = container.querySelector('#adm-color');
-  const colorPreview = container.querySelector('#adm-color-preview');
-  colorInput.value = '#2196F3';
-  colorPreview.style.background = '#2196F3';
-  colorInput.oninput = () => { colorPreview.style.background = colorInput.value; };
-
-  function renderList() {
-    const list = container.querySelector('#admin-svc-list');
-    list.innerHTML = '';
-    services.forEach((svc, i) => {
-      const el = document.createElement('div');
-      el.className = 'admin-svc-item' + (i === selectedIdx ? ' selected' : '');
-      el.style.cssText = 'display:flex;align-items:center;gap:6px;';
-
-      // Sipky pro zmenu poradi
-      const arrows = document.createElement('span');
-      arrows.style.cssText = 'display:flex;flex-direction:column;flex-shrink:0;';
-      const upBtn = document.createElement('button');
-      upBtn.textContent = '▲';
-      upBtn.style.cssText = 'background:none;border:none;color:#aaa;cursor:pointer;font-size:10px;padding:0 2px;line-height:1;';
-      upBtn.onclick = async (e) => {
-        e.stopPropagation();
-        if (i === 0) return;
-        [services[i-1], services[i]] = [services[i], services[i-1]];
-        if (selectedIdx === i) selectedIdx = i - 1;
-        else if (selectedIdx === i - 1) selectedIdx = i;
-        await db.setKV('services', services);
-        renderList(); renderTiles();
-      };
-      const downBtn = document.createElement('button');
-      downBtn.textContent = '▼';
-      downBtn.style.cssText = 'background:none;border:none;color:#aaa;cursor:pointer;font-size:10px;padding:0 2px;line-height:1;';
-      downBtn.onclick = async (e) => {
-        e.stopPropagation();
-        if (i >= services.length - 1) return;
-        [services[i], services[i+1]] = [services[i+1], services[i]];
-        if (selectedIdx === i) selectedIdx = i + 1;
-        else if (selectedIdx === i + 1) selectedIdx = i;
-        await db.setKV('services', services);
-        renderList(); renderTiles();
-      };
-      arrows.appendChild(upBtn);
-      arrows.appendChild(downBtn);
-      el.appendChild(arrows);
-
-      const label = document.createElement('span');
-      label.style.cssText = 'flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
-      label.textContent = `${iconChar(svc.icon)}  ${svc.name}  -  ${svc.price} Kc`;
-      el.appendChild(label);
-
-      el.onclick = () => {
-        selectedIdx = i;
-        container.querySelector('#adm-name').value = svc.name;
-        const svcType = svc.type || '';
-        if (svcType.startsWith('wizard_')) {
-          container.querySelector('#adm-price').value = '';
-          container.querySelector('#adm-price').disabled = true;
-          container.querySelector('#adm-wizard-info').textContent = "Ceny nastavite v tabu 'Ceniky prezuti'";
-        } else {
-          container.querySelector('#adm-price').value = svc.price;
-          container.querySelector('#adm-price').disabled = false;
-          container.querySelector('#adm-wizard-info').textContent = '';
-        }
-        selectedIcon = svc.icon || 'default';
-        renderIcons();
-        colorInput.value = svc.color || '#2196F3';
-        colorPreview.style.background = svc.color || '#2196F3';
-        renderList();
-      };
-      list.appendChild(el);
-    });
-  }
-  renderList();
-
-  container.querySelector('#adm-save').onclick = async () => {
-    if (selectedIdx < 0) { alert('Vyberte sluzbu.'); return; }
-    const svc = services[selectedIdx];
-    svc.name = container.querySelector('#adm-name').value.trim();
-    if (!(svc.type || '').startsWith('wizard_')) {
-      svc.price = parseInt(container.querySelector('#adm-price').value) || 0;
-    }
-    svc.icon = selectedIcon;
-    svc.color = colorInput.value;
-    await db.setKV('services', services);
-    renderList();
-    renderTiles();
-    alert('Sluzba ulozena.');
-  };
-
-  container.querySelector('#adm-add').onclick = async () => {
-    const name = container.querySelector('#adm-name').value.trim();
-    if (!name) { alert('Zadejte nazev.'); return; }
-    const price = parseInt(container.querySelector('#adm-price').value) || 0;
-    services.push({ name, price, icon: selectedIcon, color: colorInput.value });
-    await db.setKV('services', services);
-    renderList();
-    renderTiles();
-    alert(`Sluzba '${name}' pridana.`);
-  };
-
-  container.querySelector('#adm-delete').onclick = async () => {
-    if (selectedIdx < 0) return;
-    if (!confirm(`Smazat sluzbu '${services[selectedIdx].name}'?`)) return;
-    services.splice(selectedIdx, 1);
-    selectedIdx = -1;
-    // Opravit kosik
-    const newCart = {};
-    for (const [k, v] of Object.entries(cart)) {
-      const ki = parseInt(k);
-      if (ki < selectedIdx) newCart[ki] = v;
-      else if (ki > selectedIdx) newCart[ki - 1] = v;
-    }
-    cart = newCart;
-    await db.setKV('services', services);
-    renderList();
-    renderTiles();
-    renderCart();
-  };
 }
 
 function renderAdminFirm(container) {
