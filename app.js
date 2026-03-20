@@ -794,7 +794,7 @@ function renderTiles() {
       name: pin.name,
       icon: pin.icon ? iconChar(pin.icon) : '\u2B50',
       color: pin.color || '#607D8B',
-      priceText: `${pin.price} Kc`,
+      priceText: pin.price ? `${pin.price} Kc` : '',
       pinned: true,
       pinSource: pin.source,
       onclick: () => {
