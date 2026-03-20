@@ -195,7 +195,7 @@ const DEFAULT_SETTINGS = {
   banka_bic:"GIBACZPX",
   mena:"CZK",
   dph_sazba:21,
-  admin_password_hash:"650fe8a2661c68441c056f5c680a09a445ba87d1462c8e686c6533c6183d343d",
+  admin_password_hash:"c74dfc766e05ec9c8aea31b62d06171e959c727100423917d2f52943dc81ca3b",
   camera_url:"",
 };
 
@@ -2499,6 +2499,23 @@ function renderAdminWizards(container) {
     treeDiv.className = 'tree-builder';
     editorDiv.appendChild(treeDiv);
 
+    // Defaultne sbalit vsechny uzly s detmi (pokud jeste nemaji stav)
+    function collapseAll(node, wizName, parentIdx, level) {
+      if (node.children && node.children.length) {
+        node.children.forEach((child, i) => {
+          if (child.children && child.children.length) {
+            const nodeId = `${wizName}_${i}_${level}_${child.label}`;
+            if (!_treeCollapsed._initialized || !_treeCollapsed._initialized.has(nodeId)) {
+              _treeCollapsed.add(nodeId);
+            }
+            collapseAll(child, wizName, i, level + 1);
+          }
+        });
+      }
+    }
+    if (!_treeCollapsed._initialized) _treeCollapsed._initialized = new Set();
+    collapseAll(wiz.tree, wiz.name, 0, 1);
+
     // Rovnou zobrazime deti korenoveho uzlu
     if (wiz.tree.children && wiz.tree.children.length) {
       wiz.tree.children.forEach((child, i) => {
@@ -2553,6 +2570,8 @@ function renderAdminWizards(container) {
     const toggleEl = div.querySelector('.node-toggle');
     if (hasChildren) {
       toggleEl.onclick = () => {
+        if (!_treeCollapsed._initialized) _treeCollapsed._initialized = new Set();
+        _treeCollapsed._initialized.add(nodeId);
         if (_treeCollapsed.has(nodeId)) {
           _treeCollapsed.delete(nodeId);
         } else {
