@@ -123,10 +123,11 @@ html, body {
 #photo-status { font-size: 11px; font-style: italic; color: var(--text-muted); }
 
 #btn-finish {
+  display: block;
   background: var(--accent-green);
-  border: none; color: #fff; font-size: 20px; font-weight: 700;
-  padding: 36px 18px; margin: 8px 10px 14px; border-radius: 10px;
-  cursor: pointer; width: calc(100% - 20px);
+  border: none; color: #fff; font-size: 18px; font-weight: 700;
+  padding: 14px 18px; margin: 8px 10px 14px; border-radius: 10px;
+  cursor: pointer; width: calc(100% - 20px); text-align: center;
 }
 #btn-finish:active { opacity: 0.85; }
 
