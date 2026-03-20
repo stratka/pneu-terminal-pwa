@@ -906,7 +906,9 @@
             "color": "#16a085"
           }
         ]
-      }
+      },
+      "_runId": 1774014119870,
+      "_formData": {}
     },
     {
       "name": "Oprava defektu",
@@ -1428,14 +1430,16 @@
                 "price": 100000000,
                 "icon": "",
                 "color": "#2196f3",
-                "children": []
+                "children": [],
+                "final": true
               },
               {
                 "label": "Výměna Brzdových kotoučů včetně destiček (obě nápravy)",
                 "price": 2000,
                 "icon": "",
                 "color": "#2196f3",
-                "children": []
+                "children": [],
+                "final": true
               }
             ],
             "color": "#F44336"
@@ -1559,10 +1563,18 @@
               }
             ],
             "color": "#455A64"
+          },
+          {
+            "label": "Výměna akumulátoru",
+            "price": 300,
+            "icon": "",
+            "color": "#2196f3",
+            "children": [],
+            "final": true
           }
         ]
       },
-      "_runId": 1774013817310,
+      "_runId": 1774014127495,
       "fields": []
     },
     {
