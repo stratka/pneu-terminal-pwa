@@ -2359,7 +2359,13 @@ function renderAdminWizards(container) {
   async function saveAndRender() {
     await db.setKV('customWizards', customWizards);
     renderTiles();
+    const editor = container.querySelector('#wiz-editor');
+    const scrollTop = editor ? editor.scrollTop : 0;
     render();
+    requestAnimationFrame(() => {
+      const editorAfter = container.querySelector('#wiz-editor');
+      if (editorAfter) editorAfter.scrollTop = scrollTop;
+    });
   }
 
   function renderWizardEditor(editorDiv, wiz) {
