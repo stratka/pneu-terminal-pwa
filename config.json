@@ -548,7 +548,7 @@
           }
         ]
       },
-      "_runId": 1774009694060,
+      "_runId": 1774013813246,
       "_formData": {},
       "fields": [],
       "priceLabel": "",
@@ -956,7 +956,7 @@
         "label": "Kategorie",
         "children": [
           {
-            "label": "Rozmerove ukony",
+            "label": "Demontáž/montáž",
             "children": [
               {
                 "label": "Demontaz + montaz 1ks disku z vozu",
@@ -1297,8 +1297,9 @@
                 ]
               }
             ],
-            "color": "#2196F3",
-            "icon": "vymena"
+            "color": "#2196f3",
+            "icon": "vymena",
+            "price": 0
           },
           {
             "label": "TPMS",
@@ -1340,10 +1341,14 @@
             "label": "Manipulace",
             "children": [
               {
-                "label": "Prevzeti 1ks pneu k likvidaci",
+                "label": "Likvidace pneu",
                 "price": 25,
                 "final": true,
-                "children": []
+                "children": [],
+                "icon": "",
+                "color": "#2196f3",
+                "multiply": true,
+                "unit": "ks"
               },
               {
                 "label": "Sleva prezuti 4ks bez vyvazeni",
@@ -1358,12 +1363,6 @@
             "label": "Olej a filtry",
             "children": [
               {
-                "label": "Vymena oleje komplet",
-                "price": 1200,
-                "final": true,
-                "children": []
-              },
-              {
                 "label": "Vymena oleje a filtru",
                 "price": 1000,
                 "final": true,
@@ -1376,16 +1375,28 @@
                 "children": []
               },
               {
-                "label": "Vymena filtru (kabina/palivo)",
+                "label": "Vymena filtru (kabina)",
                 "price": 500,
                 "final": true,
-                "children": []
+                "children": [],
+                "icon": "",
+                "color": "#2196f3"
               },
               {
-                "label": "Vymena akumulatoru",
-                "price": 300,
+                "label": "Vymena filtru (palivo)",
+                "price": 500,
                 "final": true,
-                "children": []
+                "children": [],
+                "icon": "",
+                "color": "#2196f3"
+              },
+              {
+                "label": "Výměna všech filtrů",
+                "price": 1300,
+                "icon": "",
+                "color": "#2196f3",
+                "children": [],
+                "final": true
               }
             ],
             "color": "#FF9800"
@@ -1415,6 +1426,20 @@
                 "label": "Udrzba brzd",
                 "price": 750,
                 "final": true,
+                "children": []
+              },
+              {
+                "label": "Výměna brzdové kapaliny",
+                "price": 100000000,
+                "icon": "",
+                "color": "#2196f3",
+                "children": []
+              },
+              {
+                "label": "Výměna Brzdových kotoučů včetně destiček (obě nápravy)",
+                "price": 2000,
+                "icon": "",
+                "color": "#2196f3",
                 "children": []
               }
             ],
@@ -1541,7 +1566,9 @@
             "color": "#455A64"
           }
         ]
-      }
+      },
+      "_runId": 1774014680988,
+      "fields": []
     },
     {
       "name": "Uskladněni pneu",
@@ -1673,5 +1700,16 @@
       }
     }
   ],
-  "pinnedItems": []
+  "pinnedItems": [
+    {
+      "name": "Olej a filtry",
+      "price": 0,
+      "icon": "default",
+      "color": "#FF9800",
+      "source": "custom:Dilci ukony",
+      "treePath": [
+        "Olej a filtry"
+      ]
+    }
+  ]
 }
