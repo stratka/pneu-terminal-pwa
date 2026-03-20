@@ -107,6 +107,56 @@ async function revertConfigOnGitHub() {
 }
 
 // ---------------------------------------------------------------------------
+// Zaloha objednavek na GitHub (privatni repo)
+// ---------------------------------------------------------------------------
+const GITHUB_DATA_REPO = 'stratka/pneu-terminal-data';
+
+async function backupOrderToGitHub(order) {
+  if (!GITHUB_TOKEN) return; // bez tokenu nezalohujeme
+
+  try {
+    const date = new Date();
+    const fileName = `orders/${date.getFullYear()}/${String(date.getMonth()+1).padStart(2,'0')}/${Date.now()}.json`;
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify(order, null, 2))));
+
+    const resp = await fetch(`https://api.github.com/repos/${GITHUB_DATA_REPO}/contents/${fileName}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `token ${GITHUB_TOKEN}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        message: `Objednavka ${order.spz || ''} ${order.datum || ''}`,
+        content
+      })
+    });
+
+    if (resp.ok) {
+      order._backed_up = true;
+    } else {
+      order._backed_up = false;
+    }
+  } catch(e) {
+    order._backed_up = false;
+  }
+}
+
+async function backupPendingOrders() {
+  if (!GITHUB_TOKEN) return;
+  const orders = await db.getOrders();
+  for (const order of orders) {
+    if (!order._backed_up) {
+      await backupOrderToGitHub(order);
+      if (order._backed_up && order.id) {
+        // Aktualizovat v IndexedDB
+        const tx = db._db.transaction('orders', 'readwrite');
+        tx.objectStore('orders').put(order);
+      }
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Ikony
 // ---------------------------------------------------------------------------
 const SERVICE_ICONS = {
@@ -1819,13 +1869,24 @@ function showFinishDialog() {
     }
 
     // Ulozit zakazku
-    await db.addOrder({
+    const order = {
       datum: nowStr(),
       spz,
       polozky: items,
       celkem: total,
       faktura: invoiceNo,
       stav: 'dokoncena',
+      _backed_up: false,
+    };
+    const orderId = await db.addOrder(order);
+    order.id = orderId;
+
+    // Zalohovat na GitHub (async, nezdrzuje UI)
+    backupOrderToGitHub(order).then(() => {
+      if (order._backed_up && order.id) {
+        const tx = db._db.transaction('orders', 'readwrite');
+        tx.objectStore('orders').put(order);
+      }
     });
 
     clearCart();
@@ -3069,6 +3130,9 @@ async function init() {
 
   renderTiles();
   renderCart();
+
+  // Dozalohovat nezalohovane objednavky (offline fronta)
+  backupPendingOrders();
 
   // Event listenery
   document.getElementById('btn-clear-cart').onclick = clearCart;
