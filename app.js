@@ -724,12 +724,14 @@ function isPinned(source, name) {
   return pinnedItems.some(p => p.source === source && p.name === name);
 }
 
-async function togglePin(source, name, price, icon, color) {
+async function togglePin(source, name, price, icon, color, treePath) {
   const idx = pinnedItems.findIndex(p => p.source === source && p.name === name);
   if (idx >= 0) {
     pinnedItems.splice(idx, 1);
   } else {
-    pinnedItems.push({ name, price, icon: icon || '', color: color || '#607D8B', source });
+    const pin = { name, price, icon: icon || '', color: color || '#607D8B', source };
+    if (treePath) pin.treePath = treePath;
+    pinnedItems.push(pin);
   }
   await db.setKV('pinnedItems', pinnedItems);
   renderTiles();
@@ -796,6 +798,12 @@ function renderTiles() {
       pinned: true,
       pinSource: pin.source,
       onclick: () => {
+        // Otevrit wizard od pripnuteho mista
+        if (pin.treePath && pin.source.startsWith('custom:')) {
+          const wizName = pin.source.replace('custom:', '');
+          const wiz = customWizards.find(w => w.name === wizName);
+          if (wiz) { runCustomWizard(wiz, pin.treePath); return; }
+        }
         customItems.push({ name: pin.name, price: pin.price, qty: 1, detail: pin.source });
         renderCart();
       }
@@ -1352,7 +1360,7 @@ function showDilciWizard() {
 // ---------------------------------------------------------------------------
 // Custom Wizard - pruchod stromem (scitani cen)
 // ---------------------------------------------------------------------------
-function runCustomWizard(wiz) {
+function runCustomWizard(wiz, startPath) {
   // Persistent overlay pro cely wizard
   let wizOverlay = null;
 
@@ -1579,6 +1587,7 @@ function runCustomWizard(wiz) {
         const accTotal = accumulated.reduce((s, a) => s + a.price, 0) + cPrice;
         const pinName = cLabel;
         const pinPrice = accTotal > 0 ? accTotal : cPrice;
+        const pinTreePath = [...path, cLabel];
         let starHtml = '';
         if (canPin) {
           const pinned = isPinned(pinSource, pinName);
@@ -1597,7 +1606,7 @@ function runCustomWizard(wiz) {
         if (starEl) {
           starEl.onclick = (e) => {
             e.stopPropagation();
-            togglePin(pinSource, pinName, pinPrice, child.icon || wiz.icon, tileColor);
+            togglePin(pinSource, pinName, pinPrice, child.icon || wiz.icon, tileColor, pinTreePath);
             const nowPinned = isPinned(pinSource, pinName);
             starEl.textContent = nowPinned ? '⭐' : '☆';
             starEl.style.opacity = nowPinned ? '1' : '0.4';
@@ -1781,7 +1790,21 @@ function runCustomWizard(wiz) {
 
   // Unikatni ID pro tuto session wizardu
   wiz._runId = Date.now();
-  showStep(wiz.tree, [], [], wiz.name, 1);
+
+  // Pokud je zadana startPath, navigovat na uzel ve stromu
+  if (startPath && startPath.length) {
+    let node = wiz.tree;
+    let accumulated = [];
+    for (const label of startPath) {
+      const child = (node.children || []).find(c => c.label === label);
+      if (!child) break;
+      if (child.price) accumulated.push({ label: child.label, price: child.price });
+      node = child;
+    }
+    showStep(node, accumulated, startPath, node.label || wiz.name, startPath.length + 1);
+  } else {
+    showStep(wiz.tree, [], [], wiz.name, 1);
+  }
 }
 
 // ---------------------------------------------------------------------------
