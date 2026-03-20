@@ -2166,6 +2166,7 @@ function openAdminPanel() {
     </div>
     <div style="display:flex;justify-content:flex-end;gap:8px;margin:8px 0;">
       <button class="btn btn-red" id="btn-revert-github" style="font-size:13px;padding:8px 16px;">⏪ VRATIT POSLEDNI ZMENU</button>
+      <button class="btn btn-blue" id="btn-save-local" style="font-size:15px;padding:10px 24px;">ULOZIT</button>
       <button class="btn btn-green" id="btn-push-github" style="font-size:15px;padding:10px 24px;">APLIKOVAT NA GITHUB</button>
     </div>
     <div class="admin-content" id="admin-content"></div>
@@ -2194,6 +2195,20 @@ function openAdminPanel() {
     } else {
       btn.disabled = false;
     }
+  };
+  div.querySelector('#btn-save-local').onclick = async () => {
+    const btn = div.querySelector('#btn-save-local');
+    btn.disabled = true;
+    await Promise.all([
+      db.setKV('services', services),
+      db.setKV('settings', settings),
+      db.setKV('pricing', pricing),
+      db.setKV('customWizards', customWizards),
+      db.setKV('pinnedItems', pinnedItems),
+    ]);
+    renderTiles();
+    btn.textContent = 'ULOZENO ✓';
+    setTimeout(() => { btn.textContent = 'ULOZIT'; btn.disabled = false; }, 2000);
   };
   div.querySelector('#btn-push-github').onclick = async () => {
     const btn = div.querySelector('#btn-push-github');
