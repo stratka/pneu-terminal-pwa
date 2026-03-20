@@ -548,7 +548,7 @@
           }
         ]
       },
-      "_runId": 1774009694060,
+      "_runId": 1774013813246,
       "_formData": {},
       "fields": [],
       "priceLabel": "",
@@ -1358,12 +1358,6 @@
             "label": "Olej a filtry",
             "children": [
               {
-                "label": "Vymena oleje komplet",
-                "price": 1200,
-                "final": true,
-                "children": []
-              },
-              {
                 "label": "Vymena oleje a filtru",
                 "price": 1000,
                 "final": true,
@@ -1376,16 +1370,28 @@
                 "children": []
               },
               {
-                "label": "Vymena filtru (kabina/palivo)",
+                "label": "Vymena filtru (kabina)",
                 "price": 500,
                 "final": true,
-                "children": []
+                "children": [],
+                "icon": "",
+                "color": "#2196f3"
               },
               {
-                "label": "Vymena akumulatoru",
-                "price": 300,
+                "label": "Vymena filtru (palivo)",
+                "price": 500,
                 "final": true,
-                "children": []
+                "children": [],
+                "icon": "",
+                "color": "#2196f3"
+              },
+              {
+                "label": "Výměna všech filtrů",
+                "price": 1300,
+                "icon": "",
+                "color": "#2196f3",
+                "children": [],
+                "final": true
               }
             ],
             "color": "#FF9800"
@@ -1415,6 +1421,20 @@
                 "label": "Udrzba brzd",
                 "price": 750,
                 "final": true,
+                "children": []
+              },
+              {
+                "label": "Výměna brzdové kapaliny",
+                "price": 100000000,
+                "icon": "",
+                "color": "#2196f3",
+                "children": []
+              },
+              {
+                "label": "Výměna Brzdových kotoučů včetně destiček (obě nápravy)",
+                "price": 2000,
+                "icon": "",
+                "color": "#2196f3",
                 "children": []
               }
             ],
@@ -1542,7 +1562,8 @@
           }
         ]
       },
-      "_runId": 1774013453193
+      "_runId": 1774013817310,
+      "fields": []
     },
     {
       "name": "Uskladněni pneu",
