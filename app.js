@@ -1580,8 +1580,8 @@ function runCustomWizard(wiz, startPath) {
           transition:transform 0.1s; position:relative;
         `;
 
-        // Hvezdicka pro pripnuti — na vsechny dlazdice (ne multiply)
-        const canPin = !child.multiply;
+        // Hvezdicka pro pripnuti — na vsechny dlazdice
+        const canPin = true;
         const pinSource = `custom:${wiz.name}`;
         const accTotal = accumulated.reduce((s, a) => s + a.price, 0) + cPrice;
         const pinName = cLabel;
