@@ -906,9 +906,7 @@
             "color": "#16a085"
           }
         ]
-      },
-      "_runId": 1774014119870,
-      "_formData": {}
+      }
     },
     {
       "name": "Oprava defektu",
@@ -958,7 +956,7 @@
         "label": "Kategorie",
         "children": [
           {
-            "label": "Rozmerove ukony",
+            "label": "Demontáž/montáž",
             "children": [
               {
                 "label": "Demontaz + montaz 1ks disku z vozu",
@@ -1299,8 +1297,9 @@
                 ]
               }
             ],
-            "color": "#2196F3",
-            "icon": "vymena"
+            "color": "#2196f3",
+            "icon": "vymena",
+            "price": 0
           },
           {
             "label": "TPMS",
@@ -1430,16 +1429,14 @@
                 "price": 100000000,
                 "icon": "",
                 "color": "#2196f3",
-                "children": [],
-                "final": true
+                "children": []
               },
               {
                 "label": "Výměna Brzdových kotoučů včetně destiček (obě nápravy)",
                 "price": 2000,
                 "icon": "",
                 "color": "#2196f3",
-                "children": [],
-                "final": true
+                "children": []
               }
             ],
             "color": "#F44336"
@@ -1563,18 +1560,10 @@
               }
             ],
             "color": "#455A64"
-          },
-          {
-            "label": "Výměna akumulátoru",
-            "price": 300,
-            "icon": "",
-            "color": "#2196f3",
-            "children": [],
-            "final": true
           }
         ]
       },
-      "_runId": 1774014127495,
+      "_runId": 1774014374289,
       "fields": []
     },
     {
