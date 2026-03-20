@@ -283,7 +283,8 @@
                     "price": 0,
                     "children": [],
                     "color": "#27ae60",
-                    "icon": ""
+                    "icon": "",
+                    "final": true
                   },
                   {
                     "label": "SUV / VAN / EV",
@@ -305,7 +306,8 @@
                       }
                     ],
                     "color": "#e67e22",
-                    "icon": ""
+                    "icon": "",
+                    "final": true
                   }
                 ]
               }
@@ -324,14 +326,16 @@
                     "price": 0,
                     "children": [],
                     "color": "#27ae60",
-                    "icon": ""
+                    "icon": "",
+                    "final": true
                   },
                   {
                     "label": "SUV / VAN / EV",
                     "price": 200,
                     "children": [],
                     "color": "#e67e22",
-                    "icon": ""
+                    "icon": "",
+                    "final": true
                   }
                 ]
               },
@@ -344,14 +348,16 @@
                     "price": 0,
                     "children": [],
                     "color": "#27ae60",
-                    "icon": ""
+                    "icon": "",
+                    "final": true
                   },
                   {
                     "label": "SUV / VAN / EV",
                     "price": 200,
                     "children": [],
                     "color": "#e67e22",
-                    "icon": ""
+                    "icon": "",
+                    "final": true
                   }
                 ]
               },
@@ -364,14 +370,16 @@
                     "price": 0,
                     "children": [],
                     "color": "#27ae60",
-                    "icon": ""
+                    "icon": "",
+                    "final": true
                   },
                   {
                     "label": "SUV / VAN / EV",
                     "price": 200,
                     "children": [],
                     "color": "#e67e22",
-                    "icon": ""
+                    "icon": "",
+                    "final": true
                   }
                 ]
               },
@@ -384,14 +392,16 @@
                     "price": 0,
                     "children": [],
                     "color": "#27ae60",
-                    "icon": ""
+                    "icon": "",
+                    "final": true
                   },
                   {
                     "label": "SUV / VAN / EV",
                     "price": 200,
                     "children": [],
                     "color": "#e67e22",
-                    "icon": ""
+                    "icon": "",
+                    "final": true
                   }
                 ]
               },
@@ -404,14 +414,16 @@
                     "price": 0,
                     "children": [],
                     "color": "#27ae60",
-                    "icon": ""
+                    "icon": "",
+                    "final": true
                   },
                   {
                     "label": "SUV / VAN / EV",
                     "price": 200,
                     "children": [],
                     "color": "#e67e22",
-                    "icon": ""
+                    "icon": "",
+                    "final": true
                   }
                 ]
               }
@@ -430,14 +442,16 @@
                     "price": 0,
                     "children": [],
                     "color": "#27ae60",
-                    "icon": ""
+                    "icon": "",
+                    "final": true
                   },
                   {
                     "label": "SUV / VAN / EV",
                     "price": 200,
                     "children": [],
                     "color": "#e67e22",
-                    "icon": ""
+                    "icon": "",
+                    "final": true
                   }
                 ]
               },
@@ -450,14 +464,16 @@
                     "price": 0,
                     "children": [],
                     "color": "#27ae60",
-                    "icon": ""
+                    "icon": "",
+                    "final": true
                   },
                   {
                     "label": "SUV / VAN / EV",
                     "price": 200,
                     "children": [],
                     "color": "#e67e22",
-                    "icon": ""
+                    "icon": "",
+                    "final": true
                   }
                 ]
               },
@@ -470,14 +486,16 @@
                     "price": 0,
                     "children": [],
                     "color": "#27ae60",
-                    "icon": ""
+                    "icon": "",
+                    "final": true
                   },
                   {
                     "label": "SUV / VAN / EV",
                     "price": 200,
                     "children": [],
                     "color": "#e67e22",
-                    "icon": ""
+                    "icon": "",
+                    "final": true
                   }
                 ]
               },
@@ -490,14 +508,16 @@
                     "price": 0,
                     "children": [],
                     "color": "#27ae60",
-                    "icon": ""
+                    "icon": "",
+                    "final": true
                   },
                   {
                     "label": "SUV / VAN / EV",
                     "price": 200,
                     "children": [],
                     "color": "#e67e22",
-                    "icon": ""
+                    "icon": "",
+                    "final": true
                   }
                 ]
               },
@@ -510,14 +530,16 @@
                     "price": 0,
                     "children": [],
                     "color": "#27ae60",
-                    "icon": ""
+                    "icon": "",
+                    "final": true
                   },
                   {
                     "label": "SUV / VAN / EV",
                     "price": 200,
                     "children": [],
                     "color": "#e67e22",
-                    "icon": ""
+                    "icon": "",
+                    "final": true
                   }
                 ]
               }
