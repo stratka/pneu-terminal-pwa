@@ -881,7 +881,7 @@ function renderCart() {
     list.appendChild(div);
   }
 
-  document.getElementById('btn-finish').textContent = `DOKONCIT A PLATIT | ${total} Kc`;
+  document.getElementById('btn-finish').innerHTML = `<div style="font-size:28px;">${total} Kc</div><div>DOKONCIT A PLATIT</div>`;
 }
 
 // ---------------------------------------------------------------------------
