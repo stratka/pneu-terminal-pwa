@@ -3089,6 +3089,15 @@ async function init() {
   document.getElementById('btn-finish').onclick = showFinishDialog;
   document.getElementById('btn-admin').onclick = showAdmin;
   document.getElementById('btn-camera').onclick = capturePhoto;
+  document.getElementById('btn-share-pins-main').onclick = async () => {
+    const btn = document.getElementById('btn-share-pins-main');
+    btn.disabled = true;
+    btn.textContent = '...';
+    const ok = await pushConfigToGitHub();
+    btn.textContent = ok ? '✓' : '📌';
+    btn.disabled = false;
+    if (ok) setTimeout(() => { btn.textContent = '📌'; }, 2000);
+  };
   document.getElementById('btn-update').onclick = async () => {
     if ('serviceWorker' in navigator) {
       const reg = await navigator.serviceWorker.getRegistration();
