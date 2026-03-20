@@ -1801,24 +1801,24 @@ function showFinishDialog() {
   div.className = 'finish-dialog';
   div.innerHTML = `
     <h2>DOKONCENI OBJEDNAVKY</h2>
-    <div style="font-size:18px;font-weight:700;color:var(--accent-red);margin:10px 0;">Celkova castka: ${total} Kc</div>
-    <div style="font-size:13px;color:var(--text-muted);margin-bottom:6px;">VS: ${vs}</div>
-    <div style="margin:14px 0;">
+    <div style="font-size:18px;font-weight:700;color:var(--accent-red);margin:6px 0;">Celkova castka: ${total} Kc</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">VS: ${vs}</div>
+    <div style="margin:8px 0;">
       <label style="font-size:14px;">SPZ vozidla:</label>
       <input type="text" id="finish-spz" value="${currentSpz}" maxlength="10" autocapitalize="characters" style="text-transform:uppercase;">
     </div>
     <div>
       <label><input type="checkbox" id="finish-print" checked> Vygenerovat fakturu (PDF)</label>
     </div>
-    <div style="margin:14px 0;">
-      <div style="font-size:14px;margin-bottom:6px;">QR kod pro platbu:</div>
+    <div style="margin:8px 0;">
+      <div style="font-size:13px;margin-bottom:4px;">QR kod pro platbu:</div>
       <div style="display:flex;justify-content:center;">
-        <div id="finish-qr" style="background:#fff;padding:16px;border-radius:8px;display:inline-block;"></div>
+        <div id="finish-qr" style="background:#fff;padding:8px;border-radius:8px;display:inline-block;"></div>
       </div>
       <div style="font-size:11px;color:var(--text-muted);font-style:italic;margin-top:4px;">(naskenujte v bankovni aplikaci)</div>
       <div id="finish-spayd-debug" style="font-size:10px;color:#666;margin-top:6px;word-break:break-all;"></div>
     </div>
-    <button class="btn btn-green" id="finish-confirm" style="font-size:16px;padding:14px 40px;margin-top:10px;">POTVRDIT</button>
+    <button class="btn btn-green" id="finish-confirm" style="font-size:16px;padding:12px 40px;margin-top:6px;">POTVRDIT</button>
   `;
 
   const { overlay } = openModal(div);
@@ -1838,7 +1838,7 @@ function showFinishDialog() {
     debugDiv.textContent = spayd;
     if (typeof QRCode !== 'undefined') {
       new QRCode(qrDiv, {
-        text: spayd, width: 300, height: 300,
+        text: spayd, width: 180, height: 180,
         colorDark: '#000000', colorLight: '#ffffff',
         correctLevel: QRCode.CorrectLevel.H,
       });
