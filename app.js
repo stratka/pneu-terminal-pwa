@@ -132,12 +132,7 @@ const TILE_COLORS = [
 // ---------------------------------------------------------------------------
 // Vychozi data
 // ---------------------------------------------------------------------------
-const DEFAULT_SERVICES = [
-  {name:"Kompletni prezuti 4ks",price:0,icon:"pneumatika",color:"#2196F3",type:"wizard_komplet"},
-  {name:"Prezuti sada za sadu",price:0,icon:"vyvazeni",color:"#4CAF50",type:"wizard_sada"},
-  {name:"Oprava defektu",price:0,icon:"vymena",color:"#F44336",type:"wizard_defekt"},
-  {name:"Dilci ukony",price:0,icon:"default",color:"#795548",type:"wizard_dilci"},
-];
+const DEFAULT_SERVICES = [];
 
 const DEFAULT_SETTINGS = {
   firma:"Pneuservis s.r.o.",

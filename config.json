@@ -1,34 +1,5 @@
 {
-  "services": [
-    {
-      "name": "Kompletni prezuti 4ks",
-      "price": 0,
-      "icon": "pneumatika",
-      "color": "#2196F3",
-      "type": "wizard_komplet"
-    },
-    {
-      "name": "Prezuti sada za sadu",
-      "price": 0,
-      "icon": "vyvazeni",
-      "color": "#4CAF50",
-      "type": "wizard_sada"
-    },
-    {
-      "name": "Oprava defektu",
-      "price": 0,
-      "icon": "vymena",
-      "color": "#F44336",
-      "type": "wizard_defekt"
-    },
-    {
-      "name": "Dilci ukony",
-      "price": 0,
-      "icon": "default",
-      "color": "#795548",
-      "type": "wizard_dilci"
-    }
-  ],
+  "services": [],
   "settings": {
     "firma": "Tomáš Stratil",
     "ico": "70620555",
@@ -256,6 +227,1620 @@
     "sleva_pneu_od_nas": -250
   },
   "customWizards": [
+    {
+      "name": "Kompletni prezuti 4ks",
+      "icon": "pneumatika",
+      "color": "#2196F3",
+      "tree": {
+        "label": "Typ disku",
+        "children": [
+          {
+            "label": "Osobni (plech)",
+            "children": [
+              {
+                "label": "R16",
+                "price": 1000,
+                "children": [
+                  {
+                    "label": "Osobni vuz",
+                    "price": 0,
+                    "children": [
+                      {
+                        "label": "Pneu od nas ANO",
+                        "price": -250,
+                        "final": true,
+                        "children": [],
+                        "color": "#27ae60"
+                      },
+                      {
+                        "label": "Pneu od nas NE",
+                        "price": 0,
+                        "final": true,
+                        "children": [],
+                        "color": "#e74c3c"
+                      }
+                    ],
+                    "color": "#27ae60",
+                    "icon": ""
+                  },
+                  {
+                    "label": "SUV / VAN / EV",
+                    "price": 200,
+                    "children": [
+                      {
+                        "label": "Pneu od nas ANO",
+                        "price": -250,
+                        "final": true,
+                        "children": [],
+                        "color": "#27ae60"
+                      },
+                      {
+                        "label": "Pneu od nas NE",
+                        "price": 0,
+                        "final": true,
+                        "children": [],
+                        "color": "#e74c3c"
+                      }
+                    ],
+                    "color": "#e67e22",
+                    "icon": ""
+                  }
+                ]
+              },
+              {
+                "label": "R17",
+                "price": 1100,
+                "children": [
+                  {
+                    "label": "Osobni vuz",
+                    "price": 0,
+                    "children": [
+                      {
+                        "label": "Pneu od nas ANO",
+                        "price": -250,
+                        "final": true,
+                        "children": [],
+                        "color": "#27ae60"
+                      },
+                      {
+                        "label": "Pneu od nas NE",
+                        "price": 0,
+                        "final": true,
+                        "children": [],
+                        "color": "#e74c3c"
+                      }
+                    ],
+                    "color": "#27ae60",
+                    "icon": ""
+                  },
+                  {
+                    "label": "SUV / VAN / EV",
+                    "price": 200,
+                    "children": [
+                      {
+                        "label": "Pneu od nas ANO",
+                        "price": -250,
+                        "final": true,
+                        "children": [],
+                        "color": "#27ae60"
+                      },
+                      {
+                        "label": "Pneu od nas NE",
+                        "price": 0,
+                        "final": true,
+                        "children": [],
+                        "color": "#e74c3c"
+                      }
+                    ],
+                    "color": "#e67e22",
+                    "icon": ""
+                  }
+                ]
+              }
+            ],
+            "color": "#2196F3"
+          },
+          {
+            "label": "Osobni (ALU)",
+            "children": [
+              {
+                "label": "R16",
+                "price": 1200,
+                "children": [
+                  {
+                    "label": "Osobni vuz",
+                    "price": 0,
+                    "children": [
+                      {
+                        "label": "Pneu od nas ANO",
+                        "price": -250,
+                        "final": true,
+                        "children": [],
+                        "color": "#27ae60"
+                      },
+                      {
+                        "label": "Pneu od nas NE",
+                        "price": 0,
+                        "final": true,
+                        "children": [],
+                        "color": "#e74c3c"
+                      }
+                    ],
+                    "color": "#27ae60",
+                    "icon": ""
+                  },
+                  {
+                    "label": "SUV / VAN / EV",
+                    "price": 200,
+                    "children": [
+                      {
+                        "label": "Pneu od nas ANO",
+                        "price": -250,
+                        "final": true,
+                        "children": [],
+                        "color": "#27ae60"
+                      },
+                      {
+                        "label": "Pneu od nas NE",
+                        "price": 0,
+                        "final": true,
+                        "children": [],
+                        "color": "#e74c3c"
+                      }
+                    ],
+                    "color": "#e67e22",
+                    "icon": ""
+                  }
+                ]
+              },
+              {
+                "label": "R17",
+                "price": 1300,
+                "children": [
+                  {
+                    "label": "Osobni vuz",
+                    "price": 0,
+                    "children": [
+                      {
+                        "label": "Pneu od nas ANO",
+                        "price": -250,
+                        "final": true,
+                        "children": [],
+                        "color": "#27ae60"
+                      },
+                      {
+                        "label": "Pneu od nas NE",
+                        "price": 0,
+                        "final": true,
+                        "children": [],
+                        "color": "#e74c3c"
+                      }
+                    ],
+                    "color": "#27ae60",
+                    "icon": ""
+                  },
+                  {
+                    "label": "SUV / VAN / EV",
+                    "price": 200,
+                    "children": [
+                      {
+                        "label": "Pneu od nas ANO",
+                        "price": -250,
+                        "final": true,
+                        "children": [],
+                        "color": "#27ae60"
+                      },
+                      {
+                        "label": "Pneu od nas NE",
+                        "price": 0,
+                        "final": true,
+                        "children": [],
+                        "color": "#e74c3c"
+                      }
+                    ],
+                    "color": "#e67e22",
+                    "icon": ""
+                  }
+                ]
+              },
+              {
+                "label": "R18",
+                "price": 1400,
+                "children": [
+                  {
+                    "label": "Osobni vuz",
+                    "price": 0,
+                    "children": [
+                      {
+                        "label": "Pneu od nas ANO",
+                        "price": -250,
+                        "final": true,
+                        "children": [],
+                        "color": "#27ae60"
+                      },
+                      {
+                        "label": "Pneu od nas NE",
+                        "price": 0,
+                        "final": true,
+                        "children": [],
+                        "color": "#e74c3c"
+                      }
+                    ],
+                    "color": "#27ae60",
+                    "icon": ""
+                  },
+                  {
+                    "label": "SUV / VAN / EV",
+                    "price": 200,
+                    "children": [
+                      {
+                        "label": "Pneu od nas ANO",
+                        "price": -250,
+                        "final": true,
+                        "children": [],
+                        "color": "#27ae60"
+                      },
+                      {
+                        "label": "Pneu od nas NE",
+                        "price": 0,
+                        "final": true,
+                        "children": [],
+                        "color": "#e74c3c"
+                      }
+                    ],
+                    "color": "#e67e22",
+                    "icon": ""
+                  }
+                ]
+              },
+              {
+                "label": "R19",
+                "price": 1500,
+                "children": [
+                  {
+                    "label": "Osobni vuz",
+                    "price": 0,
+                    "children": [
+                      {
+                        "label": "Pneu od nas ANO",
+                        "price": -250,
+                        "final": true,
+                        "children": [],
+                        "color": "#27ae60"
+                      },
+                      {
+                        "label": "Pneu od nas NE",
+                        "price": 0,
+                        "final": true,
+                        "children": [],
+                        "color": "#e74c3c"
+                      }
+                    ],
+                    "color": "#27ae60",
+                    "icon": ""
+                  },
+                  {
+                    "label": "SUV / VAN / EV",
+                    "price": 200,
+                    "children": [
+                      {
+                        "label": "Pneu od nas ANO",
+                        "price": -250,
+                        "final": true,
+                        "children": [],
+                        "color": "#27ae60"
+                      },
+                      {
+                        "label": "Pneu od nas NE",
+                        "price": 0,
+                        "final": true,
+                        "children": [],
+                        "color": "#e74c3c"
+                      }
+                    ],
+                    "color": "#e67e22",
+                    "icon": ""
+                  }
+                ]
+              },
+              {
+                "label": "R20",
+                "price": 1700,
+                "children": [
+                  {
+                    "label": "Osobni vuz",
+                    "price": 0,
+                    "children": [
+                      {
+                        "label": "Pneu od nas ANO",
+                        "price": -250,
+                        "final": true,
+                        "children": [],
+                        "color": "#27ae60"
+                      },
+                      {
+                        "label": "Pneu od nas NE",
+                        "price": 0,
+                        "final": true,
+                        "children": [],
+                        "color": "#e74c3c"
+                      }
+                    ],
+                    "color": "#27ae60",
+                    "icon": ""
+                  },
+                  {
+                    "label": "SUV / VAN / EV",
+                    "price": 200,
+                    "children": [
+                      {
+                        "label": "Pneu od nas ANO",
+                        "price": -250,
+                        "final": true,
+                        "children": [],
+                        "color": "#27ae60"
+                      },
+                      {
+                        "label": "Pneu od nas NE",
+                        "price": 0,
+                        "final": true,
+                        "children": [],
+                        "color": "#e74c3c"
+                      }
+                    ],
+                    "color": "#e67e22",
+                    "icon": ""
+                  }
+                ]
+              }
+            ],
+            "color": "#4CAF50"
+          },
+          {
+            "label": "RunFlat / Profil < 50",
+            "children": [
+              {
+                "label": "R16",
+                "price": 2000,
+                "children": [
+                  {
+                    "label": "Osobni vuz",
+                    "price": 0,
+                    "children": [
+                      {
+                        "label": "Pneu od nas ANO",
+                        "price": -250,
+                        "final": true,
+                        "children": [],
+                        "color": "#27ae60"
+                      },
+                      {
+                        "label": "Pneu od nas NE",
+                        "price": 0,
+                        "final": true,
+                        "children": [],
+                        "color": "#e74c3c"
+                      }
+                    ],
+                    "color": "#27ae60",
+                    "icon": ""
+                  },
+                  {
+                    "label": "SUV / VAN / EV",
+                    "price": 200,
+                    "children": [
+                      {
+                        "label": "Pneu od nas ANO",
+                        "price": -250,
+                        "final": true,
+                        "children": [],
+                        "color": "#27ae60"
+                      },
+                      {
+                        "label": "Pneu od nas NE",
+                        "price": 0,
+                        "final": true,
+                        "children": [],
+                        "color": "#e74c3c"
+                      }
+                    ],
+                    "color": "#e67e22",
+                    "icon": ""
+                  }
+                ]
+              },
+              {
+                "label": "R17",
+                "price": 2200,
+                "children": [
+                  {
+                    "label": "Osobni vuz",
+                    "price": 0,
+                    "children": [
+                      {
+                        "label": "Pneu od nas ANO",
+                        "price": -250,
+                        "final": true,
+                        "children": [],
+                        "color": "#27ae60"
+                      },
+                      {
+                        "label": "Pneu od nas NE",
+                        "price": 0,
+                        "final": true,
+                        "children": [],
+                        "color": "#e74c3c"
+                      }
+                    ],
+                    "color": "#27ae60",
+                    "icon": ""
+                  },
+                  {
+                    "label": "SUV / VAN / EV",
+                    "price": 200,
+                    "children": [
+                      {
+                        "label": "Pneu od nas ANO",
+                        "price": -250,
+                        "final": true,
+                        "children": [],
+                        "color": "#27ae60"
+                      },
+                      {
+                        "label": "Pneu od nas NE",
+                        "price": 0,
+                        "final": true,
+                        "children": [],
+                        "color": "#e74c3c"
+                      }
+                    ],
+                    "color": "#e67e22",
+                    "icon": ""
+                  }
+                ]
+              },
+              {
+                "label": "R18",
+                "price": 2400,
+                "children": [
+                  {
+                    "label": "Osobni vuz",
+                    "price": 0,
+                    "children": [
+                      {
+                        "label": "Pneu od nas ANO",
+                        "price": -250,
+                        "final": true,
+                        "children": [],
+                        "color": "#27ae60"
+                      },
+                      {
+                        "label": "Pneu od nas NE",
+                        "price": 0,
+                        "final": true,
+                        "children": [],
+                        "color": "#e74c3c"
+                      }
+                    ],
+                    "color": "#27ae60",
+                    "icon": ""
+                  },
+                  {
+                    "label": "SUV / VAN / EV",
+                    "price": 200,
+                    "children": [
+                      {
+                        "label": "Pneu od nas ANO",
+                        "price": -250,
+                        "final": true,
+                        "children": [],
+                        "color": "#27ae60"
+                      },
+                      {
+                        "label": "Pneu od nas NE",
+                        "price": 0,
+                        "final": true,
+                        "children": [],
+                        "color": "#e74c3c"
+                      }
+                    ],
+                    "color": "#e67e22",
+                    "icon": ""
+                  }
+                ]
+              },
+              {
+                "label": "R19",
+                "price": 2600,
+                "children": [
+                  {
+                    "label": "Osobni vuz",
+                    "price": 0,
+                    "children": [
+                      {
+                        "label": "Pneu od nas ANO",
+                        "price": -250,
+                        "final": true,
+                        "children": [],
+                        "color": "#27ae60"
+                      },
+                      {
+                        "label": "Pneu od nas NE",
+                        "price": 0,
+                        "final": true,
+                        "children": [],
+                        "color": "#e74c3c"
+                      }
+                    ],
+                    "color": "#27ae60",
+                    "icon": ""
+                  },
+                  {
+                    "label": "SUV / VAN / EV",
+                    "price": 200,
+                    "children": [
+                      {
+                        "label": "Pneu od nas ANO",
+                        "price": -250,
+                        "final": true,
+                        "children": [],
+                        "color": "#27ae60"
+                      },
+                      {
+                        "label": "Pneu od nas NE",
+                        "price": 0,
+                        "final": true,
+                        "children": [],
+                        "color": "#e74c3c"
+                      }
+                    ],
+                    "color": "#e67e22",
+                    "icon": ""
+                  }
+                ]
+              },
+              {
+                "label": "R20",
+                "price": 2700,
+                "children": [
+                  {
+                    "label": "Osobni vuz",
+                    "price": 0,
+                    "children": [
+                      {
+                        "label": "Pneu od nas ANO",
+                        "price": -250,
+                        "final": true,
+                        "children": [],
+                        "color": "#27ae60"
+                      },
+                      {
+                        "label": "Pneu od nas NE",
+                        "price": 0,
+                        "final": true,
+                        "children": [],
+                        "color": "#e74c3c"
+                      }
+                    ],
+                    "color": "#27ae60",
+                    "icon": ""
+                  },
+                  {
+                    "label": "SUV / VAN / EV",
+                    "price": 200,
+                    "children": [
+                      {
+                        "label": "Pneu od nas ANO",
+                        "price": -250,
+                        "final": true,
+                        "children": [],
+                        "color": "#27ae60"
+                      },
+                      {
+                        "label": "Pneu od nas NE",
+                        "price": 0,
+                        "final": true,
+                        "children": [],
+                        "color": "#e74c3c"
+                      }
+                    ],
+                    "color": "#e67e22",
+                    "icon": ""
+                  }
+                ]
+              }
+            ],
+            "color": "#FF9800"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Prezuti sada za sadu",
+      "icon": "vyvazeni",
+      "color": "#4CAF50",
+      "tree": {
+        "label": "Rozmer kola",
+        "children": [
+          {
+            "label": "R16",
+            "price": 800,
+            "children": [
+              {
+                "label": "Osobni vuz",
+                "price": 0,
+                "children": [
+                  {
+                    "label": "S vyvazenim",
+                    "price": 0,
+                    "final": true,
+                    "children": [],
+                    "color": "#27ae60"
+                  },
+                  {
+                    "label": "Bez vyvazeni",
+                    "price": -150,
+                    "final": true,
+                    "children": [],
+                    "color": "#e57373"
+                  }
+                ],
+                "color": "#27ae60"
+              },
+              {
+                "label": "SUV / VAN / EV",
+                "price": 200,
+                "children": [
+                  {
+                    "label": "S vyvazenim",
+                    "price": 0,
+                    "final": true,
+                    "children": [],
+                    "color": "#27ae60"
+                  },
+                  {
+                    "label": "Bez vyvazeni",
+                    "price": -150,
+                    "final": true,
+                    "children": [],
+                    "color": "#e57373"
+                  }
+                ],
+                "color": "#e67e22"
+              }
+            ],
+            "color": "#1abc9c"
+          },
+          {
+            "label": "R17",
+            "price": 900,
+            "children": [
+              {
+                "label": "Osobni vuz",
+                "price": 0,
+                "children": [
+                  {
+                    "label": "S vyvazenim",
+                    "price": 0,
+                    "final": true,
+                    "children": [],
+                    "color": "#27ae60"
+                  },
+                  {
+                    "label": "Bez vyvazeni",
+                    "price": -150,
+                    "final": true,
+                    "children": [],
+                    "color": "#e57373"
+                  }
+                ],
+                "color": "#27ae60"
+              },
+              {
+                "label": "SUV / VAN / EV",
+                "price": 200,
+                "children": [
+                  {
+                    "label": "S vyvazenim",
+                    "price": 0,
+                    "final": true,
+                    "children": [],
+                    "color": "#27ae60"
+                  },
+                  {
+                    "label": "Bez vyvazeni",
+                    "price": -150,
+                    "final": true,
+                    "children": [],
+                    "color": "#e57373"
+                  }
+                ],
+                "color": "#e67e22"
+              }
+            ],
+            "color": "#3498db"
+          },
+          {
+            "label": "R18",
+            "price": 1000,
+            "children": [
+              {
+                "label": "Osobni vuz",
+                "price": 0,
+                "children": [
+                  {
+                    "label": "S vyvazenim",
+                    "price": 0,
+                    "final": true,
+                    "children": [],
+                    "color": "#27ae60"
+                  },
+                  {
+                    "label": "Bez vyvazeni",
+                    "price": -150,
+                    "final": true,
+                    "children": [],
+                    "color": "#e57373"
+                  }
+                ],
+                "color": "#27ae60"
+              },
+              {
+                "label": "SUV / VAN / EV",
+                "price": 200,
+                "children": [
+                  {
+                    "label": "S vyvazenim",
+                    "price": 0,
+                    "final": true,
+                    "children": [],
+                    "color": "#27ae60"
+                  },
+                  {
+                    "label": "Bez vyvazeni",
+                    "price": -150,
+                    "final": true,
+                    "children": [],
+                    "color": "#e57373"
+                  }
+                ],
+                "color": "#e67e22"
+              }
+            ],
+            "color": "#9b59b6"
+          },
+          {
+            "label": "R19",
+            "price": 1100,
+            "children": [
+              {
+                "label": "Osobni vuz",
+                "price": 0,
+                "children": [
+                  {
+                    "label": "S vyvazenim",
+                    "price": 0,
+                    "final": true,
+                    "children": [],
+                    "color": "#27ae60"
+                  },
+                  {
+                    "label": "Bez vyvazeni",
+                    "price": -150,
+                    "final": true,
+                    "children": [],
+                    "color": "#e57373"
+                  }
+                ],
+                "color": "#27ae60"
+              },
+              {
+                "label": "SUV / VAN / EV",
+                "price": 200,
+                "children": [
+                  {
+                    "label": "S vyvazenim",
+                    "price": 0,
+                    "final": true,
+                    "children": [],
+                    "color": "#27ae60"
+                  },
+                  {
+                    "label": "Bez vyvazeni",
+                    "price": -150,
+                    "final": true,
+                    "children": [],
+                    "color": "#e57373"
+                  }
+                ],
+                "color": "#e67e22"
+              }
+            ],
+            "color": "#e67e22"
+          },
+          {
+            "label": "R20",
+            "price": 1200,
+            "children": [
+              {
+                "label": "Osobni vuz",
+                "price": 0,
+                "children": [
+                  {
+                    "label": "S vyvazenim",
+                    "price": 0,
+                    "final": true,
+                    "children": [],
+                    "color": "#27ae60"
+                  },
+                  {
+                    "label": "Bez vyvazeni",
+                    "price": -150,
+                    "final": true,
+                    "children": [],
+                    "color": "#e57373"
+                  }
+                ],
+                "color": "#27ae60"
+              },
+              {
+                "label": "SUV / VAN / EV",
+                "price": 200,
+                "children": [
+                  {
+                    "label": "S vyvazenim",
+                    "price": 0,
+                    "final": true,
+                    "children": [],
+                    "color": "#27ae60"
+                  },
+                  {
+                    "label": "Bez vyvazeni",
+                    "price": -150,
+                    "final": true,
+                    "children": [],
+                    "color": "#e57373"
+                  }
+                ],
+                "color": "#e67e22"
+              }
+            ],
+            "color": "#e74c3c"
+          },
+          {
+            "label": "R21",
+            "price": 1300,
+            "children": [
+              {
+                "label": "Osobni vuz",
+                "price": 0,
+                "children": [
+                  {
+                    "label": "S vyvazenim",
+                    "price": 0,
+                    "final": true,
+                    "children": [],
+                    "color": "#27ae60"
+                  },
+                  {
+                    "label": "Bez vyvazeni",
+                    "price": -150,
+                    "final": true,
+                    "children": [],
+                    "color": "#e57373"
+                  }
+                ],
+                "color": "#27ae60"
+              },
+              {
+                "label": "SUV / VAN / EV",
+                "price": 200,
+                "children": [
+                  {
+                    "label": "S vyvazenim",
+                    "price": 0,
+                    "final": true,
+                    "children": [],
+                    "color": "#27ae60"
+                  },
+                  {
+                    "label": "Bez vyvazeni",
+                    "price": -150,
+                    "final": true,
+                    "children": [],
+                    "color": "#e57373"
+                  }
+                ],
+                "color": "#e67e22"
+              }
+            ],
+            "color": "#2c3e50"
+          },
+          {
+            "label": "R22",
+            "price": 1400,
+            "children": [
+              {
+                "label": "Osobni vuz",
+                "price": 0,
+                "children": [
+                  {
+                    "label": "S vyvazenim",
+                    "price": 0,
+                    "final": true,
+                    "children": [],
+                    "color": "#27ae60"
+                  },
+                  {
+                    "label": "Bez vyvazeni",
+                    "price": -150,
+                    "final": true,
+                    "children": [],
+                    "color": "#e57373"
+                  }
+                ],
+                "color": "#27ae60"
+              },
+              {
+                "label": "SUV / VAN / EV",
+                "price": 200,
+                "children": [
+                  {
+                    "label": "S vyvazenim",
+                    "price": 0,
+                    "final": true,
+                    "children": [],
+                    "color": "#27ae60"
+                  },
+                  {
+                    "label": "Bez vyvazeni",
+                    "price": -150,
+                    "final": true,
+                    "children": [],
+                    "color": "#e57373"
+                  }
+                ],
+                "color": "#e67e22"
+              }
+            ],
+            "color": "#16a085"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Oprava defektu",
+      "icon": "vymena",
+      "color": "#F44336",
+      "tree": {
+        "label": "Typ opravy",
+        "children": [
+          {
+            "label": "Defekt do 6mm",
+            "price": 300,
+            "final": true,
+            "children": [],
+            "color": "#27ae60"
+          },
+          {
+            "label": "Defekt od 6mm (hribkem)",
+            "price": 500,
+            "final": true,
+            "children": [],
+            "color": "#2196F3"
+          },
+          {
+            "label": "Defekt v bocnici (hribkem)",
+            "price": 600,
+            "final": true,
+            "children": [],
+            "color": "#e67e22"
+          },
+          {
+            "label": "Netesnost kolem rafku",
+            "price": 400,
+            "final": true,
+            "children": [],
+            "color": "#9C27B0"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Dilci ukony",
+      "icon": "default",
+      "color": "#795548",
+      "tree": {
+        "label": "Kategorie",
+        "children": [
+          {
+            "label": "Rozmerove ukony",
+            "children": [
+              {
+                "label": "Demontaz + montaz 1ks disku z vozu",
+                "children": [
+                  {
+                    "label": "R16",
+                    "children": [
+                      {
+                        "label": "Osobni vuz",
+                        "price": 100,
+                        "final": true,
+                        "children": [],
+                        "color": "#27ae60"
+                      },
+                      {
+                        "label": "SUV/VAN/EV/RF",
+                        "price": 200,
+                        "final": true,
+                        "children": [],
+                        "color": "#e67e22"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "R17",
+                    "children": [
+                      {
+                        "label": "Osobni vuz",
+                        "price": 100,
+                        "final": true,
+                        "children": [],
+                        "color": "#27ae60"
+                      },
+                      {
+                        "label": "SUV/VAN/EV/RF",
+                        "price": 200,
+                        "final": true,
+                        "children": [],
+                        "color": "#e67e22"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "R18",
+                    "children": [
+                      {
+                        "label": "Osobni vuz",
+                        "price": 100,
+                        "final": true,
+                        "children": [],
+                        "color": "#27ae60"
+                      },
+                      {
+                        "label": "SUV/VAN/EV/RF",
+                        "price": 200,
+                        "final": true,
+                        "children": [],
+                        "color": "#e67e22"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "R19",
+                    "children": [
+                      {
+                        "label": "Osobni vuz",
+                        "price": 125,
+                        "final": true,
+                        "children": [],
+                        "color": "#27ae60"
+                      },
+                      {
+                        "label": "SUV/VAN/EV/RF",
+                        "price": 250,
+                        "final": true,
+                        "children": [],
+                        "color": "#e67e22"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "R20",
+                    "children": [
+                      {
+                        "label": "Osobni vuz",
+                        "price": 150,
+                        "final": true,
+                        "children": [],
+                        "color": "#27ae60"
+                      },
+                      {
+                        "label": "SUV/VAN/EV/RF",
+                        "price": 300,
+                        "final": true,
+                        "children": [],
+                        "color": "#e67e22"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "R21",
+                    "children": [
+                      {
+                        "label": "Osobni vuz",
+                        "price": 200,
+                        "final": true,
+                        "children": [],
+                        "color": "#27ae60"
+                      },
+                      {
+                        "label": "SUV/VAN/EV/RF",
+                        "price": 400,
+                        "final": true,
+                        "children": [],
+                        "color": "#e67e22"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "R22",
+                    "children": [
+                      {
+                        "label": "Osobni vuz",
+                        "price": 250,
+                        "final": true,
+                        "children": [],
+                        "color": "#27ae60"
+                      },
+                      {
+                        "label": "SUV/VAN/EV/RF",
+                        "price": 500,
+                        "final": true,
+                        "children": [],
+                        "color": "#e67e22"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "label": "Demontaz 1ks pneumatiky z disku",
+                "children": [
+                  {
+                    "label": "R16",
+                    "children": [
+                      {
+                        "label": "Osobni vuz",
+                        "price": 100,
+                        "final": true,
+                        "children": [],
+                        "color": "#27ae60"
+                      },
+                      {
+                        "label": "SUV/VAN/EV/RF",
+                        "price": 200,
+                        "final": true,
+                        "children": [],
+                        "color": "#e67e22"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "R17",
+                    "children": [
+                      {
+                        "label": "Osobni vuz",
+                        "price": 100,
+                        "final": true,
+                        "children": [],
+                        "color": "#27ae60"
+                      },
+                      {
+                        "label": "SUV/VAN/EV/RF",
+                        "price": 200,
+                        "final": true,
+                        "children": [],
+                        "color": "#e67e22"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "R18",
+                    "children": [
+                      {
+                        "label": "Osobni vuz",
+                        "price": 150,
+                        "final": true,
+                        "children": [],
+                        "color": "#27ae60"
+                      },
+                      {
+                        "label": "SUV/VAN/EV/RF",
+                        "price": 300,
+                        "final": true,
+                        "children": [],
+                        "color": "#e67e22"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "R19",
+                    "children": [
+                      {
+                        "label": "Osobni vuz",
+                        "price": 150,
+                        "final": true,
+                        "children": [],
+                        "color": "#27ae60"
+                      },
+                      {
+                        "label": "SUV/VAN/EV/RF",
+                        "price": 300,
+                        "final": true,
+                        "children": [],
+                        "color": "#e67e22"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "R20",
+                    "children": [
+                      {
+                        "label": "Osobni vuz",
+                        "price": 200,
+                        "final": true,
+                        "children": [],
+                        "color": "#27ae60"
+                      },
+                      {
+                        "label": "SUV/VAN/EV/RF",
+                        "price": 400,
+                        "final": true,
+                        "children": [],
+                        "color": "#e67e22"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "label": "Montaz 1ks pneumatiky na disk",
+                "children": [
+                  {
+                    "label": "R16",
+                    "children": [
+                      {
+                        "label": "Osobni vuz",
+                        "price": 100,
+                        "final": true,
+                        "children": [],
+                        "color": "#27ae60"
+                      },
+                      {
+                        "label": "SUV/VAN/EV/RF",
+                        "price": 200,
+                        "final": true,
+                        "children": [],
+                        "color": "#e67e22"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "R17",
+                    "children": [
+                      {
+                        "label": "Osobni vuz",
+                        "price": 100,
+                        "final": true,
+                        "children": [],
+                        "color": "#27ae60"
+                      },
+                      {
+                        "label": "SUV/VAN/EV/RF",
+                        "price": 200,
+                        "final": true,
+                        "children": [],
+                        "color": "#e67e22"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "R18",
+                    "children": [
+                      {
+                        "label": "Osobni vuz",
+                        "price": 150,
+                        "final": true,
+                        "children": [],
+                        "color": "#27ae60"
+                      },
+                      {
+                        "label": "SUV/VAN/EV/RF",
+                        "price": 300,
+                        "final": true,
+                        "children": [],
+                        "color": "#e67e22"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "R19",
+                    "children": [
+                      {
+                        "label": "Osobni vuz",
+                        "price": 150,
+                        "final": true,
+                        "children": [],
+                        "color": "#27ae60"
+                      },
+                      {
+                        "label": "SUV/VAN/EV/RF",
+                        "price": 300,
+                        "final": true,
+                        "children": [],
+                        "color": "#e67e22"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "R20",
+                    "children": [
+                      {
+                        "label": "Osobni vuz",
+                        "price": 200,
+                        "final": true,
+                        "children": [],
+                        "color": "#27ae60"
+                      },
+                      {
+                        "label": "SUV/VAN/EV/RF",
+                        "price": 400,
+                        "final": true,
+                        "children": [],
+                        "color": "#e67e22"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "color": "#2196F3",
+            "icon": "vymena"
+          },
+          {
+            "label": "TPMS",
+            "children": [
+              {
+                "label": "Diagnostika TPMS",
+                "price": 250,
+                "final": true,
+                "children": []
+              },
+              {
+                "label": "Programovani a vymena 1ks TPMS",
+                "price": 1000,
+                "final": true,
+                "children": []
+              }
+            ],
+            "color": "#9C27B0"
+          },
+          {
+            "label": "Vyvazeni",
+            "children": [
+              {
+                "label": "Vyvazeni 1ks pneumatiky",
+                "price": 100,
+                "final": true,
+                "children": []
+              },
+              {
+                "label": "Pouziti zateze max 100g",
+                "price": 50,
+                "final": true,
+                "children": []
+              }
+            ],
+            "color": "#4CAF50"
+          },
+          {
+            "label": "Manipulace",
+            "children": [
+              {
+                "label": "Prevzeti 1ks pneu k likvidaci",
+                "price": 25,
+                "final": true,
+                "children": []
+              },
+              {
+                "label": "Sleva prezuti 4ks bez vyvazeni",
+                "price": -150,
+                "final": true,
+                "children": []
+              }
+            ],
+            "color": "#607D8B"
+          },
+          {
+            "label": "Olej a filtry",
+            "children": [
+              {
+                "label": "Vymena oleje komplet",
+                "price": 1200,
+                "final": true,
+                "children": []
+              },
+              {
+                "label": "Vymena oleje a filtru",
+                "price": 1000,
+                "final": true,
+                "children": []
+              },
+              {
+                "label": "Vymena filtru (vzduch)",
+                "price": 300,
+                "final": true,
+                "children": []
+              },
+              {
+                "label": "Vymena filtru (kabina/palivo)",
+                "price": 500,
+                "final": true,
+                "children": []
+              },
+              {
+                "label": "Vymena akumulatoru",
+                "price": 300,
+                "final": true,
+                "children": []
+              }
+            ],
+            "color": "#FF9800"
+          },
+          {
+            "label": "Brzdy",
+            "children": [
+              {
+                "label": "Kontrola brzd",
+                "price": 350,
+                "final": true,
+                "children": []
+              },
+              {
+                "label": "Vymena kotoucu + desticky (naprava)",
+                "price": 1000,
+                "final": true,
+                "children": []
+              },
+              {
+                "label": "Vymena brzd. desticek",
+                "price": 750,
+                "final": true,
+                "children": []
+              },
+              {
+                "label": "Udrzba brzd",
+                "price": 750,
+                "final": true,
+                "children": []
+              }
+            ],
+            "color": "#F44336"
+          },
+          {
+            "label": "Kontrola pred koupi",
+            "children": [
+              {
+                "label": "Kontrola vozidla (provozovna)",
+                "price": 3000,
+                "final": true,
+                "children": []
+              },
+              {
+                "label": "Kontrola vozidla (bazar)",
+                "price": 4000,
+                "final": true,
+                "children": []
+              },
+              {
+                "label": "Kontrola vozidla (Ostrava)",
+                "price": 4500,
+                "final": true,
+                "children": []
+              }
+            ],
+            "color": "#795548"
+          },
+          {
+            "label": "Cisteni interieru",
+            "children": [
+              {
+                "label": "Cisteni 2h (drobne)",
+                "price": 2000,
+                "final": true,
+                "children": []
+              },
+              {
+                "label": "Cisteni 3h (hrube)",
+                "price": 3000,
+                "final": true,
+                "children": []
+              },
+              {
+                "label": "Cisteni 4h (velmi hrube)",
+                "price": 4000,
+                "final": true,
+                "children": []
+              },
+              {
+                "label": "Cisteni ozonem",
+                "price": 500,
+                "final": true,
+                "children": []
+              }
+            ],
+            "color": "#E91E63"
+          },
+          {
+            "label": "Klimatizace R134a",
+            "children": [
+              {
+                "label": "Plneni klimatizace",
+                "price": 900,
+                "final": true,
+                "children": []
+              }
+            ],
+            "color": "#00BCD4"
+          },
+          {
+            "label": "Testy",
+            "children": [
+              {
+                "label": "Diagnostika",
+                "price": 600,
+                "final": true,
+                "children": []
+              },
+              {
+                "label": "Test brzdove kapaliny",
+                "price": 200,
+                "final": true,
+                "children": []
+              },
+              {
+                "label": "Test akumulatoru a alternatoru",
+                "price": 300,
+                "final": true,
+                "children": []
+              },
+              {
+                "label": "Cteni chyb z jednotky",
+                "price": 300,
+                "final": true,
+                "children": []
+              },
+              {
+                "label": "Nacteni pameti zavad DTC",
+                "price": 500,
+                "final": true,
+                "children": []
+              }
+            ],
+            "color": "#3F51B5"
+          },
+          {
+            "label": "Ostatni",
+            "children": [
+              {
+                "label": "Prirazka urgentni prace",
+                "price": 500,
+                "final": true,
+                "children": []
+              },
+              {
+                "label": "Lepeni folii proti slunci",
+                "price": 1500,
+                "final": true,
+                "children": []
+              }
+            ],
+            "color": "#455A64"
+          }
+        ]
+      }
+    },
     {
       "name": "Uskladněni pneu",
       "icon": "default",
