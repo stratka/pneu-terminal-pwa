@@ -195,24 +195,6 @@
             "price": 750
           }
         ],
-        "Klimatizace R134a": [
-          {
-            "name": "Plneni klima 0-150g",
-            "price": 500
-          },
-          {
-            "name": "Plneni klima 151-400g",
-            "price": 1000
-          },
-          {
-            "name": "Plneni klima 401-600g",
-            "price": 1500
-          },
-          {
-            "name": "Kontrola tesnosti klima",
-            "price": 300
-          }
-        ],
         "Kontrola pred koupi": [
           {
             "name": "Kontrola vozidla (provozovna)",
@@ -409,5 +391,6 @@
         "SPZ": "gdfgdf"
       }
     }
-  ]
+  ],
+  "pinnedItems": []
 }

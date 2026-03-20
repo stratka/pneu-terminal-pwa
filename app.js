@@ -16,7 +16,7 @@ async function pushConfigToGitHub() {
     localStorage.setItem('github_token', GITHUB_TOKEN);
   }
 
-  const cfg = JSON.stringify({ services, settings, pricing, customWizards }, null, 2);
+  const cfg = JSON.stringify({ services, settings, pricing, customWizards, pinnedItems }, null, 2);
   const content = btoa(unescape(encodeURIComponent(cfg)));
 
   // Ziskat aktualni SHA souboru a ulozit zalohu
@@ -100,6 +100,7 @@ async function revertConfigOnGitHub() {
     settings = cfg.settings || settings;
     pricing = cfg.pricing || pricing;
     customWizards = cfg.customWizards || customWizards;
+    pinnedItems = cfg.pinnedItems || pinnedItems;
     renderTiles(); renderCart();
     return true;
   } catch(e) { alert('Chyba: ' + e.message); return false; }
@@ -203,12 +204,6 @@ const DEFAULT_PRICING = {
         {name:"Vymena kotoucu + desticky (naprava)",price:1000},
         {name:"Vymena brzd. desticek",price:750},
         {name:"Udrzba brzd",price:750},
-      ],
-      "Klimatizace R134a":[
-        {name:"Plneni klima 0-150g",price:500},
-        {name:"Plneni klima 151-400g",price:1000},
-        {name:"Plneni klima 401-600g",price:1500},
-        {name:"Kontrola tesnosti klima",price:300},
       ],
       "Kontrola pred koupi":[
         {name:"Kontrola vozidla (provozovna)",price:3000},
@@ -337,6 +332,7 @@ let services = [];
 let settings = {};
 let pricing = {};
 let customWizards = []; // [ { name, icon, color, tree: { children: [...] } } ]
+let pinnedItems = [];   // [ { name, price, icon, color, source } ]
 let cart = {};          // { serviceIndex: qty }
 let customItems = [];   // [ { name, price, qty, detail } ]
 let currentSpz = '';
@@ -676,17 +672,34 @@ function generateSpayd(iban, amount, currency, message, vs) {
 }
 
 // ---------------------------------------------------------------------------
+// Pripnute polozky (hvezdicky)
+// ---------------------------------------------------------------------------
+function isPinned(source, name) {
+  return pinnedItems.some(p => p.source === source && p.name === name);
+}
+
+async function togglePin(source, name, price, icon, color) {
+  const idx = pinnedItems.findIndex(p => p.source === source && p.name === name);
+  if (idx >= 0) {
+    pinnedItems.splice(idx, 1);
+  } else {
+    pinnedItems.push({ name, price, icon: icon || '', color: color || '#607D8B', source });
+  }
+  await db.setKV('pinnedItems', pinnedItems);
+  renderTiles();
+}
+
+// ---------------------------------------------------------------------------
 // Rendering
 // ---------------------------------------------------------------------------
 function renderTiles() {
   const area = document.getElementById('tiles-area');
   area.innerHTML = '';
-  services.forEach((svc, idx) => {
-    const tile = document.createElement('div');
-    tile.className = 'tile';
-    tile.style.background = svc.color || TILE_COLORS[idx % TILE_COLORS.length];
 
-    const ic = iconChar(svc.icon);
+  // Pripravit data vsech dlazdic
+  const allTiles = [];
+
+  services.forEach((svc, idx) => {
     let priceText;
     const svcType = svc.type || '';
     if (svcType === 'wizard_komplet') {
@@ -709,40 +722,77 @@ function renderTiles() {
     } else {
       priceText = `${svc.price} Kc`;
     }
-
-    tile.innerHTML = `
-      <div class="tile-icon">${ic}</div>
-      <div class="tile-name">${svc.name}</div>
-      <div class="tile-price">${priceText}</div>
-    `;
-    tile.onclick = () => addToCart(idx);
-    area.appendChild(tile);
+    allTiles.push({ name: svc.name, icon: iconChar(svc.icon), color: svc.color || TILE_COLORS[idx % TILE_COLORS.length], priceText, onclick: () => addToCart(idx) });
   });
 
-  // Custom wizard dlazdice
   customWizards.forEach((wiz, wIdx) => {
+    let priceText = '';
+    if (wiz.priceLabel) {
+      priceText = wiz.priceLabel;
+    } else {
+      const allPrices = collectTreePrices(wiz.tree);
+      if (allPrices.length) {
+        const mn = Math.min(...allPrices);
+        const mx = Math.max(...allPrices);
+        priceText = mn === mx ? `${mn} Kc` : `od ${mn} Kc`;
+      }
+    }
+    allTiles.push({ name: wiz.name, icon: iconChar(wiz.icon), color: wiz.color || '#607D8B', priceText, onclick: () => runCustomWizard(wiz) });
+  });
+
+  // Pripnute polozky z wizardu
+  pinnedItems.forEach(pin => {
+    allTiles.push({
+      name: pin.name,
+      icon: pin.icon ? iconChar(pin.icon) : '\u2B50',
+      color: pin.color || '#607D8B',
+      priceText: `${pin.price} Kc`,
+      pinned: true,
+      pinSource: pin.source,
+      onclick: () => {
+        customItems.push({ name: pin.name, price: pin.price, qty: 1, detail: pin.source });
+        renderCart();
+      }
+    });
+  });
+
+  // Vypocitat font podle nejdelsiho nazvu
+  const maxNameLen = Math.max(1, ...allTiles.map(t => t.name.length));
+  // Dlazdice jsou cca 130-200px, s ikonou mame cca 2 radky pro text
+  // Zakladni velikost 14px, zmensit pokud se nejdelsi nevejde
+  let nameFontSize = 14;
+  const tileTextWidth = 120; // priblizna sirka textu v dlazdici (px)
+  const maxLines = 2;
+  while (nameFontSize > 9 && (maxNameLen * nameFontSize * 0.55) > tileTextWidth * maxLines) {
+    nameFontSize--;
+  }
+  let priceFontSize = Math.max(9, Math.floor(nameFontSize * 0.9));
+
+  for (const t of allTiles) {
     const tile = document.createElement('div');
     tile.className = 'tile';
-    tile.style.background = wiz.color || '#607D8B';
-    const ic = iconChar(wiz.icon);
-
-    // Zjistit rozsah cen
-    const allPrices = collectTreePrices(wiz.tree);
-    let priceText = '';
-    if (allPrices.length) {
-      const mn = Math.min(...allPrices);
-      const mx = Math.max(...allPrices);
-      priceText = mn === mx ? `${mn} Kc` : `od ${mn} Kc`;
-    }
-
+    tile.style.background = t.color;
     tile.innerHTML = `
-      <div class="tile-icon">${ic}</div>
-      <div class="tile-name">${wiz.name}</div>
-      <div class="tile-price">${priceText}</div>
+      ${t.pinned ? '<div class="pin-badge" style="position:absolute;top:4px;right:6px;font-size:12px;cursor:pointer;z-index:10;">⭐</div>' : ''}
+      <div class="tile-icon">${t.icon}</div>
+      <div class="tile-name" style="font-size:${nameFontSize}px;">${t.name}</div>
+      <div class="tile-price" style="font-size:${priceFontSize}px;">${t.priceText}</div>
     `;
-    tile.onclick = () => runCustomWizard(wiz);
+    if (t.pinned) {
+      tile.style.position = 'relative';
+      const badge = tile.querySelector('.pin-badge');
+      if (badge) {
+        badge.onclick = (e) => {
+          e.stopPropagation();
+          if (confirm(`Odepnout "${t.name}" z hlavni strany?`)) {
+            togglePin(t.pinSource, t.name, 0, '', '');
+          }
+        };
+      }
+    }
+    tile.onclick = t.onclick;
     area.appendChild(tile);
-  });
+  }
 }
 
 function collectTreePrices(node) {
@@ -804,6 +854,40 @@ function addToCart(idx) {
   renderCart();
 }
 
+function showCustomItemDialog() {
+  const div = document.createElement('div');
+  div.innerHTML = `
+    <h2 style="text-align:center;margin-bottom:16px;">Rucni polozka</h2>
+    <div style="max-width:350px;margin:0 auto;">
+      <div style="margin-bottom:12px;">
+        <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:4px;">Nazev sluzby:</label>
+        <input type="text" id="ci-name" placeholder="napr. Oprava svetla"
+          style="width:100%;padding:10px;border-radius:6px;border:1px solid #444;background:#16213e;color:#fff;font-size:16px;">
+      </div>
+      <div style="margin-bottom:16px;">
+        <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:4px;">Cena (Kc):</label>
+        <input type="number" id="ci-price" placeholder="0"
+          style="width:100%;padding:10px;border-radius:6px;border:1px solid #444;background:#16213e;color:#fff;font-size:16px;">
+      </div>
+      <div style="display:flex;gap:10px;justify-content:center;">
+        <button class="btn btn-green ci-ok" style="padding:12px 30px;font-size:15px;">PRIDAT</button>
+        <button class="btn btn-red ci-cancel" style="padding:12px 20px;font-size:15px;">ZRUSIT</button>
+      </div>
+    </div>
+  `;
+  const { overlay } = openModal(div);
+  div.querySelector('.ci-cancel').onclick = () => overlay.remove();
+  div.querySelector('.ci-ok').onclick = () => {
+    const name = div.querySelector('#ci-name').value.trim();
+    const price = parseInt(div.querySelector('#ci-price').value) || 0;
+    if (!name) { alert('Zadejte nazev sluzby.'); div.querySelector('#ci-name').focus(); return; }
+    customItems.push({ name, price, qty: 1, detail: '' });
+    renderCart();
+    overlay.remove();
+  };
+  div.querySelector('#ci-name').focus();
+}
+
 function clearCart() {
   cart = {};
   customItems = [];
@@ -838,17 +922,21 @@ function closeModal(overlay) {
 // ---------------------------------------------------------------------------
 // Wizard: Tile selection helper
 // ---------------------------------------------------------------------------
-function wizardTileSelect(title, subtitle, options, big, callback) {
+function wizardTileSelect(title, subtitle, options, big, callback, pinConfig) {
+  // pinConfig: { source: string, getPin: (opt) => { name, price, icon, color } } — pokud je zadano, zobrazuji se hvezdicky
   const container = document.createElement('div');
   container.style.cssText = 'display:flex;flex-direction:column;height:100%;';
 
-  // Header with cancel button
-  let html = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-shrink:0;">
-    <h2 style="margin:0">${title}</h2>
+  // Header with cancel button (right corner only)
+  let html = `<div style="display:flex;justify-content:flex-end;margin-bottom:4px;flex-shrink:0;">
     <button class="btn btn-red wizard-cancel" style="font-size:13px;padding:8px 16px;">ZRUSIT</button>
   </div>`;
-  if (subtitle) html += `<div class="modal-subtitle" style="flex-shrink:0;">${subtitle}</div>`;
-  html += `<div class="wizard-grid-auto" style="flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;"></div>`;
+  // Title + subtitle directly above tiles
+  html += `<div class="wizard-grid-auto" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;">
+    <h2 style="margin:0 0 4px;text-align:center;">${title}</h2>
+    ${subtitle ? `<div class="modal-subtitle" style="margin:0 0 10px;">${subtitle}</div>` : ''}
+    <div class="wizard-tiles-container"></div>
+  </div>`;
   container.innerHTML = html;
 
   const { overlay, modal } = openModal(container);
@@ -861,13 +949,14 @@ function wizardTileSelect(title, subtitle, options, big, callback) {
 
   container.querySelector('.wizard-cancel').onclick = () => overlay.remove();
 
-  const gridWrap = container.querySelector('.wizard-grid-auto');
+  const gridWrap = container.querySelector('.wizard-tiles-container');
 
   // Vypocitat optimalni rozlozeni az po renderovani
   requestAnimationFrame(() => {
     const n = options.length;
-    const areaW = gridWrap.clientWidth;
-    const areaH = gridWrap.clientHeight;
+    const parentWrap = container.querySelector('.wizard-grid-auto');
+    const areaW = parentWrap.clientWidth;
+    const areaH = parentWrap.clientHeight * 0.75;
     if (!areaW || !areaH) return;
 
     // Najit nejlepsi pocet sloupcu tak aby se vse veslo
@@ -885,16 +974,36 @@ function wizardTileSelect(title, subtitle, options, big, callback) {
     const cols = bestCols;
     const rows = Math.ceil(n / cols);
     const gap = 10;
-    const tileSize = Math.min(200, Math.floor(Math.min(
+    const tileSize = Math.min(260, Math.floor(Math.min(
       (areaW - gap * (cols + 1)) / cols,
       (areaH - gap * (rows + 1)) / rows
     )));
 
-    // Font velikosti podle tile size
-    const iconSize = Math.min(42, Math.max(16, Math.floor(tileSize * 0.25)));
-    const labelSize = Math.max(11, Math.floor(tileSize * 0.12));
-    const labelSizeNoIcon = Math.max(16, Math.floor(tileSize * 0.22));
-    const subSize = Math.max(10, Math.floor(tileSize * 0.10));
+    // Najit nejdelsi label a sublabel pro urceni fontu
+    const hasIcons = options.some(o => !!o.icon);
+    const hasSublabels = options.some(o => !!o.sublabel);
+    const maxLabelLen = Math.max(...options.map(o => (o.label || '').length));
+    const maxSubLen = Math.max(0, ...options.map(o => {
+      if (!o.sublabel) return 0;
+      return Math.max(...o.sublabel.split('\n').map(l => l.length));
+    }));
+    const padding = 16;
+    const availTextW = tileSize - padding;
+
+    // Vice radku pro label pokud neni ikona ani sublabel
+    const maxLabelLines = (hasIcons || hasSublabels) ? 2 : 3;
+    let baseLabelSize = hasIcons ? Math.floor(tileSize * 0.13) : Math.floor(tileSize * 0.20);
+    while (baseLabelSize > 9 && (maxLabelLen * baseLabelSize * 0.55) > availTextW * maxLabelLines) {
+      baseLabelSize--;
+    }
+    baseLabelSize = Math.max(9, Math.min(baseLabelSize, 26));
+
+    const iconSize = hasIcons ? Math.min(hasSublabels ? 28 : 42, Math.max(14, Math.floor(tileSize * (hasSublabels ? 0.15 : 0.25)))) : 0;
+    let subSize = Math.max(8, Math.floor(baseLabelSize * 0.65));
+    // Zmensit sublabel pokud se nevejde
+    while (subSize > 8 && (maxSubLen * subSize * 0.55) > availTextW) {
+      subSize--;
+    }
 
     const grid = document.createElement('div');
     grid.style.cssText = `display:grid; grid-template-columns:repeat(${cols}, ${tileSize}px); grid-template-rows:repeat(${rows}, ${tileSize}px); gap:${gap}px;`;
@@ -905,15 +1014,38 @@ function wizardTileSelect(title, subtitle, options, big, callback) {
         background:${opt.color || '#2196F3'}; border-radius:12px;
         display:flex; flex-direction:column; align-items:center; justify-content:center;
         cursor:pointer; padding:8px; text-align:center; overflow:hidden;
-        transition:transform 0.1s;
+        transition:transform 0.1s; position:relative;
       `;
       const hasIcon = !!opt.icon;
-      const finalLabelSize = hasIcon ? labelSize : labelSizeNoIcon;
+
+      // Hvezdicka pro pripnuti na hlavni stranu
+      let starHtml = '';
+      if (pinConfig && opt.pinnable !== false) {
+        const pin = pinConfig.getPin(opt);
+        const pinned = isPinned(pinConfig.source, pin.name);
+        starHtml = `<div class="pin-star" style="position:absolute;top:4px;right:6px;font-size:16px;cursor:pointer;z-index:10;opacity:${pinned ? '1' : '0.4'};">${pinned ? '⭐' : '☆'}</div>`;
+      }
+
       tile.innerHTML = `
+        ${starHtml}
         ${hasIcon ? `<div style="font-size:${iconSize}px;margin-bottom:4px;line-height:1;">${opt.icon}</div>` : ''}
-        <div style="font-size:${finalLabelSize}px;font-weight:700;line-height:1.2;word-break:break-word;">${opt.label}</div>
+        <div style="font-size:${baseLabelSize}px;font-weight:700;line-height:1.2;word-break:break-word;">${opt.label}</div>
         ${opt.sublabel ? `<div style="font-size:${subSize}px;color:#e0e0e0;margin-top:4px;font-weight:700;white-space:pre-line;">${opt.sublabel}</div>` : ''}
       `;
+
+      // Klik na hvezdicku = pin/unpin
+      const starEl = tile.querySelector('.pin-star');
+      if (starEl) {
+        starEl.onclick = (e) => {
+          e.stopPropagation();
+          const pin = pinConfig.getPin(opt);
+          togglePin(pinConfig.source, pin.name, pin.price, pin.icon, pin.color);
+          const nowPinned = isPinned(pinConfig.source, pin.name);
+          starEl.textContent = nowPinned ? '⭐' : '☆';
+          starEl.style.opacity = nowPinned ? '1' : '0.4';
+        };
+      }
+
       tile.onpointerdown = () => { tile.style.transform = 'scale(0.95)'; };
       tile.onpointerup = () => { tile.style.transform = ''; };
       tile.onpointerleave = () => { tile.style.transform = ''; };
@@ -1051,6 +1183,9 @@ function showDefektWizard() {
   wizardTileSelect('OPRAVA DEFEKTU', 'Vyberte typ opravy', opts, false, v => {
     customItems.push({ name: `Oprava defektu | ${v.name}`, price: v.price, qty: 1, detail: v.name });
     renderCart();
+  }, {
+    source: 'defekt',
+    getPin: (opt) => ({ name: opt.value.name, price: opt.value.price, icon: 'vymena', color: '#F44336' })
   });
 }
 
@@ -1154,9 +1289,14 @@ function showDilciWizard() {
       color: colors[i % colors.length], icon: '',
       value: item,
     }));
+    const catColor = (catStyles[catName] || {}).color || '#607D8B';
+    const catIcon = (catStyles[catName] || {}).icon || '';
     wizardTileSelect(catName.toUpperCase(), 'Vyberte sluzbu', opts, false, v => {
       customItems.push({ name: v.name, price: v.price, qty: 1, detail: catName });
       renderCart();
+    }, {
+      source: `dilci:${catName}`,
+      getPin: (opt) => ({ name: opt.value.name, price: opt.value.price, icon: '', color: catColor })
     });
   }
 
@@ -1173,11 +1313,88 @@ function runCustomWizard(wiz) {
   const formScreen = wiz.formScreen || 0; // 0 = na konci, 1+ = cislo obrazovky
   const collectedFormData = {};  // { fieldLabel: value }
 
+  function showMultiplyInput(node, accumulated, path) {
+    if (wizOverlay) wizOverlay.remove();
+    const unit = node.unit || 'ks';
+    const unitPrice = node.price;
+
+    const div = document.createElement('div');
+    div.innerHTML = `
+      <h2 style="text-align:center;margin-bottom:12px;">${node.label}</h2>
+      <div style="text-align:center;font-size:14px;color:var(--text-muted);margin-bottom:16px;">
+        Cena: ${unitPrice} Kc / ${unit}
+      </div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:16px;">
+        <button class="btn btn-red qty-minus" style="font-size:24px;width:50px;height:50px;border-radius:50%;">−</button>
+        <input type="number" id="qty-input" value="1" min="1" style="
+          font-size:32px;font-weight:700;text-align:center;width:120px;padding:10px;
+          border-radius:8px;border:2px solid #444;background:#16213e;color:#fff;">
+        <span style="font-size:18px;color:var(--text-muted);">${unit}</span>
+        <button class="btn btn-green qty-plus" style="font-size:24px;width:50px;height:50px;border-radius:50%;">+</button>
+      </div>
+      <div id="qty-total" style="text-align:center;font-size:22px;font-weight:700;color:var(--accent-yellow);margin-bottom:16px;">
+        Celkem: ${unitPrice} Kc
+      </div>
+      <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:8px;">
+        <button class="btn qty-preset" data-val="10" style="background:#3498db;font-size:14px;padding:8px 14px;">10</button>
+        <button class="btn qty-preset" data-val="50" style="background:#3498db;font-size:14px;padding:8px 14px;">50</button>
+        <button class="btn qty-preset" data-val="100" style="background:#3498db;font-size:14px;padding:8px 14px;">100</button>
+        <button class="btn qty-preset" data-val="200" style="background:#3498db;font-size:14px;padding:8px 14px;">200</button>
+        <button class="btn qty-preset" data-val="500" style="background:#3498db;font-size:14px;padding:8px 14px;">500</button>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:center;margin-top:16px;">
+        <button class="btn btn-green qty-ok" style="padding:14px 40px;font-size:16px;">PRIDAT DO KOSIKU</button>
+        <button class="btn btn-red qty-cancel" style="padding:14px 20px;font-size:14px;">ZRUSIT</button>
+      </div>
+    `;
+
+    const { overlay } = openModal(div);
+    wizOverlay = overlay;
+    const qtyInput = div.querySelector('#qty-input');
+    const totalDiv = div.querySelector('#qty-total');
+
+    function updateTotal() {
+      const qty = Math.max(1, parseInt(qtyInput.value) || 1);
+      qtyInput.value = qty;
+      totalDiv.textContent = `Celkem: ${qty * unitPrice} Kc`;
+    }
+
+    div.querySelector('.qty-minus').onclick = () => { qtyInput.value = Math.max(1, (parseInt(qtyInput.value) || 1) - 1); updateTotal(); };
+    div.querySelector('.qty-plus').onclick = () => { qtyInput.value = (parseInt(qtyInput.value) || 1) + 1; updateTotal(); };
+    qtyInput.oninput = updateTotal;
+
+    div.querySelectorAll('.qty-preset').forEach(btn => {
+      btn.onclick = () => { qtyInput.value = btn.dataset.val; updateTotal(); };
+    });
+
+    div.querySelector('.qty-cancel').onclick = () => {
+      overlay.remove();
+      showStep(wiz.tree, [], [], wiz.name, 1);
+    };
+
+    div.querySelector('.qty-ok').onclick = () => {
+      const qty = Math.max(1, parseInt(qtyInput.value) || 1);
+      const totalPrice = qty * unitPrice;
+      accumulated.push({ label: `${node.label} ${qty}${unit}`, price: totalPrice });
+      finishItem(accumulated, path);
+      overlay.remove();
+      showStep(wiz.tree, [], [], wiz.name, 1);
+    };
+
+    qtyInput.focus();
+    qtyInput.select();
+  }
+
   function showStep(node, accumulated, path, title, level) {
     // Pokud existuje predchozi overlay, odstranit
     if (wizOverlay) wizOverlay.remove();
 
     if (!node.children || !node.children.length) {
+      // Listovy uzel s mnozstvim — zobrazit input
+      if (node.multiply && node.price) {
+        showMultiplyInput(node, accumulated, path);
+        return;
+      }
       // Listovy uzel — pridat do kosiku a VRATIT se na zacatek
       if (node.price) accumulated.push({ label: node.label, price: node.price });
       finishItem(accumulated, path);
@@ -1274,10 +1491,19 @@ function runCustomWizard(wiz) {
         (areaH - gap * (rows + 1)) / rows
       )));
 
+      // Najit nejdelsi label pro urceni fontu (stejny algoritmus jako wizardTileSelect)
+      const hasIcons = options.some(c => !!(c.icon));
+      const maxLblLen = Math.max(...options.map(c => (c.label || '').length));
+      const tilePadding = 16;
+      const availTxtW = tileSize - tilePadding;
+      let baseLblSz = hasIcons ? Math.floor(tileSize * 0.15) : Math.floor(tileSize * 0.22);
+      const maxLns = hasIcons ? 2 : 3;
+      while (baseLblSz > 10 && (maxLblLen * baseLblSz * 0.55) > availTxtW * maxLns) {
+        baseLblSz--;
+      }
+      baseLblSz = Math.max(10, Math.min(baseLblSz, 28));
       const iconSz = Math.min(42, Math.max(16, Math.floor(tileSize * 0.25)));
-      const labelSz = Math.max(11, Math.floor(tileSize * 0.12));
-      const labelSzNoIcon = Math.max(16, Math.floor(tileSize * 0.22));
-      const subSz = Math.max(10, Math.floor(tileSize * 0.10));
+      const subSz = Math.max(10, Math.floor(baseLblSz * 0.7));
 
       const grid = document.createElement('div');
       grid.style.cssText = `display:grid; grid-template-columns:repeat(${cols}, ${tileSize}px); grid-template-rows:repeat(${rows}, ${tileSize}px); gap:${gap}px;`;
@@ -1288,20 +1514,48 @@ function runCustomWizard(wiz) {
         const cIcon = child.icon ? iconChar(child.icon) : '';
         const hasIcon = !!cIcon;
         const cSub = cPrice ? `${cPrice} Kc` : (child.children && child.children.length ? `${child.children.length} moznosti` : '');
+        if (child.multiply && cPrice) {
+          // Zobrazit jednotkovou cenu
+        }
 
         const tile = document.createElement('div');
+        const tileColor = child.color || colors[options.indexOf(child) % colors.length];
         tile.style.cssText = `
-          background:${child.color || colors[options.indexOf(child) % colors.length]}; border-radius:12px;
+          background:${tileColor}; border-radius:12px;
           display:flex; flex-direction:column; align-items:center; justify-content:center;
           cursor:pointer; padding:8px; text-align:center; overflow:hidden;
-          transition:transform 0.1s;
+          transition:transform 0.1s; position:relative;
         `;
-        const fLabelSz = hasIcon ? labelSz : labelSzNoIcon;
+
+        // Hvezdicka pro pripnuti — jen pro listove uzly s cenou (ne multiply)
+        const canPin = cPrice && (child.final || (!child.children || !child.children.length)) && !child.multiply;
+        const pinSource = `custom:${wiz.name}`;
+        const pinName = `${wiz.name} | ${cLabel}`;
+        let starHtml = '';
+        if (canPin) {
+          const pinned = isPinned(pinSource, pinName);
+          starHtml = `<div class="pin-star" style="position:absolute;top:4px;right:6px;font-size:16px;cursor:pointer;z-index:10;opacity:${pinned ? '1' : '0.4'};">${pinned ? '⭐' : '☆'}</div>`;
+        }
+
         tile.innerHTML = `
+          ${starHtml}
           ${hasIcon ? `<div style="font-size:${iconSz}px;margin-bottom:4px;line-height:1;">${cIcon}</div>` : ''}
-          <div style="font-size:${fLabelSz}px;font-weight:700;line-height:1.2;word-break:break-word;">${cLabel}</div>
-          ${cSub ? `<div style="font-size:${subSz}px;color:#e0e0e0;margin-top:4px;font-weight:700;">${cSub}</div>` : ''}
+          <div style="font-size:${baseLblSz}px;font-weight:700;line-height:1.2;word-break:break-word;">${cLabel}</div>
+          ${cSub ? `<div style="font-size:${subSz}px;color:#e0e0e0;margin-top:4px;font-weight:700;">${child.multiply ? cPrice + ' Kc/' + (child.unit||'ks') : cSub}</div>` : ''}
         `;
+
+        // Klik na hvezdicku
+        const starEl = tile.querySelector('.pin-star');
+        if (starEl) {
+          starEl.onclick = (e) => {
+            e.stopPropagation();
+            togglePin(pinSource, pinName, cPrice, child.icon || wiz.icon, tileColor);
+            const nowPinned = isPinned(pinSource, pinName);
+            starEl.textContent = nowPinned ? '⭐' : '☆';
+            starEl.style.opacity = nowPinned ? '1' : '0.4';
+          };
+        }
+
         tile.onpointerdown = () => { tile.style.transform = 'scale(0.95)'; };
         tile.onpointerup = () => { tile.style.transform = ''; };
         tile.onpointerleave = () => { tile.style.transform = ''; };
@@ -1311,6 +1565,13 @@ function runCustomWizard(wiz) {
 
           const newPath = [...path, cLabel];
           const newAcc = [...accumulated];
+
+          // Mnozstvi — zobrazit input
+          if (child.multiply && cPrice && (!child.children || !child.children.length)) {
+            showMultiplyInput(child, newAcc, newPath);
+            return;
+          }
+
           if (cPrice) newAcc.push({ label: cLabel, price: cPrice });
 
           if (child.children && child.children.length && !child.final) {
@@ -1838,6 +2099,7 @@ function openAdminPanel() {
       <button class="admin-tab" data-tab="wizards">Vlastni wizardy</button>
       <button class="admin-tab" data-tab="orders">Zakazky</button>
       <button class="admin-tab" data-tab="invoices">Faktury</button>
+      <button class="admin-tab" data-tab="blank_protocol">Prazdny protokol</button>
       <button class="admin-tab" data-tab="password">Zmena hesla</button>
     </div>
     <div style="display:flex;justify-content:flex-end;gap:8px;margin:8px 0;">
@@ -1895,6 +2157,7 @@ function renderAdminTab(tabName, container, overlay) {
   else if (tabName === 'wizards') renderAdminWizards(container);
   else if (tabName === 'orders') renderAdminOrders(container);
   else if (tabName === 'invoices') renderAdminInvoices(container);
+  else if (tabName === 'blank_protocol') renderAdminBlankProtocol(container);
   else if (tabName === 'password') renderAdminPassword(container);
 }
 
@@ -2215,6 +2478,7 @@ function renderAdminWizards(container) {
     header.innerHTML = `
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
         <div class="admin-field" style="margin:0;"><label>Nazev dlazdice:</label><input type="text" id="wiz-name" value="${wiz.name}" style="width:180px;"></div>
+        <div class="admin-field" style="margin:0;"><label>Cena (text na dlazdici):</label><input type="text" id="wiz-price-label" value="${wiz.priceLabel || ''}" placeholder="napr. od 800 Kc" style="width:140px;"></div>
         <div class="admin-field" style="margin:0;"><label>Barva:</label><input type="color" id="wiz-color" value="${wiz.color}" style="width:50px;height:34px;"></div>
         <div class="admin-field" style="margin:0;">
           <label>Ikona:</label>
@@ -2235,6 +2499,7 @@ function renderAdminWizards(container) {
 
     header.querySelector('#wiz-save-header').onclick = async () => {
       wiz.name = header.querySelector('#wiz-name').value.trim() || 'Wizard';
+      wiz.priceLabel = header.querySelector('#wiz-price-label').value.trim();
       wiz.protocol = header.querySelector('#wiz-protocol').checked;
       wiz.signature = header.querySelector('#wiz-signature').checked;
       wiz.color = header.querySelector('#wiz-color').value;
@@ -2372,6 +2637,10 @@ function renderAdminWizards(container) {
         <label style="font-size:11px;color:#f39c12;cursor:pointer;display:flex;align-items:center;gap:3px;" title="Po kliknuti ukonci wizard a prida do kosiku">
           <input type="checkbox" class="node-final" ${node.final?'checked':''}> Koncove
         </label>
+        <label style="font-size:11px;color:#1abc9c;cursor:pointer;display:flex;align-items:center;gap:3px;" title="Pta se na mnozstvi a vynasobi cenu">
+          <input type="checkbox" class="node-multiply" ${node.multiply?'checked':''}> Mnozstvi
+        </label>
+        ${node.multiply ? `<input type="text" value="${node.unit || 'ks'}" placeholder="Jednotka" class="node-unit" style="width:40px;" title="napr. ks, g, ml">` : ''}
         <div class="tree-node-actions">
           <button style="background:#555;" class="node-up" title="Posunout nahoru">▲</button>
           <button style="background:#555;" class="node-down" title="Posunout dolu">▼</button>
@@ -2402,6 +2671,10 @@ function renderAdminWizards(container) {
     iconSelect.onchange = () => { syncNode(); saveAndRenderQuiet(); };
     colorInput.onchange = () => { syncNode(); saveAndRenderQuiet(); };
     finalCheck.onchange = () => { node.final = finalCheck.checked; saveAndRender(); };
+    const multiplyCheck = div.querySelector('.node-multiply');
+    multiplyCheck.onchange = () => { node.multiply = multiplyCheck.checked; if (!node.unit) node.unit = 'ks'; saveAndRender(); };
+    const unitInput = div.querySelector('.node-unit');
+    if (unitInput) unitInput.onchange = () => { node.unit = unitInput.value.trim() || 'ks'; saveAndRenderQuiet(); };
 
     // Posun nahoru/dolu
     div.querySelector('.node-up').onclick = () => {
@@ -2520,6 +2793,144 @@ async function renderAdminInvoices(container) {
   container.appendChild(list);
 }
 
+function renderAdminBlankProtocol(container) {
+  container.innerHTML = `
+    <h3 style="margin-bottom:16px;">Tisk prazdneho predavaciho protokolu</h3>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+      <label style="font-size:14px;">Pocet kopii:</label>
+      <button class="btn btn-red" id="bp-minus" style="width:40px;height:40px;font-size:20px;border-radius:50%;">−</button>
+      <input type="number" id="bp-copies" value="1" min="1" max="50"
+        style="width:70px;text-align:center;font-size:20px;font-weight:700;padding:8px;border-radius:6px;border:1px solid #444;background:#16213e;color:#fff;">
+      <button class="btn btn-green" id="bp-plus" style="width:40px;height:40px;font-size:20px;border-radius:50%;">+</button>
+    </div>
+    <button class="btn btn-green" id="bp-print" style="font-size:16px;padding:12px 30px;">VYTISKNOUT</button>
+  `;
+
+  const copiesInput = container.querySelector('#bp-copies');
+  container.querySelector('#bp-minus').onclick = () => { copiesInput.value = Math.max(1, (parseInt(copiesInput.value) || 1) - 1); };
+  container.querySelector('#bp-plus').onclick = () => { copiesInput.value = (parseInt(copiesInput.value) || 1) + 1; };
+
+  container.querySelector('#bp-print').onclick = async () => {
+    const copies = Math.max(1, parseInt(copiesInput.value) || 1);
+    const s = settings;
+    const doc = createPDF();
+
+    for (let c = 0; c < copies; c++) {
+      if (c > 0) doc.addPage();
+
+      const today = todayStr();
+
+      // Hlavicka
+      doc.setFont(undefined, 'bold');
+      doc.setFontSize(18);
+      doc.text('PŘEDÁVACÍ PROTOKOL', 14, 20);
+      doc.setFont(undefined, 'normal');
+      doc.setFontSize(11);
+      doc.text('Uskladnění kol / pneu', 14, 28);
+      doc.setFontSize(10);
+      doc.text(`Datum: ${today}`, 14, 36);
+
+      let y = 50;
+
+      // Provozovatel
+      doc.setFont(undefined, 'bold');
+      doc.setFontSize(11);
+      doc.text('Provozovatel:', 14, y);
+      doc.setFont(undefined, 'normal');
+      doc.setFontSize(10);
+      y += 7;
+      doc.text(s.firma || '', 14, y); y += 6;
+      doc.text(`IČO: ${s.ico || ''}  DIČ: ${s.dic || ''}`, 14, y); y += 6;
+      doc.text(s.adresa || '', 14, y); y += 6;
+      doc.text(`Tel: ${s.telefon || ''}  Email: ${s.email || ''}`, 14, y); y += 14;
+
+      // Zakaznik — prazdne radky k vyplneni
+      doc.setFont(undefined, 'bold');
+      doc.setFontSize(11);
+      doc.text('Zákazník:', 14, y);
+      doc.setFont(undefined, 'normal');
+      doc.setFontSize(10);
+      y += 8;
+      const custFields = ['Jméno a příjmení', 'Adresa', 'Telefon', 'Email', 'SPZ'];
+      for (const label of custFields) {
+        doc.text(`${label}:`, 14, y);
+        doc.line(55, y, 196, y);
+        y += 8;
+      }
+      y += 6;
+
+      // Predmet uskladneni
+      doc.setFont(undefined, 'bold');
+      doc.setFontSize(11);
+      doc.text('Předmět uskladnění:', 14, y);
+      doc.setFont(undefined, 'normal');
+      doc.setFontSize(10);
+      y += 8;
+      const descFields = ['Pneumatiky (rozměr, značka)', 'Disky (typ)', 'Stav (hloubka vzorku)', 'Počet kusů', 'Poznámka'];
+      for (const label of descFields) {
+        doc.text(`${label}:`, 14, y);
+        doc.line(70, y, 196, y);
+        y += 8;
+      }
+      y += 8;
+
+      // Cenik — prazdna tabulka
+      doc.setFont(undefined, 'bold');
+      doc.setFontSize(11);
+      doc.text('Ceník:', 14, y);
+      y += 8;
+
+      doc.setFillColor(52, 73, 94);
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(10);
+      doc.rect(14, y, 182, 8, 'F');
+      doc.text('#', 17, y + 6);
+      doc.text('Popis', 25, y + 6);
+      doc.text('Cena', 172, y + 6);
+      y += 10;
+
+      doc.setTextColor(0, 0, 0);
+      doc.setFont(undefined, 'normal');
+      for (let r = 0; r < 5; r++) {
+        doc.text(String(r + 1), 17, y + 5);
+        doc.rect(14, y, 182, 7);
+        y += 7;
+      }
+
+      y += 5;
+      doc.setFont(undefined, 'bold');
+      doc.setFontSize(11);
+      doc.text('Celkem:', 140, y);
+      doc.line(160, y, 196, y);
+      y += 14;
+
+      // Podpisy
+      doc.setFont(undefined, 'normal');
+      doc.setFontSize(10);
+      doc.text('Předávající (zákazník):', 14, y);
+      doc.text('Přebírající (servis):', 110, y);
+      y += 30;
+      doc.line(14, y, 85, y);
+      doc.line(110, y, 196, y);
+      y += 5;
+      doc.setFontSize(9);
+      doc.text('Podpis', 45, y, { align: 'center' });
+      doc.text('Podpis', 150, y, { align: 'center' });
+
+      // Paticka
+      doc.setFont(undefined, 'italic');
+      doc.setFontSize(8);
+      doc.text(`${s.firma || ''} | ${s.adresa || ''} | Tel: ${s.telefon || ''}`, 105, 285, { align: 'center' });
+    }
+
+    // Otevrit PDF
+    const pdfBlob = doc.output('blob');
+    const url = URL.createObjectURL(pdfBlob);
+    const win = window.open(url, '_blank');
+    if (win) { win.onload = () => { win.print(); }; }
+  };
+}
+
 function renderAdminPassword(container) {
   container.innerHTML = `
     <div style="max-width:350px;margin:0 auto;text-align:center;">
@@ -2606,33 +3017,38 @@ async function init() {
   await db.open();
 
   // Nacist konfiguraci:
-  // - localhost (PC) = vzdy IndexedDB (lokalni zmeny)
-  // - github.io (tablet) = vzdy config.json z GitHubu
-  const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+  // 1) Zkusit stahnout config.json z GitHubu (jeden zdroj pravdy)
+  // 2) Pokud neni internet (offline tablet), pouzit IndexedDB cache
+  // 3) Pokud neni ani cache, pouzit vychozi defaulty
+  let configLoaded = false;
+  try {
+    const resp = await fetch(`https://raw.githubusercontent.com/${GITHUB_REPO}/master/${GITHUB_CONFIG_PATH}?v=${Date.now()}`);
+    if (resp.ok) {
+      const cfg = await resp.json();
+      services = cfg.services || DEFAULT_SERVICES;
+      settings = cfg.settings || DEFAULT_SETTINGS;
+      pricing  = cfg.pricing || DEFAULT_PRICING;
+      customWizards = cfg.customWizards || [];
+      pinnedItems = cfg.pinnedItems || [];
+      configLoaded = true;
+      // Ulozit do IndexedDB jako offline cache
+      await Promise.all([
+        db.setKV('services', services),
+        db.setKV('settings', settings),
+        db.setKV('pricing', pricing),
+        db.setKV('customWizards', customWizards),
+        db.setKV('pinnedItems', pinnedItems),
+      ]);
+    }
+  } catch(e) { /* offline nebo chyba site */ }
 
-  if (isLocal) {
-    // PC — pouzit IndexedDB
+  if (!configLoaded) {
+    // Offline fallback — pouzit IndexedDB cache
     services = await db.getKV('services', DEFAULT_SERVICES);
     settings = await db.getKV('settings', DEFAULT_SETTINGS);
     pricing  = await db.getKV('pricing', DEFAULT_PRICING);
     customWizards = await db.getKV('customWizards', []);
-  } else {
-    // Tablet (github.io) — vzdy config.json
-    try {
-      const resp = await fetch('./config.json?v=' + Date.now());
-      if (resp.ok) {
-        const cfg = await resp.json();
-        services = cfg.services || DEFAULT_SERVICES;
-        settings = cfg.settings || DEFAULT_SETTINGS;
-        pricing  = cfg.pricing || DEFAULT_PRICING;
-        customWizards = cfg.customWizards || [];
-      } else { throw new Error('not ok'); }
-    } catch(e) {
-      services = DEFAULT_SERVICES;
-      settings = DEFAULT_SETTINGS;
-      pricing  = DEFAULT_PRICING;
-      customWizards = [];
-    }
+    pinnedItems = await db.getKV('pinnedItems', []);
   }
 
   // Nacist fonty pro PDF
@@ -2660,6 +3076,7 @@ async function init() {
 
   // Event listenery
   document.getElementById('btn-clear-cart').onclick = clearCart;
+  document.getElementById('btn-custom-item').onclick = showCustomItemDialog;
   document.getElementById('btn-finish').onclick = showFinishDialog;
   document.getElementById('btn-admin').onclick = showAdmin;
   document.getElementById('btn-camera').onclick = capturePhoto;
