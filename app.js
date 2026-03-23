@@ -2176,7 +2176,14 @@ async function showInvoices() {
 // ---------------------------------------------------------------------------
 // Administrace
 // ---------------------------------------------------------------------------
-async function showAdmin() {
+async function showAdmin(openHere) {
+  // Pokud uz je admin panel otevreny, zavrit ho (toggle)
+  const existing = document.getElementById('admin-side-panel');
+  if (existing) {
+    closeAdminSidePanel();
+    return;
+  }
+
   const storedHash = settings.admin_password_hash || '';
 
   if (!storedHash) {
@@ -2187,7 +2194,7 @@ async function showAdmin() {
     if (pwd !== pwd2) { alert('Hesla se neshoduji!'); return; }
     settings.admin_password_hash = await hashPassword(pwd);
     await db.setKV('settings', settings);
-    openAdminPanel();
+    openAdminSidePanel();
     return;
   }
 
@@ -2195,43 +2202,64 @@ async function showAdmin() {
   if (!pwd) return;
   const h = await hashPassword(pwd);
   if (h !== storedHash) { alert('Spatne heslo!'); return; }
-  openAdminPanel();
+
+  openAdminSidePanel();
 }
 
-function openAdminPanel() {
-  const div = document.createElement('div');
-  div.innerHTML = `
-    <h2>ADMINISTRACE</h2>
-    <div class="admin-tabs">
-      <button class="admin-tab active" data-tab="wizards">Wizardy</button>
-      <button class="admin-tab" data-tab="firm">Udaje firmy</button>
-      <button class="admin-tab" data-tab="pricing">Ceniky prezuti</button>
-      <button class="admin-tab" data-tab="orders">Zakazky</button>
-      <button class="admin-tab" data-tab="invoices">Faktury</button>
-      <button class="admin-tab" data-tab="blank_protocol">Prazdny protokol</button>
-      <button class="admin-tab" data-tab="password">Zmena hesla</button>
+function closeAdminSidePanel() {
+  const panel = document.getElementById('admin-side-panel');
+  if (panel) panel.remove();
+}
+
+function openAdminSidePanel() {
+  // Odstranit existujici panel pokud je
+  closeAdminSidePanel();
+
+  const panel = document.createElement('div');
+  panel.id = 'admin-side-panel';
+  panel.innerHTML = `
+    <div class="admin-header">
+      <h2>ADMINISTRACE</h2>
+      <button class="admin-close-btn" id="admin-close">✕</button>
     </div>
-    <div style="display:flex;justify-content:flex-end;gap:8px;margin:8px 0;">
-      <button class="btn btn-red" id="btn-revert-github" style="font-size:13px;padding:8px 16px;">⏪ VRATIT POSLEDNI ZMENU</button>
-      <button class="btn btn-blue" id="btn-save-local" style="font-size:15px;padding:10px 24px;">ULOZIT</button>
-      <button class="btn" id="btn-share-pins" style="font-size:13px;padding:8px 16px;background:#FF9800;">SDILET PINY</button>
-      <button class="btn btn-green" id="btn-push-github" style="font-size:15px;padding:10px 24px;">APLIKOVAT NA GITHUB</button>
+    <div class="admin-body">
+      <div class="admin-tabs">
+        <button class="admin-tab active" data-tab="wizards">Wizardy</button>
+        <button class="admin-tab" data-tab="firm">Firma</button>
+        <button class="admin-tab" data-tab="pricing">Ceniky</button>
+        <button class="admin-tab" data-tab="orders">Zakazky</button>
+        <button class="admin-tab" data-tab="invoices">Faktury</button>
+        <button class="admin-tab" data-tab="blank_protocol">Protokol</button>
+        <button class="admin-tab" data-tab="password">Heslo</button>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;justify-content:flex-end;gap:6px;margin:8px 0;">
+        <button class="btn btn-red" id="btn-revert-github" style="font-size:12px;padding:6px 12px;">⏪ VRATIT</button>
+        <button class="btn btn-blue" id="btn-save-local" style="font-size:13px;padding:8px 16px;">ULOZIT</button>
+        <button class="btn" id="btn-share-pins" style="font-size:12px;padding:6px 12px;background:#FF9800;">PINY</button>
+        <button class="btn btn-green" id="btn-push-github" style="font-size:13px;padding:8px 16px;">GITHUB</button>
+      </div>
+      <div class="admin-content" id="admin-content"></div>
     </div>
-    <div class="admin-content" id="admin-content"></div>
   `;
 
-  const { overlay, modal } = openModal(div, 'admin-modal');
+  // Vlozit do #main vedle tiles a cart
+  const main = document.getElementById('main');
+  main.appendChild(panel);
+
+  const div = panel;
+
+  panel.querySelector('#admin-close').onclick = closeAdminSidePanel;
 
   const tabs = div.querySelectorAll('.admin-tab');
   tabs.forEach(tab => {
     tab.onclick = () => {
       tabs.forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
-      renderAdminTab(tab.dataset.tab, div.querySelector('#admin-content'), overlay);
+      renderAdminTab(tab.dataset.tab, div.querySelector('#admin-content'), null);
     };
   });
 
-  renderAdminTab('wizards', div.querySelector('#admin-content'), overlay);
+  renderAdminTab('wizards', div.querySelector('#admin-content'), null);
 
   div.querySelector('#btn-revert-github').onclick = async () => {
     const btn = div.querySelector('#btn-revert-github');
@@ -2239,7 +2267,7 @@ function openAdminPanel() {
     const ok = await revertConfigOnGitHub();
     if (ok) {
       btn.textContent = 'VRACENO ✓';
-      setTimeout(() => { btn.textContent = '⏪ VRATIT POSLEDNI ZMENU'; btn.disabled = false; }, 3000);
+      setTimeout(() => { btn.textContent = '⏪ VRATIT'; btn.disabled = false; }, 3000);
     } else {
       btn.disabled = false;
     }
@@ -2266,9 +2294,9 @@ function openAdminPanel() {
     const ok = await pushConfigToGitHub();
     if (ok) {
       btn.textContent = 'SDILENO ✓';
-      setTimeout(() => { btn.textContent = 'SDILET PINY'; btn.disabled = false; }, 2000);
+      setTimeout(() => { btn.textContent = 'PINY'; btn.disabled = false; }, 2000);
     } else {
-      btn.textContent = 'SDILET PINY';
+      btn.textContent = 'PINY';
       btn.disabled = false;
     }
   };
@@ -2280,11 +2308,93 @@ function openAdminPanel() {
     if (ok) {
       btn.textContent = 'ULOZENO ✓';
       btn.style.background = '#27ae60';
-      setTimeout(() => { btn.textContent = 'APLIKOVAT NA GITHUB'; btn.disabled = false; }, 3000);
+      setTimeout(() => { btn.textContent = 'GITHUB'; btn.disabled = false; }, 3000);
     } else {
-      btn.textContent = 'APLIKOVAT NA GITHUB';
+      btn.textContent = 'GITHUB';
       btn.disabled = false;
     }
+  };
+}
+
+// Standalone admin (pro ?admin=1 v URL)
+function openAdminStandalone() {
+  const div = document.createElement('div');
+  div.style.maxWidth = '900px';
+  div.style.margin = '0 auto';
+  div.style.padding = '20px';
+  div.innerHTML = `
+    <h2>ADMINISTRACE</h2>
+    <div class="admin-tabs">
+      <button class="admin-tab active" data-tab="wizards">Wizardy</button>
+      <button class="admin-tab" data-tab="firm">Udaje firmy</button>
+      <button class="admin-tab" data-tab="pricing">Ceniky prezuti</button>
+      <button class="admin-tab" data-tab="orders">Zakazky</button>
+      <button class="admin-tab" data-tab="invoices">Faktury</button>
+      <button class="admin-tab" data-tab="blank_protocol">Prazdny protokol</button>
+      <button class="admin-tab" data-tab="password">Zmena hesla</button>
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin:8px 0;">
+      <button class="btn btn-red" id="btn-revert-github" style="font-size:13px;padding:8px 16px;">⏪ VRATIT POSLEDNI ZMENU</button>
+      <button class="btn btn-blue" id="btn-save-local" style="font-size:15px;padding:10px 24px;">ULOZIT</button>
+      <button class="btn" id="btn-share-pins" style="font-size:13px;padding:8px 16px;background:#FF9800;">SDILET PINY</button>
+      <button class="btn btn-green" id="btn-push-github" style="font-size:15px;padding:10px 24px;">APLIKOVAT NA GITHUB</button>
+    </div>
+    <div class="admin-content" id="admin-content"></div>
+  `;
+  document.body.appendChild(div);
+
+  const tabs = div.querySelectorAll('.admin-tab');
+  tabs.forEach(tab => {
+    tab.onclick = () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      renderAdminTab(tab.dataset.tab, div.querySelector('#admin-content'), null);
+    };
+  });
+  renderAdminTab('wizards', div.querySelector('#admin-content'), null);
+
+  div.querySelector('#btn-revert-github').onclick = async () => {
+    const btn = div.querySelector('#btn-revert-github');
+    btn.disabled = true;
+    const ok = await revertConfigOnGitHub();
+    if (ok) {
+      btn.textContent = 'VRACENO ✓';
+      setTimeout(() => { btn.textContent = '⏪ VRATIT POSLEDNI ZMENU'; btn.disabled = false; }, 3000);
+    } else { btn.disabled = false; }
+  };
+  div.querySelector('#btn-save-local').onclick = async () => {
+    const btn = div.querySelector('#btn-save-local');
+    btn.disabled = true;
+    await Promise.all([
+      db.setKV('services', services),
+      db.setKV('settings', settings),
+      db.setKV('pricing', pricing),
+      db.setKV('customWizards', customWizards),
+      db.setKV('pinnedItems', pinnedItems),
+    ]);
+    btn.textContent = 'ULOZENO ✓';
+    setTimeout(() => { btn.textContent = 'ULOZIT'; btn.disabled = false; }, 2000);
+  };
+  div.querySelector('#btn-share-pins').onclick = async () => {
+    const btn = div.querySelector('#btn-share-pins');
+    btn.disabled = true;
+    btn.textContent = 'SDILIM...';
+    const ok = await pushConfigToGitHub();
+    if (ok) {
+      btn.textContent = 'SDILENO ✓';
+      setTimeout(() => { btn.textContent = 'SDILET PINY'; btn.disabled = false; }, 2000);
+    } else { btn.textContent = 'SDILET PINY'; btn.disabled = false; }
+  };
+  div.querySelector('#btn-push-github').onclick = async () => {
+    const btn = div.querySelector('#btn-push-github');
+    btn.textContent = 'UKLADAM...';
+    btn.disabled = true;
+    const ok = await pushConfigToGitHub();
+    if (ok) {
+      btn.textContent = 'ULOZENO ✓';
+      btn.style.background = '#27ae60';
+      setTimeout(() => { btn.textContent = 'APLIKOVAT NA GITHUB'; btn.disabled = false; }, 3000);
+    } else { btn.textContent = 'APLIKOVAT NA GITHUB'; btn.disabled = false; }
   };
 }
 
@@ -3115,7 +3225,7 @@ async function init() {
   document.getElementById('btn-clear-cart').onclick = clearCart;
   document.getElementById('btn-custom-item').onclick = showCustomItemDialog;
   document.getElementById('btn-finish').onclick = showFinishDialog;
-  document.getElementById('btn-admin').onclick = showAdmin;
+  document.getElementById('btn-admin').onclick = () => showAdmin();
   document.getElementById('btn-camera').onclick = capturePhoto;
   document.getElementById('btn-share-pins-main').onclick = async () => {
     const btn = document.getElementById('btn-share-pins-main');
@@ -3142,6 +3252,15 @@ async function init() {
   // Aktualizace probiha jen po kliknuti na tlacitko aktualizace
   if ('serviceWorker' in navigator) {
     await navigator.serviceWorker.register('./sw.js').catch(() => null);
+  }
+
+  // Pokud je v URL ?admin=1, skryt pokladnu a zobrazit jen admin (standalone)
+  if (new URLSearchParams(location.search).get('admin') === '1') {
+    document.getElementById('header').style.display = 'none';
+    document.getElementById('main').style.display = 'none';
+    document.body.style.overflow = 'auto';
+    document.title = 'Administrace - Pneuservis';
+    openAdminStandalone();
   }
 }
 
