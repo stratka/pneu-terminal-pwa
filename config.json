@@ -548,7 +548,7 @@
           }
         ]
       },
-      "_runId": 1774013813246,
+      "_runId": 1774281926384,
       "_formData": {},
       "fields": [],
       "priceLabel": "",
@@ -907,7 +907,7 @@
           }
         ]
       },
-      "fields": []
+      "_runId": 1774281966243
     },
     {
       "name": "Oprava defektu",
@@ -946,9 +946,8 @@
           }
         ]
       },
-      "_runId": 1774008846513,
-      "_formData": {},
-      "fields": []
+      "_runId": 1774281880106,
+      "_formData": {}
     },
     {
       "name": "Dilci ukony",
@@ -1569,8 +1568,9 @@
           }
         ]
       },
-      "_runId": 1774014680988,
-      "fields": []
+      "_runId": 1774281995958,
+      "fields": [],
+      "_formData": {}
     },
     {
       "name": "Uskladněni pneu",
@@ -1697,7 +1697,7 @@
       ],
       "protocol": true,
       "signature": true,
-      "_runId": 1773850733130,
+      "_runId": 1774281897843,
       "_formData": {
         "Počet kusů": "1",
         "Alu": "Ano",
@@ -1751,6 +1751,17 @@
       "source": "custom:Dilci ukony",
       "treePath": [
         "Olej a filtry"
+      ]
+    },
+    {
+      "name": "Likvidace pneu",
+      "price": 25,
+      "icon": "default",
+      "color": "#2196f3",
+      "source": "custom:Dilci ukony",
+      "treePath": [
+        "Manipulace",
+        "Likvidace pneu"
       ]
     }
   ]
