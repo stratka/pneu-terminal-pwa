@@ -2185,25 +2185,17 @@ async function showInvoices() {
 // ---------------------------------------------------------------------------
 // Administrace
 // ---------------------------------------------------------------------------
-async function showAdmin(openHere) {
-  // Pokud uz je admin panel otevreny, zavrit ho (toggle)
-  const existing = document.getElementById('admin-side-panel');
-  if (existing) {
-    closeAdminSidePanel();
-    return;
-  }
-
+async function showAdmin() {
   const storedHash = settings.admin_password_hash || '';
 
   if (!storedHash) {
-    // Nastavit heslo
     const pwd = prompt('Nastavte heslo pro administraci:');
     if (!pwd) return;
     const pwd2 = prompt('Zopakujte heslo:');
     if (pwd !== pwd2) { alert('Hesla se neshoduji!'); return; }
     settings.admin_password_hash = await hashPassword(pwd);
     await db.setKV('settings', settings);
-    openAdminSidePanel();
+    openAdminWindow();
     return;
   }
 
@@ -2212,120 +2204,28 @@ async function showAdmin(openHere) {
   const h = await hashPassword(pwd);
   if (h !== storedHash) { alert('Spatne heslo!'); return; }
 
-  openAdminSidePanel();
+  openAdminWindow();
 }
 
-function closeAdminSidePanel() {
-  const panel = document.getElementById('admin-side-panel');
-  if (panel) panel.remove();
+let _adminWindow = null;
+function openAdminWindow() {
+  // Pokud uz existuje otevrene admin okno, aktivovat ho
+  if (_adminWindow && !_adminWindow.closed) {
+    _adminWindow.focus();
+    return;
+  }
+  const w = Math.min(960, screen.availWidth);
+  const h = Math.min(700, screen.availHeight);
+  const left = screen.availWidth - w;
+  const top = 0;
+  _adminWindow = window.open(
+    location.pathname + '?admin=1',
+    'pneu-admin',
+    `width=${w},height=${h},left=${left},top=${top},resizable=yes,scrollbars=yes`
+  );
 }
 
-function openAdminSidePanel() {
-  // Odstranit existujici panel pokud je
-  closeAdminSidePanel();
-
-  const panel = document.createElement('div');
-  panel.id = 'admin-side-panel';
-  panel.innerHTML = `
-    <div class="admin-header">
-      <h2>ADMINISTRACE</h2>
-      <button class="admin-close-btn" id="admin-close">✕</button>
-    </div>
-    <div class="admin-body">
-      <div class="admin-tabs">
-        <button class="admin-tab active" data-tab="wizards">Wizardy</button>
-        <button class="admin-tab" data-tab="firm">Firma</button>
-        <button class="admin-tab" data-tab="pricing">Ceniky</button>
-        <button class="admin-tab" data-tab="orders">Zakazky</button>
-        <button class="admin-tab" data-tab="invoices">Faktury</button>
-        <button class="admin-tab" data-tab="blank_protocol">Protokol</button>
-        <button class="admin-tab" data-tab="password">Heslo</button>
-      </div>
-      <div style="display:flex;flex-wrap:wrap;justify-content:flex-end;gap:6px;margin:8px 0;">
-        <button class="btn btn-red" id="btn-revert-github" style="font-size:12px;padding:6px 12px;">⏪ VRATIT</button>
-        <button class="btn btn-blue" id="btn-save-local" style="font-size:13px;padding:8px 16px;">ULOZIT</button>
-        <button class="btn" id="btn-share-pins" style="font-size:12px;padding:6px 12px;background:#FF9800;">PINY</button>
-        <button class="btn btn-green" id="btn-push-github" style="font-size:13px;padding:8px 16px;">GITHUB</button>
-      </div>
-      <div class="admin-content" id="admin-content"></div>
-    </div>
-  `;
-
-  // Vlozit do #main vedle tiles a cart
-  const main = document.getElementById('main');
-  main.appendChild(panel);
-
-  const div = panel;
-
-  panel.querySelector('#admin-close').onclick = closeAdminSidePanel;
-
-  const tabs = div.querySelectorAll('.admin-tab');
-  tabs.forEach(tab => {
-    tab.onclick = () => {
-      tabs.forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-      renderAdminTab(tab.dataset.tab, div.querySelector('#admin-content'), null);
-    };
-  });
-
-  renderAdminTab('wizards', div.querySelector('#admin-content'), null);
-
-  div.querySelector('#btn-revert-github').onclick = async () => {
-    const btn = div.querySelector('#btn-revert-github');
-    btn.disabled = true;
-    const ok = await revertConfigOnGitHub();
-    if (ok) {
-      btn.textContent = 'VRACENO ✓';
-      setTimeout(() => { btn.textContent = '⏪ VRATIT'; btn.disabled = false; }, 3000);
-    } else {
-      btn.disabled = false;
-    }
-  };
-  div.querySelector('#btn-save-local').onclick = async () => {
-    const btn = div.querySelector('#btn-save-local');
-    btn.disabled = true;
-    await Promise.all([
-      db.setKV('services', services),
-      db.setKV('settings', settings),
-      db.setKV('pricing', pricing),
-      db.setKV('customWizards', customWizards),
-      db.setKV('pinnedItems', pinnedItems),
-    ]);
-    renderTiles();
-    btn.textContent = 'ULOZENO ✓';
-    setTimeout(() => { btn.textContent = 'ULOZIT'; btn.disabled = false; }, 2000);
-  };
-  div.querySelector('#btn-share-pins').onclick = async () => {
-    const btn = div.querySelector('#btn-share-pins');
-    btn.disabled = true;
-    btn.textContent = 'SDILIM...';
-    // Pushne config vcetne pinnedItems na GitHub
-    const ok = await pushConfigToGitHub();
-    if (ok) {
-      btn.textContent = 'SDILENO ✓';
-      setTimeout(() => { btn.textContent = 'PINY'; btn.disabled = false; }, 2000);
-    } else {
-      btn.textContent = 'PINY';
-      btn.disabled = false;
-    }
-  };
-  div.querySelector('#btn-push-github').onclick = async () => {
-    const btn = div.querySelector('#btn-push-github');
-    btn.textContent = 'UKLADAM...';
-    btn.disabled = true;
-    const ok = await pushConfigToGitHub();
-    if (ok) {
-      btn.textContent = 'ULOZENO ✓';
-      btn.style.background = '#27ae60';
-      setTimeout(() => { btn.textContent = 'GITHUB'; btn.disabled = false; }, 3000);
-    } else {
-      btn.textContent = 'GITHUB';
-      btn.disabled = false;
-    }
-  };
-}
-
-// Standalone admin (pro ?admin=1 v URL)
+// Standalone admin (pro ?admin=1 v URL a samostatne okno)
 function openAdminStandalone() {
   const div = document.createElement('div');
   div.style.maxWidth = '900px';
@@ -2381,6 +2281,8 @@ function openAdminStandalone() {
       db.setKV('customWizards', customWizards),
       db.setKV('pinnedItems', pinnedItems),
     ]);
+    // Oznamit hlavnimu oknu ze se data zmenila
+    if (window._adminChannel) window._adminChannel.postMessage('reload');
     btn.textContent = 'ULOZENO ✓';
     setTimeout(() => { btn.textContent = 'ULOZIT'; btn.disabled = false; }, 2000);
   };
@@ -3263,13 +3165,30 @@ async function init() {
     await navigator.serviceWorker.register('./sw.js').catch(() => null);
   }
 
-  // Pokud je v URL ?admin=1, skryt pokladnu a zobrazit jen admin (standalone)
+  // BroadcastChannel pro komunikaci admin okno <-> hlavni okno
+  const adminChannel = new BroadcastChannel('pneu-admin-sync');
   if (new URLSearchParams(location.search).get('admin') === '1') {
+    // Admin okno — skryt pokladnu, zobrazit admin
     document.getElementById('header').style.display = 'none';
     document.getElementById('main').style.display = 'none';
     document.body.style.overflow = 'auto';
     document.title = 'Administrace - Pneuservis';
+    window._adminChannel = adminChannel;
     openAdminStandalone();
+  } else {
+    // Hlavni okno — poslouchat na zmeny z adminu
+    adminChannel.onmessage = async (e) => {
+      if (e.data === 'reload') {
+        // Znovu nacist data z IndexedDB a prekreslat
+        services = await db.getKV('services') || services;
+        settings = await db.getKV('settings') || settings;
+        pricing = await db.getKV('pricing') || pricing;
+        customWizards = await db.getKV('customWizards') || customWizards;
+        pinnedItems = await db.getKV('pinnedItems') || pinnedItems;
+        renderTiles();
+        renderCart();
+      }
+    };
   }
 }
 
