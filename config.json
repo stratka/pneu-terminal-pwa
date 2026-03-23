@@ -1578,7 +1578,7 @@
         "label": "Hlavni",
         "children": [
           {
-            "label": "do 16'",
+            "label": "do 15",
             "price": 500,
             "icon": "",
             "color": "#2196f3",
@@ -1586,7 +1586,7 @@
             "final": true
           },
           {
-            "label": "17'",
+            "label": "16'",
             "price": 600,
             "icon": "",
             "color": "#2196f3",
@@ -1594,7 +1594,7 @@
             "final": true
           },
           {
-            "label": "18'",
+            "label": "17'",
             "price": 700,
             "icon": "",
             "color": "#2196f3",
@@ -1602,7 +1602,7 @@
             "final": true
           },
           {
-            "label": "19'",
+            "label": "18'",
             "price": 800,
             "icon": "",
             "color": "#2196f3",
@@ -1610,7 +1610,7 @@
             "final": true
           },
           {
-            "label": "20'",
+            "label": "19'",
             "price": 900,
             "icon": "",
             "color": "#2196f3",
@@ -1618,7 +1618,7 @@
             "final": true
           },
           {
-            "label": "21",
+            "label": "20'",
             "price": 1000,
             "icon": "",
             "color": "#2196f3",
@@ -1626,7 +1626,7 @@
             "final": true
           },
           {
-            "label": "22",
+            "label": "21",
             "price": 1100,
             "icon": "",
             "color": "#2196f3",
@@ -1634,8 +1634,16 @@
             "final": true
           },
           {
-            "label": "23",
+            "label": "22",
             "price": 1200,
+            "icon": "",
+            "color": "#2196f3",
+            "children": [],
+            "final": true
+          },
+          {
+            "label": "23",
+            "price": 1300,
             "icon": "",
             "color": "#2196f3",
             "children": [],
