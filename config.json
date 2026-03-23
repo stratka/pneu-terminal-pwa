@@ -548,17 +548,17 @@
           }
         ]
       },
-      "_runId": 1774013813246,
+      "_runId": 1774281742388,
       "_formData": {},
       "fields": [],
-      "priceLabel": "",
+      "priceLabel": "od 1000 kč",
       "protocol": false,
       "signature": false
     },
     {
       "name": "Prezuti sada za sadu",
       "icon": "vyvazeni",
-      "color": "#4CAF50",
+      "color": "#4caf50",
       "tree": {
         "label": "Rozmer kola",
         "children": [
@@ -906,7 +906,13 @@
             "color": "#16a085"
           }
         ]
-      }
+      },
+      "_runId": 1774281764190,
+      "_formData": {},
+      "fields": [],
+      "priceLabel": "od 650 kč",
+      "protocol": false,
+      "signature": false
     },
     {
       "name": "Oprava defektu",
@@ -1737,7 +1743,8 @@
       "fields": [],
       "priceLabel": "",
       "protocol": false,
-      "signature": false
+      "signature": false,
+      "_runId": 1774281673765
     }
   ],
   "pinnedItems": [
