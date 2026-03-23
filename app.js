@@ -727,13 +727,14 @@ function isPinned(source, name) {
   return pinnedItems.some(p => p.source === source && p.name === name);
 }
 
-async function togglePin(source, name, price, icon, color, treePath) {
+async function togglePin(source, name, price, icon, color, treePath, percent) {
   const idx = pinnedItems.findIndex(p => p.source === source && p.name === name);
   if (idx >= 0) {
     pinnedItems.splice(idx, 1);
   } else {
     const pin = { name, price, icon: icon || '', color: color || '#607D8B', source };
     if (treePath) pin.treePath = treePath;
+    if (percent) pin.percent = true;
     pinnedItems.push(pin);
   }
   await db.setKV('pinnedItems', pinnedItems);
@@ -781,11 +782,19 @@ function renderTiles() {
     if (wiz.priceLabel) {
       priceText = wiz.priceLabel;
     } else {
-      const allPrices = collectTreePrices(wiz.tree);
-      if (allPrices.length) {
-        const mn = Math.min(...allPrices);
-        const mx = Math.max(...allPrices);
+      const allPriceData = collectTreePrices(wiz.tree);
+      const kcOnly = allPriceData.filter(p => !p.percent);
+      const pctOnly = allPriceData.filter(p => p.percent);
+      if (kcOnly.length) {
+        const mn = Math.min(...kcOnly.map(p => p.price));
+        const mx = Math.max(...kcOnly.map(p => p.price));
         priceText = mn === mx ? `${mn} Kc` : `od ${mn} Kc`;
+      }
+      if (pctOnly.length) {
+        const mn = Math.min(...pctOnly.map(p => p.price));
+        const mx = Math.max(...pctOnly.map(p => p.price));
+        const pctText = mn === mx ? `${mn}%` : `${mn}-${mx}%`;
+        priceText = priceText ? `${priceText} / ${pctText}` : pctText;
       }
     }
     allTiles.push({ name: wiz.name, icon: iconChar(wiz.icon), color: wiz.color || '#607D8B', priceText, onclick: () => runCustomWizard(wiz) });
@@ -797,7 +806,7 @@ function renderTiles() {
       name: pin.name,
       icon: pin.icon ? iconChar(pin.icon) : '\u2B50',
       color: pin.color || '#607D8B',
-      priceText: pin.price ? `${pin.price} Kc` : '',
+      priceText: pin.price ? `${pin.price}${pin.percent ? '%' : ' Kc'}` : '',
       pinned: true,
       pinSource: pin.source,
       onclick: () => {
@@ -855,7 +864,7 @@ function renderTiles() {
 function collectTreePrices(node) {
   const prices = [];
   if (!node) return prices;
-  if (node.price && node.price > 0) prices.push(node.price);
+  if (node.price && node.price > 0) prices.push({ price: node.price, percent: !!node.percent });
   if (node.children) {
     for (const child of node.children) prices.push(...collectTreePrices(child));
   }
@@ -1587,7 +1596,7 @@ function runCustomWizard(wiz, startPath) {
         const cPrice = child.price || 0;
         const cIcon = child.icon ? iconChar(child.icon) : '';
         const hasIcon = !!cIcon;
-        const cSub = cPrice ? `${cPrice} Kc` : (child.children && child.children.length ? `${child.children.length} moznosti` : '');
+        const cSub = cPrice ? `${cPrice}${child.percent ? '%' : ' Kc'}` : (child.children && child.children.length ? `${child.children.length} moznosti` : '');
         if (child.multiply && cPrice) {
           // Zobrazit jednotkovou cenu
         }
@@ -1618,7 +1627,7 @@ function runCustomWizard(wiz, startPath) {
           ${starHtml}
           ${hasIcon ? `<div style="font-size:${iconSz}px;margin-bottom:4px;line-height:1;">${cIcon}</div>` : ''}
           <div style="font-size:${baseLblSz}px;font-weight:700;line-height:1.2;word-break:break-word;">${cLabel}</div>
-          ${cSub ? `<div style="font-size:${subSz}px;color:#e0e0e0;margin-top:4px;font-weight:700;">${child.multiply ? cPrice + ' Kc/' + (child.unit||'ks') : cSub}</div>` : ''}
+          ${cSub ? `<div style="font-size:${subSz}px;color:#e0e0e0;margin-top:4px;font-weight:700;">${child.multiply ? cPrice + (child.percent ? '%' : ' Kc') + '/' + (child.unit||'ks') : cSub}</div>` : ''}
         `;
 
         // Klik na hvezdicku
@@ -1626,7 +1635,7 @@ function runCustomWizard(wiz, startPath) {
         if (starEl) {
           starEl.onclick = (e) => {
             e.stopPropagation();
-            togglePin(pinSource, pinName, pinPrice, child.icon || wiz.icon, tileColor, pinTreePath);
+            togglePin(pinSource, pinName, pinPrice, child.icon || wiz.icon, tileColor, pinTreePath, child.percent);
             const nowPinned = isPinned(pinSource, pinName);
             starEl.textContent = nowPinned ? '⭐' : '☆';
             starEl.style.opacity = nowPinned ? '1' : '0.4';
