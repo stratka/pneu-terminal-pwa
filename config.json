@@ -548,17 +548,17 @@
           }
         ]
       },
-      "_runId": 1774281742388,
+      "_runId": 1774013813246,
       "_formData": {},
       "fields": [],
-      "priceLabel": "od 1000 kč",
+      "priceLabel": "",
       "protocol": false,
       "signature": false
     },
     {
       "name": "Prezuti sada za sadu",
       "icon": "vyvazeni",
-      "color": "#4caf50",
+      "color": "#4CAF50",
       "tree": {
         "label": "Rozmer kola",
         "children": [
@@ -907,12 +907,7 @@
           }
         ]
       },
-      "_runId": 1774281764190,
-      "_formData": {},
-      "fields": [],
-      "priceLabel": "od 650 kč",
-      "protocol": false,
-      "signature": false
+      "fields": []
     },
     {
       "name": "Oprava defektu",
@@ -952,7 +947,8 @@
         ]
       },
       "_runId": 1774008846513,
-      "_formData": {}
+      "_formData": {},
+      "fields": []
     },
     {
       "name": "Dilci ukony",
@@ -1743,8 +1739,7 @@
       "fields": [],
       "priceLabel": "",
       "protocol": false,
-      "signature": false,
-      "_runId": 1774281673765
+      "signature": false
     }
   ],
   "pinnedItems": [
