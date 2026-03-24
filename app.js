@@ -1684,25 +1684,27 @@ function runCustomWizard(wiz, startPath) {
             showStep(child, newAcc, newPath, cLabel, level + 1);
           } else {
             if (child.final) {
-              // Koncove — zobrazit formular, podpis, protokol, zavrit wizard
+              // Koncove — formular, mnozstvi, podpis, protokol
               showEndForm(() => {
-                finishItem(newAcc, newPath);
-                if (wizOverlay) { wizOverlay.remove(); wizOverlay = null; }
+                // Vyber mnozstvi pred finishItem
+                showQtySelect(newAcc, newPath, () => {
+                  if (wizOverlay) { wizOverlay.remove(); wizOverlay = null; }
 
-                function afterSignature(sigDataUrl) {
-                  if (wiz.protocol) {
-                    const protoItems = newAcc.map(a => ({ name: a.label, price: a.price }));
-                    generateProtocolPDF(wiz.name, protoItems, collectedFormData, sigDataUrl).then(({ doc, protoNo }) => {
-                      showProtocol(doc, protoNo);
-                    });
+                  function afterSignature(sigDataUrl) {
+                    if (wiz.protocol) {
+                      const protoItems = newAcc.map(a => ({ name: a.label, price: a.price }));
+                      generateProtocolPDF(wiz.name, protoItems, collectedFormData, sigDataUrl).then(({ doc, protoNo }) => {
+                        showProtocol(doc, protoNo);
+                      });
+                    }
                   }
-                }
 
-                if (wiz.signature) {
-                  showSignaturePad((sigDataUrl) => afterSignature(sigDataUrl));
-                } else {
-                  afterSignature(null);
-                }
+                  if (wiz.signature) {
+                    showSignaturePad((sigDataUrl) => afterSignature(sigDataUrl));
+                  } else {
+                    afterSignature(null);
+                  }
+                });
               });
             } else {
               // Pridat do kosiku — nabidnout vyber mnozstvi
@@ -1816,7 +1818,7 @@ function runCustomWizard(wiz, startPath) {
     wiz._formData = { ...collectedFormData };
   }
 
-  function showQtySelect(accumulated, path) {
+  function showQtySelect(accumulated, path, onDone) {
     if (wizOverlay) wizOverlay.remove();
     const unitPrice = accumulated.reduce((s, a) => s + a.price, 0);
     const qtyOpts = [1,2,3,4,5,6,8].map(n => ({
@@ -1855,14 +1857,20 @@ function runCustomWizard(wiz, startPath) {
       tile.style.background = opt.color;
       tile.innerHTML = `<div class="wt-label">${opt.label}</div><div class="wt-sub">${opt.sublabel}</div>`;
       tile.onclick = () => {
-        accumulated[accumulated.length - 1] = {
-          ...accumulated[accumulated.length - 1],
-          label: `${accumulated[accumulated.length - 1].label} x${opt.value}`,
-          price: accumulated[accumulated.length - 1].price * opt.value,
-        };
+        if (opt.value > 1 && accumulated.length) {
+          accumulated[accumulated.length - 1] = {
+            ...accumulated[accumulated.length - 1],
+            label: `${accumulated[accumulated.length - 1].label} x${opt.value}`,
+            price: accumulated[accumulated.length - 1].price * opt.value,
+          };
+        }
         finishItem(accumulated, path);
         overlay.remove();
-        showStep(wiz.tree, [], [], wiz.name, 1);
+        if (onDone) {
+          onDone();
+        } else {
+          showStep(wiz.tree, [], [], wiz.name, 1);
+        }
       };
       grid.appendChild(tile);
     }
