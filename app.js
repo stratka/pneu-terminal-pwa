@@ -1360,7 +1360,18 @@ function showDilciWizard() {
     wizardTileSelect('TYP VOZIDLA', `${ukon} | ${sz}`, opts, true, isSuv => {
       const finalPrice = isSuv ? suvPrice : basePrice;
       const veh = isSuv ? 'SUV/VAN/EV/RF' : 'Osobni';
-      customItems.push({ name:`${ukon} | ${sz} | ${veh}`, price:finalPrice, qty:1, detail:'' });
+      step5qty(ukon, sz, veh, finalPrice);
+    });
+  }
+
+  function step5qty(ukon, sz, veh, unitPrice) {
+    const qtyOpts = [1,2,3,4,5,6,8].map(n => ({
+      label: `${n} ks`, sublabel: `${n * unitPrice} Kc`,
+      color: n === 4 ? '#27ae60' : '#3498db', icon: '',
+      value: n,
+    }));
+    wizardTileSelect('POCET KUSU', `${ukon} | ${sz} | ${veh} | ${unitPrice} Kc/ks`, qtyOpts, true, qty => {
+      customItems.push({ name:`${ukon} | ${sz} | ${veh}`, price:unitPrice, qty, detail:'' });
       renderCart();
     });
   }
@@ -1377,8 +1388,15 @@ function showDilciWizard() {
     const catColor = (catStyles[catName] || {}).color || '#607D8B';
     const catIcon = (catStyles[catName] || {}).icon || '';
     wizardTileSelect(catName.toUpperCase(), 'Vyberte sluzbu', opts, false, v => {
-      customItems.push({ name: v.name, price: v.price, qty: 1, detail: catName });
-      renderCart();
+      const qtyOpts = [1,2,3,4,5,6,8].map(n => ({
+        label: `${n} ks`, sublabel: `${n * v.price} Kc`,
+        color: n === 1 ? '#27ae60' : '#3498db', icon: '',
+        value: n,
+      }));
+      wizardTileSelect('POCET KUSU', `${v.name} | ${v.price} Kc/ks`, qtyOpts, true, qty => {
+        customItems.push({ name: v.name, price: v.price, qty, detail: catName });
+        renderCart();
+      });
     }, {
       source: `dilci:${catName}`,
       getPin: (opt) => ({ name: opt.value.name, price: opt.value.price, icon: '', color: catColor })
