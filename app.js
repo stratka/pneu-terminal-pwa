@@ -1112,7 +1112,7 @@ function wizardTileSelect(title, subtitle, options, big, callback, pinConfig) {
       tile.innerHTML = `
         ${starHtml}
         ${hasIcon ? `<div style="font-size:${iconSize}px;margin-bottom:4px;line-height:1;">${opt.icon}</div>` : ''}
-        <div style="font-size:${baseLabelSize}px;font-weight:700;line-height:1.2;word-break:break-word;">${opt.label}</div>
+        <div style="font-size:${baseLabelSize}px;font-weight:700;line-height:1.2;overflow-wrap:anywhere;word-break:normal;">${opt.label}</div>
         ${opt.sublabel ? `<div style="font-size:${subSize}px;color:#e0e0e0;margin-top:4px;font-weight:700;white-space:pre-line;">${opt.sublabel}</div>` : ''}
       `;
 
@@ -1626,7 +1626,7 @@ function runCustomWizard(wiz, startPath) {
         tile.innerHTML = `
           ${starHtml}
           ${hasIcon ? `<div style="font-size:${iconSz}px;margin-bottom:4px;line-height:1;">${cIcon}</div>` : ''}
-          <div style="font-size:${baseLblSz}px;font-weight:700;line-height:1.2;word-break:break-word;">${cLabel}</div>
+          <div style="font-size:${baseLblSz}px;font-weight:700;line-height:1.2;overflow-wrap:anywhere;word-break:normal;">${cLabel}</div>
           ${cSub ? `<div style="font-size:${subSz}px;color:#e0e0e0;margin-top:4px;font-weight:700;">${child.multiply ? cPrice + (child.percent ? '%' : ' Kc') + '/' + (child.unit||'ks') : cSub}</div>` : ''}
         `;
 

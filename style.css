@@ -75,7 +75,7 @@ html, body {
 }
 .tile:active { transform: scale(0.95); }
 .tile-icon { font-size: clamp(24px, 4vw, 42px); margin-bottom: 4px; line-height: 1; }
-.tile-name { font-size: clamp(10px, 1.4vw, 14px); font-weight: 700; line-height: 1.2; word-break: break-word; }
+.tile-name { font-size: clamp(10px, 1.4vw, 14px); font-weight: 700; line-height: 1.2; overflow-wrap: anywhere; word-break: normal; }
 .tile-price { font-size: clamp(10px, 1.4vw, 15px); font-weight: 700; color: #e0e0e0; margin-top: 3px; }
 
 /* ---- Cart (right) ---- */
