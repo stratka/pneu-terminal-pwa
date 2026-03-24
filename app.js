@@ -1705,9 +1705,8 @@ function runCustomWizard(wiz, startPath) {
                 }
               });
             } else {
-              // Pridat do kosiku a zpet na root
-              finishItem(newAcc, newPath);
-              showStep(wiz.tree, [], [], wiz.name, 1);
+              // Pridat do kosiku — nabidnout vyber mnozstvi
+              showQtySelect(newAcc, newPath);
             }
           }
         };
@@ -1815,6 +1814,59 @@ function runCustomWizard(wiz, startPath) {
       if (ci._wizId === wiz._runId) ci.formData = { ...collectedFormData };
     }
     wiz._formData = { ...collectedFormData };
+  }
+
+  function showQtySelect(accumulated, path) {
+    if (wizOverlay) wizOverlay.remove();
+    const unitPrice = accumulated.reduce((s, a) => s + a.price, 0);
+    const qtyOpts = [1,2,3,4,5,6,8].map(n => ({
+      label: `${n} ks`, sublabel: `${n * unitPrice} Kc`,
+      color: n === 1 ? '#27ae60' : '#3498db', icon: '',
+      value: n,
+    }));
+    const { overlay, modal } = openModal(document.createElement('div'));
+    wizOverlay = overlay;
+    modal.style.width = '95vw';
+    modal.style.height = '95vh';
+    modal.style.maxWidth = '100vw';
+    modal.style.maxHeight = '100vh';
+    modal.style.display = 'flex';
+    modal.style.flexDirection = 'column';
+
+    const name = path.join(' | ');
+    modal.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-shrink:0;">
+        <h2 style="margin:0">POCET KUSU</h2>
+        <button class="btn btn-red wiz-cancel" style="font-size:13px;padding:8px 16px;">ZRUSIT</button>
+      </div>
+      <div style="text-align:center;color:var(--text-muted);font-size:14px;margin-bottom:8px;">${name} | ${unitPrice} Kc/ks</div>
+    `;
+    modal.querySelector('.wiz-cancel').onclick = () => { overlay.remove(); };
+
+    const grid = document.createElement('div');
+    grid.className = 'wizard-grid';
+    grid.style.flex = '1';
+    grid.style.overflowY = 'auto';
+    grid.style.alignContent = 'center';
+
+    for (const opt of qtyOpts) {
+      const tile = document.createElement('div');
+      tile.className = 'wizard-tile';
+      tile.style.background = opt.color;
+      tile.innerHTML = `<div class="wt-label">${opt.label}</div><div class="wt-sub">${opt.sublabel}</div>`;
+      tile.onclick = () => {
+        accumulated[accumulated.length - 1] = {
+          ...accumulated[accumulated.length - 1],
+          label: `${accumulated[accumulated.length - 1].label} x${opt.value}`,
+          price: accumulated[accumulated.length - 1].price * opt.value,
+        };
+        finishItem(accumulated, path);
+        overlay.remove();
+        showStep(wiz.tree, [], [], wiz.name, 1);
+      };
+      grid.appendChild(tile);
+    }
+    modal.appendChild(grid);
   }
 
   function finishItem(accumulated, path) {
