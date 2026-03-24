@@ -976,6 +976,8 @@ function clearCart() {
   customItems = [];
   currentSpz = '';
   photoDataUrl = null;
+  // Vycistit formularova data ze vsech wizardu
+  customWizards.forEach(w => { delete w._formData; });
   document.getElementById('spz-display').textContent = '';
   document.getElementById('photo-area').innerHTML = '';
   renderCart();
@@ -1394,7 +1396,7 @@ function runCustomWizard(wiz, startPath) {
   let wizOverlay = null;
 
   const formScreen = wiz.formScreen || 0; // 0 = na konci, 1+ = cislo obrazovky
-  const collectedFormData = {};  // { fieldLabel: value }
+  const collectedFormData = { ...(wiz._formData || {}) };  // zachovat data z predchoziho behu
 
   function showMultiplyInput(node, accumulated, path) {
     if (wizOverlay) wizOverlay.remove();
