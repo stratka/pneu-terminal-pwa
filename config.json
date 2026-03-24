@@ -1096,7 +1096,9 @@
                       }
                     ]
                   }
-                ]
+                ],
+                "multiply": true,
+                "unit": "ks"
               },
               {
                 "label": "Demontaz 1ks pneumatiky z disku",
@@ -1196,7 +1198,9 @@
                       }
                     ]
                   }
-                ]
+                ],
+                "multiply": true,
+                "unit": "ks"
               },
               {
                 "label": "Montaz 1ks pneumatiky na disk",
@@ -1296,7 +1300,9 @@
                       }
                     ]
                   }
-                ]
+                ],
+                "multiply": true,
+                "unit": "ks"
               }
             ],
             "color": "#2196f3",
@@ -1328,7 +1334,9 @@
                 "label": "Vyvazeni 1ks pneumatiky",
                 "price": 100,
                 "final": true,
-                "children": []
+                "children": [],
+                "multiply": true,
+                "unit": "ks"
               },
               {
                 "label": "Pouziti zateze max 100g",
@@ -1751,17 +1759,6 @@
       "source": "custom:Dilci ukony",
       "treePath": [
         "Olej a filtry"
-      ]
-    },
-    {
-      "name": "Likvidace pneu",
-      "price": 25,
-      "icon": "default",
-      "color": "#2196f3",
-      "source": "custom:Dilci ukony",
-      "treePath": [
-        "Manipulace",
-        "Likvidace pneu"
       ]
     }
   ]
