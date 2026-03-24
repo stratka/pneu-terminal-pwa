@@ -1655,7 +1655,7 @@ function runCustomWizard(wiz, startPath) {
           const newAcc = [...accumulated];
 
           // Mnozstvi — zobrazit input
-          if (child.multiply && cPrice && (!child.children || !child.children.length)) {
+          if (child.multiply && cPrice) {
             showMultiplyInput(child, newAcc, newPath);
             return;
           }
