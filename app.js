@@ -774,7 +774,8 @@ function renderTiles() {
     } else {
       priceText = `${svc.price} Kc`;
     }
-    allTiles.push({ name: svc.name, icon: iconChar(svc.icon), color: svc.color || TILE_COLORS[idx % TILE_COLORS.length], priceText, onclick: () => addToCart(idx) });
+    allTiles.push({ name: svc.name, icon: iconChar(svc.icon), color: svc.color || TILE_COLORS[idx % TILE_COLORS.length], priceText, onclick: () => addToCart(idx),
+      _matchQuery: q => svc.name.toLowerCase().includes(q) });
   });
 
   customWizards.forEach((wiz, wIdx) => {
@@ -797,7 +798,8 @@ function renderTiles() {
         priceText = priceText ? `${priceText} / ${pctText}` : pctText;
       }
     }
-    allTiles.push({ name: wiz.name, icon: iconChar(wiz.icon), color: wiz.color || '#607D8B', priceText, onclick: () => runCustomWizard(wiz) });
+    allTiles.push({ name: wiz.name, icon: iconChar(wiz.icon), color: wiz.color || '#607D8B', priceText, onclick: () => runCustomWizard(wiz),
+      _matchQuery: q => wiz.name.toLowerCase().includes(q) || treeContains(wiz.tree, q) });
   });
 
   // Pripnute polozky z wizardu
@@ -809,6 +811,7 @@ function renderTiles() {
       priceText: pin.price ? `${pin.price}${pin.percent ? '%' : ' Kc'}` : '',
       pinned: true,
       pinSource: pin.source,
+      _matchQuery: q => pin.name.toLowerCase().includes(q) || (pin.source || '').toLowerCase().includes(q),
       onclick: () => {
         // Otevrit wizard od pripnuteho mista
         if (pin.treePath && pin.source.startsWith('custom:')) {
@@ -822,8 +825,13 @@ function renderTiles() {
     });
   });
 
+  // Filtrovat podle hledani
+  const searchInput = document.getElementById('tile-search');
+  const query = (searchInput ? searchInput.value : '').toLowerCase().trim();
+  const filtered = query ? allTiles.filter(t => t._matchQuery(query)) : allTiles;
+
   // Vypocitat font podle nejdelsiho nazvu
-  const maxNameLen = Math.max(1, ...allTiles.map(t => t.name.length));
+  const maxNameLen = Math.max(1, ...filtered.map(t => t.name.length));
   // Dlazdice jsou cca 130-200px, s ikonou mame cca 2 radky pro text
   // Zakladni velikost 14px, zmensit pokud se nejdelsi nevejde
   let nameFontSize = 14;
@@ -834,7 +842,7 @@ function renderTiles() {
   }
   let priceFontSize = Math.max(9, Math.floor(nameFontSize * 0.9));
 
-  for (const t of allTiles) {
+  for (const t of filtered) {
     const tile = document.createElement('div');
     tile.className = 'tile';
     tile.style.background = t.color;
@@ -869,6 +877,18 @@ function collectTreePrices(node) {
     for (const child of node.children) prices.push(...collectTreePrices(child));
   }
   return prices;
+}
+
+// Prohledat strom wizardu - vraci true pokud nektery uzel obsahuje hledany text
+function treeContains(node, query) {
+  if (!node) return false;
+  if ((node.label || '').toLowerCase().includes(query)) return true;
+  if (node.children) {
+    for (const c of node.children) {
+      if (treeContains(c, query)) return true;
+    }
+  }
+  return false;
 }
 
 function renderCart() {
@@ -3307,6 +3327,7 @@ async function init() {
   document.getElementById('btn-clear-cart').onclick = clearCart;
   document.getElementById('btn-custom-item').onclick = showCustomItemDialog;
   document.getElementById('btn-finish').onclick = showFinishDialog;
+  document.getElementById('tile-search').oninput = () => renderTiles();
   document.getElementById('btn-admin').onclick = () => showAdmin();
   document.getElementById('btn-camera').onclick = capturePhoto;
   document.getElementById('btn-share-pins-main').onclick = async () => {
