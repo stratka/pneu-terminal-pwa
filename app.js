@@ -1415,6 +1415,7 @@ function runCustomWizard(wiz, startPath) {
 
   const formScreen = wiz.formScreen || 0; // 0 = na konci, 1+ = cislo obrazovky
   const collectedFormData = { ...(wiz._formData || {}) };  // zachovat data z predchoziho behu
+  let pendingMultiply = 1;  // mnozstvi z uzlu s multiply, aplikuje se na konci
 
   function showMultiplyInput(node, accumulated, path) {
     if (wizOverlay) wizOverlay.remove();
@@ -1488,16 +1489,13 @@ function runCustomWizard(wiz, startPath) {
     qtyInput.select();
   }
 
-  function showStep(node, accumulated, path, title, level, inheritMultiply) {
+  function showStep(node, accumulated, path, title, level) {
     // Pokud existuje predchozi overlay, odstranit
     if (wizOverlay) wizOverlay.remove();
 
-    // Propagovat multiply z rodicu
-    const isMultiply = node.multiply || inheritMultiply;
-
     if (!node.children || !node.children.length) {
       // Listovy uzel s mnozstvim — zobrazit input
-      if ((node.multiply || inheritMultiply) && node.price) {
+      if (node.multiply && node.price) {
         showMultiplyInput(node, accumulated, path);
         return;
       }
@@ -1675,59 +1673,47 @@ function runCustomWizard(wiz, startPath) {
           const newPath = [...path, cLabel];
           const newAcc = [...accumulated];
 
-          // Mnozstvi — zobrazit input (uzel sam ma multiply a cenu, zadne dalsi kroky)
+          // Uzel s multiply a cenu bez children — primo showMultiplyInput (jako Vyvazeni)
           if (child.multiply && cPrice && (!child.children || !child.children.length)) {
             showMultiplyInput(child, newAcc, newPath);
             return;
           }
 
-          // Zjistit jestli tento uzel nebo nektery rodic ma multiply
-          const childMultiply = child.multiply || isMultiply;
+          // Uzel s multiply a children — zeptat se na mnozstvi, ulozit, pokracovat do children
+          if (child.multiply && child.children && child.children.length) {
+            showMultiplyQuestion(child, newAcc, newPath, cLabel, level);
+            return;
+          }
 
           if (cPrice) newAcc.push({ label: cLabel, price: cPrice, percent: !!child.percent });
 
           if (child.children && child.children.length && !child.final) {
-            showStep(child, newAcc, newPath, cLabel, level + 1, childMultiply);
+            showStep(child, newAcc, newPath, cLabel, level + 1);
           } else {
             if (child.final) {
               // Koncove — formular, podpis, protokol
               showEndForm(() => {
-                // Pokud nekde ve strome bylo multiply, zobrazit vyber mnozstvi
-                if (childMultiply && newAcc.length) {
-                  showMultiplyInputFromAcc(newAcc, newPath, () => {
-                    if (wizOverlay) { wizOverlay.remove(); wizOverlay = null; }
-                    doAfterFinish();
-                  });
-                } else {
-                  finishItem(newAcc, newPath);
-                  if (wizOverlay) { wizOverlay.remove(); wizOverlay = null; }
-                  doAfterFinish();
-                }
+                finishItem(newAcc, newPath);
+                if (wizOverlay) { wizOverlay.remove(); wizOverlay = null; }
 
-                function doAfterFinish() {
-                  function afterSignature(sigDataUrl) {
-                    if (wiz.protocol) {
-                      const protoItems = newAcc.map(a => ({ name: a.label, price: a.price }));
-                      generateProtocolPDF(wiz.name, protoItems, collectedFormData, sigDataUrl).then(({ doc, protoNo }) => {
-                        showProtocol(doc, protoNo);
-                      });
-                    }
+                function afterSignature(sigDataUrl) {
+                  if (wiz.protocol) {
+                    const protoItems = newAcc.map(a => ({ name: a.label, price: a.price }));
+                    generateProtocolPDF(wiz.name, protoItems, collectedFormData, sigDataUrl).then(({ doc, protoNo }) => {
+                      showProtocol(doc, protoNo);
+                    });
                   }
-                  if (wiz.signature) {
-                    showSignaturePad((sigDataUrl) => afterSignature(sigDataUrl));
-                  } else {
-                    afterSignature(null);
-                  }
+                }
+                if (wiz.signature) {
+                  showSignaturePad((sigDataUrl) => afterSignature(sigDataUrl));
+                } else {
+                  afterSignature(null);
                 }
               });
             } else {
               // Ne-final listovy uzel
-              if (childMultiply && newAcc.length) {
-                showMultiplyInputFromAcc(newAcc, newPath);
-              } else {
-                finishItem(newAcc, newPath);
-                showStep(wiz.tree, [], [], wiz.name, 1);
-              }
+              finishItem(newAcc, newPath);
+              showStep(wiz.tree, [], [], wiz.name, 1);
             }
           }
         };
@@ -1837,7 +1823,66 @@ function runCustomWizard(wiz, startPath) {
     wiz._formData = { ...collectedFormData };
   }
 
-  // Zobrazit vyber mnozstvi (stejne UI jako showMultiplyInput) pro accumulated polozky
+  // Uzel s multiply a children — zeptat se na mnozstvi hned, pak pokracovat
+  function showMultiplyQuestion(node, accumulated, path, title, level) {
+    if (wizOverlay) wizOverlay.remove();
+    const unit = node.unit || 'ks';
+
+    const div = document.createElement('div');
+    div.innerHTML = `
+      <h2 style="text-align:center;margin-bottom:12px;">${node.label}</h2>
+      <div style="text-align:center;font-size:14px;color:var(--text-muted);margin-bottom:16px;">
+        Kolik kusu?
+      </div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:16px;">
+        <button class="btn btn-red qty-minus" style="font-size:24px;width:50px;height:50px;border-radius:50%;">−</button>
+        <input type="number" id="qty-input" value="${pendingMultiply}" min="1" style="
+          font-size:32px;font-weight:700;text-align:center;width:120px;padding:10px;
+          border-radius:8px;border:2px solid #444;background:#16213e;color:#fff;">
+        <span style="font-size:18px;color:var(--text-muted);">${unit}</span>
+        <button class="btn btn-green qty-plus" style="font-size:24px;width:50px;height:50px;border-radius:50%;">+</button>
+      </div>
+      <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:8px;">
+        <button class="btn qty-preset" data-val="1" style="background:#27ae60;font-size:14px;padding:8px 14px;">1</button>
+        <button class="btn qty-preset" data-val="2" style="background:#3498db;font-size:14px;padding:8px 14px;">2</button>
+        <button class="btn qty-preset" data-val="4" style="background:#3498db;font-size:14px;padding:8px 14px;">4</button>
+        <button class="btn qty-preset" data-val="5" style="background:#3498db;font-size:14px;padding:8px 14px;">5</button>
+        <button class="btn qty-preset" data-val="6" style="background:#3498db;font-size:14px;padding:8px 14px;">6</button>
+        <button class="btn qty-preset" data-val="8" style="background:#3498db;font-size:14px;padding:8px 14px;">8</button>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:center;margin-top:16px;">
+        <button class="btn btn-green qty-ok" style="padding:14px 40px;font-size:16px;">POKRACOVAT</button>
+        <button class="btn btn-red qty-cancel" style="padding:14px 20px;font-size:14px;">ZRUSIT</button>
+      </div>
+    `;
+
+    const { overlay } = openModal(div);
+    wizOverlay = overlay;
+    const qtyInput = div.querySelector('#qty-input');
+
+    div.querySelector('.qty-minus').onclick = () => { qtyInput.value = Math.max(1, (parseInt(qtyInput.value) || 1) - 1); };
+    div.querySelector('.qty-plus').onclick = () => { qtyInput.value = (parseInt(qtyInput.value) || 1) + 1; };
+    div.querySelectorAll('.qty-preset').forEach(btn => {
+      btn.onclick = () => { qtyInput.value = btn.dataset.val; };
+    });
+
+    div.querySelector('.qty-cancel').onclick = () => {
+      overlay.remove();
+      showStep(wiz.tree, [], [], wiz.name, 1);
+    };
+
+    div.querySelector('.qty-ok').onclick = () => {
+      pendingMultiply = Math.max(1, parseInt(qtyInput.value) || 1);
+      overlay.remove();
+      // Pokracovat do children
+      showStep(node, accumulated, path, title, level + 1);
+    };
+
+    qtyInput.focus();
+    qtyInput.select();
+  }
+
+  // Zobrazit vyber mnozstvi (stejne UI jako showMultiplyInput) pro accumulated polozky — UNUSED, kept for reference
   function showMultiplyInputFromAcc(accumulated, path, onDone) {
     if (wizOverlay) wizOverlay.remove();
     const unitPrice = accumulated.reduce((s, a) => s + a.price, 0);
@@ -1923,16 +1968,19 @@ function runCustomWizard(wiz, startPath) {
   function finishItem(accumulated, path) {
     const hasPercent = accumulated.some(a => a.percent);
     const totalPrice = accumulated.reduce((s, a) => s + a.price, 0);
+    const qty = pendingMultiply;  // mnozstvi z multiply uzlu
+    pendingMultiply = 1;  // reset pro dalsi pruchod
     const nameParts = [wiz.name, ...path];
     let detail = accumulated.map(a => `${a.label}: ${a.price}${a.percent ? '%' : ' Kc'}`).join(', ');
+    if (qty > 1) detail += ` | ${qty} ks`;
     // Pridat formularova data do detailu
     const fieldEntries = Object.entries(collectedFormData);
     if (fieldEntries.length) {
       detail += (detail ? ' | ' : '') + fieldEntries.map(([k,v]) => `${k}: ${v}`).join(', ');
     }
     customItems.push({
-      name: nameParts.join(' | '),
-      price: totalPrice,
+      name: nameParts.join(' | ') + (qty > 1 ? ` x${qty}` : ''),
+      price: totalPrice * qty,
       qty: 1,
       detail,
       _percent: hasPercent,
