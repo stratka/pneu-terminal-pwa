@@ -1684,6 +1684,10 @@ function runCustomWizard(wiz, startPath) {
             showMultiplyQuestion(child, newAcc, newPath, cLabel, level);
             return;
           }
+          // Uzel s multiply bez children a bez ceny
+          if (child.multiply) {
+            alert('DEBUG v1.4: multiply bez children/ceny: ' + cLabel);
+          }
 
           if (cPrice) newAcc.push({ label: cLabel, price: cPrice, percent: !!child.percent });
 
