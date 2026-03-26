@@ -1488,13 +1488,16 @@ function runCustomWizard(wiz, startPath) {
     qtyInput.select();
   }
 
-  function showStep(node, accumulated, path, title, level) {
+  function showStep(node, accumulated, path, title, level, inheritMultiply) {
     // Pokud existuje predchozi overlay, odstranit
     if (wizOverlay) wizOverlay.remove();
 
+    // Propagovat multiply z rodicu
+    const isMultiply = node.multiply || inheritMultiply;
+
     if (!node.children || !node.children.length) {
       // Listovy uzel s mnozstvim — zobrazit input
-      if (node.multiply && node.price) {
+      if ((node.multiply || inheritMultiply) && node.price) {
         showMultiplyInput(node, accumulated, path);
         return;
       }
@@ -1672,24 +1675,36 @@ function runCustomWizard(wiz, startPath) {
           const newPath = [...path, cLabel];
           const newAcc = [...accumulated];
 
-          // Mnozstvi — zobrazit input
-          if (child.multiply && cPrice) {
+          // Mnozstvi — zobrazit input (uzel sam ma multiply a cenu, zadne dalsi kroky)
+          if (child.multiply && cPrice && (!child.children || !child.children.length)) {
             showMultiplyInput(child, newAcc, newPath);
             return;
           }
 
+          // Zjistit jestli tento uzel nebo nektery rodic ma multiply
+          const childMultiply = child.multiply || isMultiply;
+
           if (cPrice) newAcc.push({ label: cLabel, price: cPrice, percent: !!child.percent });
 
           if (child.children && child.children.length && !child.final) {
-            showStep(child, newAcc, newPath, cLabel, level + 1);
+            showStep(child, newAcc, newPath, cLabel, level + 1, childMultiply);
           } else {
             if (child.final) {
-              // Koncove — formular, mnozstvi, podpis, protokol
+              // Koncove — formular, podpis, protokol
               showEndForm(() => {
-                // Vyber mnozstvi pred finishItem
-                showQtySelect(newAcc, newPath, () => {
+                // Pokud nekde ve strome bylo multiply, zobrazit vyber mnozstvi
+                if (childMultiply && newAcc.length) {
+                  showMultiplyInputFromAcc(newAcc, newPath, () => {
+                    if (wizOverlay) { wizOverlay.remove(); wizOverlay = null; }
+                    doAfterFinish();
+                  });
+                } else {
+                  finishItem(newAcc, newPath);
                   if (wizOverlay) { wizOverlay.remove(); wizOverlay = null; }
+                  doAfterFinish();
+                }
 
+                function doAfterFinish() {
                   function afterSignature(sigDataUrl) {
                     if (wiz.protocol) {
                       const protoItems = newAcc.map(a => ({ name: a.label, price: a.price }));
@@ -1698,17 +1713,21 @@ function runCustomWizard(wiz, startPath) {
                       });
                     }
                   }
-
                   if (wiz.signature) {
                     showSignaturePad((sigDataUrl) => afterSignature(sigDataUrl));
                   } else {
                     afterSignature(null);
                   }
-                });
+                }
               });
             } else {
-              // Pridat do kosiku — nabidnout vyber mnozstvi
-              showQtySelect(newAcc, newPath);
+              // Ne-final listovy uzel
+              if (childMultiply && newAcc.length) {
+                showMultiplyInputFromAcc(newAcc, newPath);
+              } else {
+                finishItem(newAcc, newPath);
+                showStep(wiz.tree, [], [], wiz.name, 1);
+              }
             }
           }
         };
@@ -1818,63 +1837,87 @@ function runCustomWizard(wiz, startPath) {
     wiz._formData = { ...collectedFormData };
   }
 
-  function showQtySelect(accumulated, path, onDone) {
+  // Zobrazit vyber mnozstvi (stejne UI jako showMultiplyInput) pro accumulated polozky
+  function showMultiplyInputFromAcc(accumulated, path, onDone) {
     if (wizOverlay) wizOverlay.remove();
     const unitPrice = accumulated.reduce((s, a) => s + a.price, 0);
-    const qtyOpts = [1,2,3,4,5,6,8].map(n => ({
-      label: `${n} ks`, sublabel: `${n * unitPrice} Kc`,
-      color: n === 1 ? '#27ae60' : '#3498db', icon: '',
-      value: n,
-    }));
-    const { overlay, modal } = openModal(document.createElement('div'));
-    wizOverlay = overlay;
-    modal.style.width = '95vw';
-    modal.style.height = '95vh';
-    modal.style.maxWidth = '100vw';
-    modal.style.maxHeight = '100vh';
-    modal.style.display = 'flex';
-    modal.style.flexDirection = 'column';
+    const itemName = path.join(' | ');
 
-    const name = path.join(' | ');
-    modal.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-shrink:0;">
-        <h2 style="margin:0">POCET KUSU</h2>
-        <button class="btn btn-red wiz-cancel" style="font-size:13px;padding:8px 16px;">ZRUSIT</button>
+    const div = document.createElement('div');
+    div.innerHTML = `
+      <h2 style="text-align:center;margin-bottom:12px;">${itemName}</h2>
+      <div style="text-align:center;font-size:14px;color:var(--text-muted);margin-bottom:16px;">
+        Cena: ${unitPrice} Kc / ks
       </div>
-      <div style="text-align:center;color:var(--text-muted);font-size:14px;margin-bottom:8px;">${name} | ${unitPrice} Kc/ks</div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:16px;">
+        <button class="btn btn-red qty-minus" style="font-size:24px;width:50px;height:50px;border-radius:50%;">−</button>
+        <input type="number" id="qty-input" value="1" min="1" style="
+          font-size:32px;font-weight:700;text-align:center;width:120px;padding:10px;
+          border-radius:8px;border:2px solid #444;background:#16213e;color:#fff;">
+        <span style="font-size:18px;color:var(--text-muted);">ks</span>
+        <button class="btn btn-green qty-plus" style="font-size:24px;width:50px;height:50px;border-radius:50%;">+</button>
+      </div>
+      <div id="qty-total" style="text-align:center;font-size:22px;font-weight:700;color:var(--accent-yellow);margin-bottom:16px;">
+        Celkem: ${unitPrice} Kc
+      </div>
+      <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:8px;">
+        <button class="btn qty-preset" data-val="2" style="background:#3498db;font-size:14px;padding:8px 14px;">2</button>
+        <button class="btn qty-preset" data-val="4" style="background:#3498db;font-size:14px;padding:8px 14px;">4</button>
+        <button class="btn qty-preset" data-val="5" style="background:#3498db;font-size:14px;padding:8px 14px;">5</button>
+        <button class="btn qty-preset" data-val="6" style="background:#3498db;font-size:14px;padding:8px 14px;">6</button>
+        <button class="btn qty-preset" data-val="8" style="background:#3498db;font-size:14px;padding:8px 14px;">8</button>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:center;margin-top:16px;">
+        <button class="btn btn-green qty-ok" style="padding:14px 40px;font-size:16px;">PRIDAT DO KOSIKU</button>
+        <button class="btn btn-red qty-cancel" style="padding:14px 20px;font-size:14px;">ZRUSIT</button>
+      </div>
     `;
-    modal.querySelector('.wiz-cancel').onclick = () => { overlay.remove(); };
 
-    const grid = document.createElement('div');
-    grid.className = 'wizard-grid';
-    grid.style.flex = '1';
-    grid.style.overflowY = 'auto';
-    grid.style.alignContent = 'center';
+    const { overlay } = openModal(div);
+    wizOverlay = overlay;
+    const qtyInput = div.querySelector('#qty-input');
+    const totalDiv = div.querySelector('#qty-total');
 
-    for (const opt of qtyOpts) {
-      const tile = document.createElement('div');
-      tile.className = 'wizard-tile';
-      tile.style.background = opt.color;
-      tile.innerHTML = `<div class="wt-label">${opt.label}</div><div class="wt-sub">${opt.sublabel}</div>`;
-      tile.onclick = () => {
-        if (opt.value > 1 && accumulated.length) {
-          accumulated[accumulated.length - 1] = {
-            ...accumulated[accumulated.length - 1],
-            label: `${accumulated[accumulated.length - 1].label} x${opt.value}`,
-            price: accumulated[accumulated.length - 1].price * opt.value,
-          };
-        }
-        finishItem(accumulated, path);
-        overlay.remove();
-        if (onDone) {
-          onDone();
-        } else {
-          showStep(wiz.tree, [], [], wiz.name, 1);
-        }
-      };
-      grid.appendChild(tile);
+    function updateTotal() {
+      const qty = Math.max(1, parseInt(qtyInput.value) || 1);
+      qtyInput.value = qty;
+      totalDiv.textContent = `Celkem: ${qty * unitPrice} Kc`;
     }
-    modal.appendChild(grid);
+
+    div.querySelector('.qty-minus').onclick = () => { qtyInput.value = Math.max(1, (parseInt(qtyInput.value) || 1) - 1); updateTotal(); };
+    div.querySelector('.qty-plus').onclick = () => { qtyInput.value = (parseInt(qtyInput.value) || 1) + 1; updateTotal(); };
+    qtyInput.oninput = updateTotal;
+
+    div.querySelectorAll('.qty-preset').forEach(btn => {
+      btn.onclick = () => { qtyInput.value = btn.dataset.val; updateTotal(); };
+    });
+
+    div.querySelector('.qty-cancel').onclick = () => {
+      overlay.remove();
+      showStep(wiz.tree, [], [], wiz.name, 1);
+    };
+
+    div.querySelector('.qty-ok').onclick = () => {
+      const qty = Math.max(1, parseInt(qtyInput.value) || 1);
+      // Vynasobit posledni polozku mnozstvim
+      if (qty > 1 && accumulated.length) {
+        accumulated[accumulated.length - 1] = {
+          ...accumulated[accumulated.length - 1],
+          label: `${accumulated[accumulated.length - 1].label} x${qty}`,
+          price: accumulated[accumulated.length - 1].price * qty,
+        };
+      }
+      finishItem(accumulated, path);
+      overlay.remove();
+      if (onDone) {
+        onDone();
+      } else {
+        showStep(wiz.tree, [], [], wiz.name, 1);
+      }
+    };
+
+    qtyInput.focus();
+    qtyInput.select();
   }
 
   function finishItem(accumulated, path) {
