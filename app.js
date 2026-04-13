@@ -9,6 +9,40 @@ const GITHUB_REPO = 'stratka/pneu-terminal-pwa';
 const GITHUB_CONFIG_PATH = 'config.json';
 let GITHUB_TOKEN = localStorage.getItem('github_token') || '';
 
+// ---------------------------------------------------------------------------
+// Google Drive upload (pres Google Apps Script)
+// ---------------------------------------------------------------------------
+const GDRIVE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz50omXKaESA1dqCcy0rX_EFZlVqgIt9RuFsBxHAcBQyhbWgji9j0iQ1RVllVVGsejQXg/exec';
+
+async function uploadToDrive(blob, filename, type) {
+  // type: 'faktura' nebo 'protokol'
+  try {
+    const base64 = await blobToBase64(blob);
+    const resp = await fetch(GDRIVE_SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ file: base64, name: filename, type: type, mime: 'application/pdf' }),
+    });
+    console.log(`Drive upload (${type}): ${filename} odeslano`);
+    return true;
+  } catch (e) {
+    console.warn('Drive upload failed:', e);
+    return false;
+  }
+}
+
+function blobToBase64(blob) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = reader.result.split(',')[1];
+      resolve(base64);
+    };
+    reader.readAsDataURL(blob);
+  });
+}
+
 async function pushConfigToGitHub() {
   if (!GITHUB_TOKEN) {
     GITHUB_TOKEN = prompt('Zadej GitHub token (ulozi se do prohlizece, zadavas jen jednou):');
@@ -655,6 +689,9 @@ async function generateProtocolPDF(wizName, items, formData, signatureDataUrl) {
 function showProtocol(doc, protoNo) {
   const pdfBlob = doc.output('blob');
   const url = URL.createObjectURL(pdfBlob);
+
+  // Odeslat na Google Drive
+  uploadToDrive(pdfBlob, `protokol_${protoNo}.pdf`, 'protokol');
 
   const div = document.createElement('div');
   div.innerHTML = `
@@ -2280,6 +2317,9 @@ async function generateInvoicePDF(spz, total, items) {
   const pdfBlob = doc.output('blob');
   const filename = `${invoiceNo}_${spz}.pdf`;
   await db.saveInvoice(filename, pdfBlob);
+
+  // Odeslat na Google Drive
+  uploadToDrive(pdfBlob, filename, 'faktura');
 
   // Stahnout / otevrit
   const url = URL.createObjectURL(pdfBlob);
