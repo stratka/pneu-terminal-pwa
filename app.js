@@ -12,7 +12,7 @@ let GITHUB_TOKEN = localStorage.getItem('github_token') || '';
 // ---------------------------------------------------------------------------
 // Google Drive upload (pres Google Apps Script)
 // ---------------------------------------------------------------------------
-const GDRIVE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz50omXKaESA1dqCcy0rX_EFZlVqgIt9RuFsBxHAcBQyhbWgji9j0iQ1RVllVVGsejQXg/exec';
+const GDRIVE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyGUTDLoGN9L7Mi-quYLT3cb-DvpIiMAXVocMUkvga1b7GxBY4pmL_ft0E8_iNHMF_eoQ/exec';
 
 async function uploadToDrive(blob, filename, type) {
   // type: 'faktura' nebo 'protokol'
