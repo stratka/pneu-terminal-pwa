@@ -18,11 +18,13 @@ async function uploadToDrive(blob, filename, type) {
   // type: 'faktura' nebo 'protokol'
   try {
     const base64 = await blobToBase64(blob);
-    const resp = await fetch(GDRIVE_SCRIPT_URL, {
+    const payload = JSON.stringify({ file: base64, name: filename, type: type, mime: 'application/pdf' });
+    // Apps Script redirect vyzaduje no-cors + text/plain
+    await fetch(GDRIVE_SCRIPT_URL, {
       method: 'POST',
       mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ file: base64, name: filename, type: type, mime: 'application/pdf' }),
+      headers: { 'Content-Type': 'text/plain' },
+      body: payload,
     });
     console.log(`Drive upload (${type}): ${filename} odeslano`);
     return true;
