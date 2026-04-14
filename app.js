@@ -3121,8 +3121,30 @@ async function renderAdminInvoices(container) {
     container.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:20px;">Zadne faktury</p>';
     return;
   }
+
+  // Tlacitko nahrat vse na Drive
+  const uploadBtn = document.createElement('button');
+  uploadBtn.className = 'btn btn-green';
+  uploadBtn.style.cssText = 'margin-bottom:12px;font-size:14px;padding:10px 20px;';
+  uploadBtn.textContent = `NAHRAT VSE NA DRIVE (${ids.length})`;
+  uploadBtn.onclick = async () => {
+    uploadBtn.disabled = true;
+    let ok = 0, fail = 0;
+    for (const id of ids) {
+      uploadBtn.textContent = `Nahravam ${ok + fail + 1}/${ids.length}...`;
+      const rec = await db.getInvoice(id);
+      if (rec && rec.blob) {
+        const success = await uploadToDrive(rec.blob, id, 'faktura');
+        if (success) ok++; else fail++;
+      } else { fail++; }
+    }
+    uploadBtn.textContent = `HOTOVO: ${ok} nahrano, ${fail} chyb`;
+    setTimeout(() => { uploadBtn.textContent = `NAHRAT VSE NA DRIVE (${ids.length})`; uploadBtn.disabled = false; }, 5000);
+  };
+  container.appendChild(uploadBtn);
+
   const list = document.createElement('div');
-  list.style.maxHeight = '60vh';
+  list.style.maxHeight = '55vh';
   list.style.overflowY = 'auto';
   for (const id of ids.reverse()) {
     const btn = document.createElement('div');
