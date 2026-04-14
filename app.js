@@ -3127,19 +3127,44 @@ async function renderAdminInvoices(container) {
   uploadBtn.className = 'btn btn-green';
   uploadBtn.style.cssText = 'margin-bottom:12px;font-size:14px;padding:10px 20px;';
   uploadBtn.textContent = `NAHRAT VSE NA DRIVE (${ids.length})`;
+  // Zjistit ktere uz byly nahrane
+  const uploaded = JSON.parse(localStorage.getItem('drive_uploaded_invoices') || '[]');
+  const remaining = ids.filter(id => !uploaded.includes(id));
+  uploadBtn.textContent = remaining.length
+    ? `NAHRAT NA DRIVE (${remaining.length} z ${ids.length})`
+    : `VSE NAHRANO (${ids.length})`;
+  if (!remaining.length) uploadBtn.style.background = '#607D8B';
+
   uploadBtn.onclick = async () => {
     uploadBtn.disabled = true;
+    // Wake Lock - zabranit uspani tabletu
+    let wakeLock = null;
+    try { wakeLock = await navigator.wakeLock.request('screen'); } catch(e) {}
+
+    const toUpload = ids.filter(id => !JSON.parse(localStorage.getItem('drive_uploaded_invoices') || '[]').includes(id));
     let ok = 0, fail = 0;
-    for (const id of ids) {
-      uploadBtn.textContent = `Nahravam ${ok + fail + 1}/${ids.length}...`;
+    for (const id of toUpload) {
+      uploadBtn.textContent = `Nahravam ${ok + fail + 1}/${toUpload.length}...`;
       const rec = await db.getInvoice(id);
       if (rec && rec.blob) {
         const success = await uploadToDrive(rec.blob, id, 'faktura');
-        if (success) ok++; else fail++;
+        if (success) {
+          ok++;
+          const list = JSON.parse(localStorage.getItem('drive_uploaded_invoices') || '[]');
+          list.push(id);
+          localStorage.setItem('drive_uploaded_invoices', JSON.stringify(list));
+        } else { fail++; }
       } else { fail++; }
     }
+
+    if (wakeLock) try { wakeLock.release(); } catch(e) {}
     uploadBtn.textContent = `HOTOVO: ${ok} nahrano, ${fail} chyb`;
-    setTimeout(() => { uploadBtn.textContent = `NAHRAT VSE NA DRIVE (${ids.length})`; uploadBtn.disabled = false; }, 5000);
+    setTimeout(() => {
+      const rem = ids.filter(id => !JSON.parse(localStorage.getItem('drive_uploaded_invoices') || '[]').includes(id));
+      uploadBtn.textContent = rem.length ? `NAHRAT NA DRIVE (${rem.length} z ${ids.length})` : `VSE NAHRANO (${ids.length})`;
+      uploadBtn.style.background = rem.length ? '#27ae60' : '#607D8B';
+      uploadBtn.disabled = false;
+    }, 3000);
   };
   container.appendChild(uploadBtn);
 
