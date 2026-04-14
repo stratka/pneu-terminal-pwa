@@ -564,55 +564,6 @@
         "children": [
           {
             "label": "R16",
-            "price": 800,
-            "children": [
-              {
-                "label": "Osobni vuz",
-                "price": 0,
-                "children": [
-                  {
-                    "label": "S vyvazenim",
-                    "price": 0,
-                    "final": true,
-                    "children": [],
-                    "color": "#27ae60"
-                  },
-                  {
-                    "label": "Bez vyvazeni",
-                    "price": -150,
-                    "final": true,
-                    "children": [],
-                    "color": "#e57373"
-                  }
-                ],
-                "color": "#27ae60"
-              },
-              {
-                "label": "SUV / VAN / EV",
-                "price": 200,
-                "children": [
-                  {
-                    "label": "S vyvazenim",
-                    "price": 0,
-                    "final": true,
-                    "children": [],
-                    "color": "#27ae60"
-                  },
-                  {
-                    "label": "Bez vyvazeni",
-                    "price": -150,
-                    "final": true,
-                    "children": [],
-                    "color": "#e57373"
-                  }
-                ],
-                "color": "#e67e22"
-              }
-            ],
-            "color": "#1abc9c"
-          },
-          {
-            "label": "R17",
             "price": 900,
             "children": [
               {
@@ -658,10 +609,11 @@
                 "color": "#e67e22"
               }
             ],
-            "color": "#3498db"
+            "color": "#1abc9c",
+            "icon": ""
           },
           {
-            "label": "R18",
+            "label": "R17",
             "price": 1000,
             "children": [
               {
@@ -707,10 +659,11 @@
                 "color": "#e67e22"
               }
             ],
-            "color": "#9b59b6"
+            "color": "#3498db",
+            "icon": ""
           },
           {
-            "label": "R19",
+            "label": "R18",
             "price": 1100,
             "children": [
               {
@@ -756,10 +709,11 @@
                 "color": "#e67e22"
               }
             ],
-            "color": "#e67e22"
+            "color": "#9b59b6",
+            "icon": ""
           },
           {
-            "label": "R20",
+            "label": "R19",
             "price": 1200,
             "children": [
               {
@@ -805,10 +759,11 @@
                 "color": "#e67e22"
               }
             ],
-            "color": "#e74c3c"
+            "color": "#e67e22",
+            "icon": ""
           },
           {
-            "label": "R21",
+            "label": "R20",
             "price": 1300,
             "children": [
               {
@@ -854,10 +809,11 @@
                 "color": "#e67e22"
               }
             ],
-            "color": "#2c3e50"
+            "color": "#e74c3c",
+            "icon": ""
           },
           {
-            "label": "R22",
+            "label": "R21",
             "price": 1400,
             "children": [
               {
@@ -903,7 +859,58 @@
                 "color": "#e67e22"
               }
             ],
-            "color": "#16a085"
+            "color": "#2c3e50",
+            "icon": ""
+          },
+          {
+            "label": "R22",
+            "price": 1500,
+            "children": [
+              {
+                "label": "Osobni vuz",
+                "price": 0,
+                "children": [
+                  {
+                    "label": "S vyvazenim",
+                    "price": 0,
+                    "final": true,
+                    "children": [],
+                    "color": "#27ae60"
+                  },
+                  {
+                    "label": "Bez vyvazeni",
+                    "price": -150,
+                    "final": true,
+                    "children": [],
+                    "color": "#e57373"
+                  }
+                ],
+                "color": "#27ae60"
+              },
+              {
+                "label": "SUV / VAN / EV",
+                "price": 200,
+                "children": [
+                  {
+                    "label": "S vyvazenim",
+                    "price": 0,
+                    "final": true,
+                    "children": [],
+                    "color": "#27ae60"
+                  },
+                  {
+                    "label": "Bez vyvazeni",
+                    "price": -150,
+                    "final": true,
+                    "children": [],
+                    "color": "#e57373"
+                  }
+                ],
+                "color": "#e67e22"
+              }
+            ],
+            "color": "#16a085",
+            "icon": ""
           }
         ]
       },
