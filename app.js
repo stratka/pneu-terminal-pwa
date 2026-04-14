@@ -2231,6 +2231,7 @@ function showFinishDialog() {
       polozky: items,
       celkem: total,
       faktura: invoiceNo,
+      customer: (customer.name || customer.ico) ? customer : undefined,
       stav: 'dokoncena',
       _backed_up: false,
     };
@@ -2249,6 +2250,69 @@ function showFinishDialog() {
     closeModal(overlay);
     alert(`Objednavka pro ${spz} byla dokoncena!`);
   };
+}
+
+// ---------------------------------------------------------------------------
+// Rychly prehled zakazek (bez hesla)
+// ---------------------------------------------------------------------------
+async function showQuickOrders() {
+  const allOrders = await db.getOrders();
+  const div = document.createElement('div');
+  div.innerHTML = `
+    <h2 style="text-align:center;margin-bottom:10px;">ZAKAZKY</h2>
+    <input type="text" id="qo-filter" placeholder="Hledat SPZ..." style="padding:8px;border-radius:6px;border:1px solid #444;background:#16213e;color:#fff;font-size:14px;width:200px;margin-bottom:10px;">
+    <div id="qo-list" style="max-height:60vh;overflow-y:auto;"></div>
+  `;
+
+  const { overlay } = openModal(div, 'admin-modal');
+
+  function renderList(filter) {
+    const listDiv = div.querySelector('#qo-list');
+    listDiv.innerHTML = '';
+    const ft = (filter || '').toUpperCase();
+    const filtered = allOrders.filter(o => !ft || (o.spz || '').toUpperCase().includes(ft)).reverse();
+    if (!filtered.length) {
+      listDiv.innerHTML = '<p style="text-align:center;color:var(--text-muted);">Zadne zakazky</p>';
+      return;
+    }
+    for (const o of filtered) {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:8px 12px;margin-bottom:4px;background:#16213e;border-radius:8px;';
+      const polStr = (o.polozky || []).map(p => p.name.split('|').pop().trim()).join(', ');
+      row.innerHTML = `
+        <div style="flex:1;">
+          <div style="font-weight:700;font-size:14px;">${o.spz || '?'} <span style="color:var(--text-muted);font-weight:400;font-size:12px;">${o.datum || ''}</span></div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">${polStr.substring(0, 60)}</div>
+        </div>
+        <div style="text-align:right;margin-left:10px;">
+          <div style="font-weight:700;font-size:14px;color:var(--accent-yellow);">${o.celkem || 0} Kc</div>
+          <div style="font-size:11px;color:var(--text-muted);">${o.faktura || 'bez faktury'}</div>
+        </div>
+        <button class="btn btn-green qo-invoice-btn" style="margin-left:10px;font-size:12px;padding:6px 12px;white-space:nowrap;">${o.faktura ? 'ZNOVU' : 'FAKTURA'}</button>
+      `;
+      row.querySelector('.qo-invoice-btn').onclick = async (e) => {
+        const btn = e.target;
+        btn.disabled = true;
+        btn.textContent = '...';
+        const items = (o.polozky || []).map(p => ({ name: p.name, price: p.price, qty: p.qty || 1 }));
+        const invoiceNo = await generateInvoicePDF(o.spz || '', o.celkem || 0, items, o.customer || {});
+        // Aktualizovat zakazku s cislem faktury
+        if (!o.faktura) {
+          o.faktura = invoiceNo;
+          try {
+            const tx = db._db.transaction('orders', 'readwrite');
+            tx.objectStore('orders').put(o);
+          } catch(e) {}
+        }
+        btn.textContent = invoiceNo;
+        setTimeout(() => { btn.textContent = o.faktura ? 'ZNOVU' : 'FAKTURA'; btn.disabled = false; }, 3000);
+      };
+      listDiv.appendChild(row);
+    }
+  }
+
+  renderList('');
+  div.querySelector('#qo-filter').oninput = e => renderList(e.target.value);
 }
 
 // ---------------------------------------------------------------------------
@@ -3495,6 +3559,7 @@ async function init() {
   document.getElementById('btn-clear-cart').onclick = clearCart;
   document.getElementById('btn-custom-item').onclick = showCustomItemDialog;
   document.getElementById('btn-finish').onclick = showFinishDialog;
+  document.getElementById('btn-orders').onclick = showQuickOrders;
   document.getElementById('tile-search').oninput = () => renderTiles();
   document.getElementById('btn-admin').onclick = () => showAdmin();
   document.getElementById('btn-camera').onclick = capturePhoto;
