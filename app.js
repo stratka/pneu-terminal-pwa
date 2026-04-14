@@ -2259,9 +2259,7 @@ async function generateInvoicePDF(spz, total, items, customer) {
   const s = settings;
   const today = todayStr();
   const due = dueStr();
-  const dphRate = s.dph_sazba || 21;
-  const zaklad = total / (1 + dphRate / 100);
-  const dph = total - zaklad;
+  const isVatPayer = !!(s.dic);  // platce DPH jen pokud ma DIC
 
   // jsPDF
   const doc = createPDF();
@@ -2288,7 +2286,7 @@ async function generateInvoicePDF(spz, total, items, customer) {
   doc.text(`IČO: ${s.ico || ''}`, 14, y);
   if (cust.ico) doc.text(`IČO: ${cust.ico}`, 110, y);
   y += 6;
-  doc.text(`DIČ: ${s.dic || ''}`, 14, y);
+  if (s.dic) doc.text(`DIČ: ${s.dic}`, 14, y);
   if (cust.dic) doc.text(`DIČ: ${cust.dic}`, 110, y);
   y += 6;
   doc.text(s.adresa || '', 14, y);
@@ -2331,14 +2329,25 @@ async function generateInvoicePDF(spz, total, items, customer) {
   });
 
   y += 5;
-  doc.setFontSize(10);
-  doc.text(`Základ daně: ${Math.round(zaklad)} Kč`, 196, y, { align: 'right' });
-  y += 6;
-  doc.text(`DPH ${dphRate}%: ${Math.round(dph)} Kč`, 196, y, { align: 'right' });
-  y += 8;
+  if (isVatPayer) {
+    const dphRate = s.dph_sazba || 21;
+    const zaklad = total / (1 + dphRate / 100);
+    const dph = total - zaklad;
+    doc.setFontSize(10);
+    doc.text(`Základ daně: ${Math.round(zaklad)} Kč`, 196, y, { align: 'right' });
+    y += 6;
+    doc.text(`DPH ${dphRate}%: ${Math.round(dph)} Kč`, 196, y, { align: 'right' });
+    y += 8;
+  }
   doc.setFont(undefined, 'bold');
   doc.setFontSize(12);
   doc.text(`CELKEM K ÚHRADĚ: ${total} Kč`, 196, y, { align: 'right' });
+  if (!isVatPayer) {
+    y += 6;
+    doc.setFont(undefined, 'normal');
+    doc.setFontSize(9);
+    doc.text('Nejsme plátci DPH.', 196, y, { align: 'right' });
+  }
   y += 10;
 
   // Bankovni udaje
