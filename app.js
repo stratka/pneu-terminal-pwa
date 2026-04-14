@@ -323,7 +323,7 @@ class DB {
   }
   open() {
     return new Promise((resolve, reject) => {
-      const req = indexedDB.open('pneuservis', 2);
+      const req = indexedDB.open('pneuservis', 3);
       req.onupgradeneeded = e => {
         const db = e.target.result;
         if (!db.objectStoreNames.contains('kv')) db.createObjectStore('kv');
@@ -334,6 +334,9 @@ class DB {
         }
         if (!db.objectStoreNames.contains('invoices')) {
           db.createObjectStore('invoices', { keyPath: 'id' });
+        }
+        if (!db.objectStoreNames.contains('protocols')) {
+          db.createObjectStore('protocols', { keyPath: 'id' });
         }
       };
       req.onsuccess = () => { this._db = req.result; resolve(); };
@@ -398,6 +401,32 @@ class DB {
     return new Promise((resolve) => {
       const tx = this._db.transaction('invoices', 'readonly');
       const req = tx.objectStore('invoices').getAllKeys();
+      req.onsuccess = () => resolve(req.result || []);
+      req.onerror = () => resolve([]);
+    });
+  }
+
+  // Protocol PDF blobs
+  async saveProtocol(id, blob) {
+    return new Promise((resolve, reject) => {
+      const tx = this._db.transaction('protocols', 'readwrite');
+      tx.objectStore('protocols').put({ id, blob, date: new Date().toISOString() });
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+  async getProtocol(id) {
+    return new Promise((resolve) => {
+      const tx = this._db.transaction('protocols', 'readonly');
+      const req = tx.objectStore('protocols').get(id);
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => resolve(null);
+    });
+  }
+  async getAllProtocolIds() {
+    return new Promise((resolve) => {
+      const tx = this._db.transaction('protocols', 'readonly');
+      const req = tx.objectStore('protocols').getAllKeys();
       req.onsuccess = () => resolve(req.result || []);
       req.onerror = () => resolve([]);
     });
@@ -692,8 +721,12 @@ function showProtocol(doc, protoNo) {
   const pdfBlob = doc.output('blob');
   const url = URL.createObjectURL(pdfBlob);
 
+  // Ulozit do IndexedDB
+  const protoFilename = `protokol_${protoNo}.pdf`;
+  db.saveProtocol(protoFilename, pdfBlob);
+
   // Odeslat na Google Drive
-  uploadToDrive(pdfBlob, `protokol_${protoNo}.pdf`, 'protokol');
+  uploadToDrive(pdfBlob, protoFilename, 'protokol');
 
   const div = document.createElement('div');
   div.innerHTML = `
@@ -2615,6 +2648,7 @@ function openAdminStandalone() {
       <button class="admin-tab" data-tab="pricing">Ceniky prezuti</button>
       <button class="admin-tab" data-tab="orders">Zakazky</button>
       <button class="admin-tab" data-tab="invoices">Faktury</button>
+      <button class="admin-tab" data-tab="protocols">Protokoly</button>
       <button class="admin-tab" data-tab="blank_protocol">Prazdny protokol</button>
       <button class="admin-tab" data-tab="password">Zmena hesla</button>
     </div>
@@ -2692,6 +2726,7 @@ function renderAdminTab(tabName, container, overlay) {
   else if (tabName === 'wizards') renderAdminWizards(container);
   else if (tabName === 'orders') renderAdminOrders(container);
   else if (tabName === 'invoices') renderAdminInvoices(container);
+  else if (tabName === 'protocols') renderAdminProtocols(container);
   else if (tabName === 'blank_protocol') renderAdminBlankProtocol(container);
   else if (tabName === 'password') renderAdminPassword(container);
 }
@@ -3250,6 +3285,76 @@ async function renderAdminInvoices(container) {
     btn.innerHTML = `<span class="cart-item-name">${id}</span><span class="cart-item-price">PDF</span>`;
     btn.onclick = async () => {
       const rec = await db.getInvoice(id);
+      if (rec && rec.blob) {
+        const url = URL.createObjectURL(rec.blob);
+        window.open(url, '_blank');
+        setTimeout(() => URL.revokeObjectURL(url), 10000);
+      }
+    };
+    list.appendChild(btn);
+  }
+  container.appendChild(list);
+}
+
+async function renderAdminProtocols(container) {
+  const ids = await db.getAllProtocolIds();
+  if (!ids.length) {
+    container.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:20px;">Zadne protokoly</p>';
+    return;
+  }
+
+  // Tlacitko nahrat vse na Drive
+  const uploaded = JSON.parse(localStorage.getItem('drive_uploaded_protocols') || '[]');
+  const remaining = ids.filter(id => !uploaded.includes(id));
+  const uploadBtn = document.createElement('button');
+  uploadBtn.className = 'btn btn-green';
+  uploadBtn.style.cssText = 'margin-bottom:12px;font-size:14px;padding:10px 20px;';
+  uploadBtn.textContent = remaining.length
+    ? `NAHRAT NA DRIVE (${remaining.length} z ${ids.length})`
+    : `VSE NAHRANO (${ids.length})`;
+  if (!remaining.length) uploadBtn.style.background = '#607D8B';
+
+  uploadBtn.onclick = async () => {
+    uploadBtn.disabled = true;
+    let wakeLock = null;
+    try { wakeLock = await navigator.wakeLock.request('screen'); } catch(e) {}
+
+    const toUpload = ids.filter(id => !JSON.parse(localStorage.getItem('drive_uploaded_protocols') || '[]').includes(id));
+    let ok = 0, fail = 0;
+    for (const id of toUpload) {
+      uploadBtn.textContent = `Nahravam ${ok + fail + 1}/${toUpload.length}...`;
+      const rec = await db.getProtocol(id);
+      if (rec && rec.blob) {
+        const success = await uploadToDrive(rec.blob, id, 'protokol');
+        if (success) {
+          ok++;
+          const list = JSON.parse(localStorage.getItem('drive_uploaded_protocols') || '[]');
+          list.push(id);
+          localStorage.setItem('drive_uploaded_protocols', JSON.stringify(list));
+        } else { fail++; }
+      } else { fail++; }
+    }
+
+    if (wakeLock) try { wakeLock.release(); } catch(e) {}
+    uploadBtn.textContent = `HOTOVO: ${ok} nahrano, ${fail} chyb`;
+    setTimeout(() => {
+      const rem = ids.filter(id => !JSON.parse(localStorage.getItem('drive_uploaded_protocols') || '[]').includes(id));
+      uploadBtn.textContent = rem.length ? `NAHRAT NA DRIVE (${rem.length} z ${ids.length})` : `VSE NAHRANO (${ids.length})`;
+      uploadBtn.style.background = rem.length ? '#27ae60' : '#607D8B';
+      uploadBtn.disabled = false;
+    }, 3000);
+  };
+  container.appendChild(uploadBtn);
+
+  const list = document.createElement('div');
+  list.style.maxHeight = '55vh';
+  list.style.overflowY = 'auto';
+  for (const id of ids.reverse()) {
+    const btn = document.createElement('div');
+    btn.className = 'cart-item';
+    btn.innerHTML = `<span class="cart-item-name">${id}</span><span class="cart-item-price">PDF</span>`;
+    btn.onclick = async () => {
+      const rec = await db.getProtocol(id);
       if (rec && rec.blob) {
         const url = URL.createObjectURL(rec.blob);
         window.open(url, '_blank');
