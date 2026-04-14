@@ -523,7 +523,7 @@
               },
               {
                 "label": "R20",
-                "price": 2700,
+                "price": 2800,
                 "children": [
                   {
                     "label": "Osobni vuz",
@@ -541,7 +541,9 @@
                     "icon": "",
                     "final": true
                   }
-                ]
+                ],
+                "icon": "",
+                "color": "#2196f3"
               }
             ],
             "color": "#FF9800"
