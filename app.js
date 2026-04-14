@@ -2094,6 +2094,32 @@ function showFinishDialog() {
       <label style="font-size:14px;">SPZ vozidla:</label>
       <input type="text" id="finish-spz" value="${currentSpz}" maxlength="10" autocapitalize="characters" style="text-transform:uppercase;">
     </div>
+    <div style="margin:6px 0;">
+      <button class="btn" id="finish-customer-btn" style="background:#8e44ad;font-size:13px;padding:6px 14px;">+ Údaje zákazníka</button>
+    </div>
+    <div id="finish-customer-form" style="display:none;background:#16213e;border-radius:8px;padding:10px;margin:6px 0;">
+      <div style="display:flex;gap:6px;align-items:flex-end;margin-bottom:8px;">
+        <div style="flex:1;">
+          <label style="font-size:12px;color:var(--text-muted);">IČO:</label>
+          <input type="text" id="finish-cust-ico" placeholder="Zadejte IČO" style="width:100%;padding:6px;border-radius:6px;border:1px solid #444;background:#1a1a2e;color:#fff;font-size:14px;">
+        </div>
+        <button class="btn btn-blue" id="finish-ares-btn" style="font-size:12px;padding:6px 12px;white-space:nowrap;">ARES</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+        <div>
+          <label style="font-size:12px;color:var(--text-muted);">Název / Jméno:</label>
+          <input type="text" id="finish-cust-name" style="width:100%;padding:6px;border-radius:6px;border:1px solid #444;background:#1a1a2e;color:#fff;font-size:13px;">
+        </div>
+        <div>
+          <label style="font-size:12px;color:var(--text-muted);">DIČ:</label>
+          <input type="text" id="finish-cust-dic" style="width:100%;padding:6px;border-radius:6px;border:1px solid #444;background:#1a1a2e;color:#fff;font-size:13px;">
+        </div>
+        <div style="grid-column:1/-1;">
+          <label style="font-size:12px;color:var(--text-muted);">Adresa:</label>
+          <input type="text" id="finish-cust-addr" style="width:100%;padding:6px;border-radius:6px;border:1px solid #444;background:#1a1a2e;color:#fff;font-size:13px;">
+        </div>
+      </div>
+    </div>
     <div>
       <label><input type="checkbox" id="finish-print" checked> Vygenerovat fakturu (PDF)</label>
     </div>
@@ -2140,6 +2166,36 @@ function showFinishDialog() {
   regenerateQR();
   div.querySelector('#finish-spz').addEventListener('input', regenerateQR);
 
+  // Udaje zakaznika - toggle formular
+  div.querySelector('#finish-customer-btn').onclick = () => {
+    const form = div.querySelector('#finish-customer-form');
+    form.style.display = form.style.display === 'none' ? 'block' : 'none';
+  };
+
+  // ARES lookup
+  div.querySelector('#finish-ares-btn').onclick = async () => {
+    const ico = div.querySelector('#finish-cust-ico').value.trim();
+    if (!ico) { alert('Zadejte IČO'); return; }
+    const btn = div.querySelector('#finish-ares-btn');
+    btn.disabled = true; btn.textContent = '...';
+    try {
+      const resp = await fetch(`https://ares.gov.cz/ekonomicke-subjekty-v-be/rest/ekonomicke-subjekty/${ico}`);
+      if (resp.ok) {
+        const data = await resp.json();
+        div.querySelector('#finish-cust-name').value = data.obchodniJmeno || '';
+        div.querySelector('#finish-cust-dic').value = data.dic || '';
+        const addr = data.sidlo || {};
+        const addrParts = [addr.nazevUlice, addr.cisloDomovni ? (addr.cisloOrientacni ? `${addr.cisloDomovni}/${addr.cisloOrientacni}` : addr.cisloDomovni) : '', addr.nazevObce, addr.psc].filter(Boolean);
+        div.querySelector('#finish-cust-addr').value = addrParts.join(', ');
+      } else {
+        alert('IČO nenalezeno v ARES');
+      }
+    } catch(e) {
+      alert('Chyba při hledání v ARES: ' + e.message);
+    }
+    btn.disabled = false; btn.textContent = 'ARES';
+  };
+
   div.querySelector('#finish-confirm').onclick = async () => {
     const spz = div.querySelector('#finish-spz').value.trim().toUpperCase();
     if (!spz) { alert('Zadejte prosim SPZ vozidla.'); return; }
@@ -2155,9 +2211,17 @@ function showFinishDialog() {
       items.push({ name: services[idx].name, price: services[idx].price, qty });
     }
 
+    // Udaje zakaznika
+    const customer = {
+      name: (div.querySelector('#finish-cust-name') || {}).value || '',
+      ico: (div.querySelector('#finish-cust-ico') || {}).value || '',
+      dic: (div.querySelector('#finish-cust-dic') || {}).value || '',
+      addr: (div.querySelector('#finish-cust-addr') || {}).value || '',
+    };
+
     let invoiceNo = '';
     if (doPrint) {
-      invoiceNo = await generateInvoicePDF(spz, total, items);
+      invoiceNo = await generateInvoicePDF(spz, total, items, customer);
     }
 
     // Ulozit zakazku
@@ -2190,7 +2254,7 @@ function showFinishDialog() {
 // ---------------------------------------------------------------------------
 // PDF generovani (jsPDF)
 // ---------------------------------------------------------------------------
-async function generateInvoicePDF(spz, total, items) {
+async function generateInvoicePDF(spz, total, items, customer) {
   const invoiceNo = await nextInvoiceNumber();
   const s = settings;
   const today = todayStr();
@@ -2217,16 +2281,22 @@ async function generateInvoicePDF(spz, total, items) {
   doc.setFont(undefined, 'normal');
   doc.setFontSize(10);
   y += 7;
+  const cust = customer || {};
   doc.text(s.firma || '', 14, y);
-  doc.text(`SPZ: ${spz}`, 110, y);
+  doc.text(cust.name || `SPZ: ${spz}`, 110, y);
   y += 6;
-  doc.text(`ICO: ${s.ico || ''}`, 14, y);
+  doc.text(`IČO: ${s.ico || ''}`, 14, y);
+  if (cust.ico) doc.text(`IČO: ${cust.ico}`, 110, y);
   y += 6;
-  doc.text(`DIC: ${s.dic || ''}`, 14, y);
+  doc.text(`DIČ: ${s.dic || ''}`, 14, y);
+  if (cust.dic) doc.text(`DIČ: ${cust.dic}`, 110, y);
   y += 6;
   doc.text(s.adresa || '', 14, y);
+  if (cust.addr) doc.text(cust.addr, 110, y);
   y += 6;
   doc.text(`Tel: ${s.telefon || ''}`, 14, y);
+  if (!cust.name) doc.text(`SPZ: ${spz}`, 110, y);
+  else doc.text(`SPZ: ${spz}`, 110, y);
   y += 10;
 
   // Datumy
