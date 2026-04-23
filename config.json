@@ -252,22 +252,7 @@
                   {
                     "label": "SUV / VAN / EV",
                     "price": 200,
-                    "children": [
-                      {
-                        "label": "Pneu od nas ANO",
-                        "price": -250,
-                        "final": true,
-                        "children": [],
-                        "color": "#27ae60"
-                      },
-                      {
-                        "label": "Pneu od nas NE",
-                        "price": 0,
-                        "final": true,
-                        "children": [],
-                        "color": "#e74c3c"
-                      }
-                    ],
+                    "children": [],
                     "color": "#e67e22",
                     "icon": "",
                     "final": true
@@ -289,22 +274,7 @@
                   {
                     "label": "SUV / VAN / EV",
                     "price": 200,
-                    "children": [
-                      {
-                        "label": "Pneu od nas ANO",
-                        "price": -250,
-                        "final": true,
-                        "children": [],
-                        "color": "#27ae60"
-                      },
-                      {
-                        "label": "Pneu od nas NE",
-                        "price": 0,
-                        "final": true,
-                        "children": [],
-                        "color": "#e74c3c"
-                      }
-                    ],
+                    "children": [],
                     "color": "#e67e22",
                     "icon": "",
                     "final": true
@@ -553,7 +523,24 @@
       "fields": [],
       "priceLabel": "",
       "protocol": false,
-      "signature": false
+      "signature": false,
+      "preSteps": [
+        {
+          "label": "Pneu od nas?",
+          "options": [
+            {
+              "label": "Pneu od nas ANO",
+              "price": -250,
+              "color": "#27ae60"
+            },
+            {
+              "label": "Pneu od nas NE",
+              "price": 0,
+              "color": "#e74c3c"
+            }
+          ]
+        }
+      ]
     },
     {
       "name": "Prezuti sada za sadu",

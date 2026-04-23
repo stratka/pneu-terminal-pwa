@@ -1565,7 +1565,7 @@ function runCustomWizard(wiz, startPath) {
 
     div.querySelector('.qty-cancel').onclick = () => {
       overlay.remove();
-      showStep(wiz.tree, [], [], wiz.name, 1);
+      runFromStart();
     };
 
     div.querySelector('.qty-ok').onclick = () => {
@@ -1574,7 +1574,7 @@ function runCustomWizard(wiz, startPath) {
       accumulated.push({ label: `${node.label} ${qty}${unit}`, price: totalPrice });
       finishItem(accumulated, path);
       overlay.remove();
-      showStep(wiz.tree, [], [], wiz.name, 1);
+      runFromStart();
     };
 
     qtyInput.focus();
@@ -1595,7 +1595,7 @@ function runCustomWizard(wiz, startPath) {
       if (node.price) accumulated.push({ label: node.label, price: node.price });
       finishItem(accumulated, path);
       // Zpet na root pro dalsi vyber
-      showStep(wiz.tree, [], [], wiz.name, 1);
+      runFromStart();
       return;
     }
 
@@ -1805,7 +1805,7 @@ function runCustomWizard(wiz, startPath) {
             } else {
               // Ne-final listovy uzel
               finishItem(newAcc, newPath);
-              showStep(wiz.tree, [], [], wiz.name, 1);
+              runFromStart();
             }
           }
         };
@@ -1960,7 +1960,7 @@ function runCustomWizard(wiz, startPath) {
 
     div.querySelector('.qty-cancel').onclick = () => {
       overlay.remove();
-      showStep(wiz.tree, [], [], wiz.name, 1);
+      runFromStart();
     };
 
     div.querySelector('.qty-ok').onclick = () => {
@@ -2031,7 +2031,7 @@ function runCustomWizard(wiz, startPath) {
 
     div.querySelector('.qty-cancel').onclick = () => {
       overlay.remove();
-      showStep(wiz.tree, [], [], wiz.name, 1);
+      runFromStart();
     };
 
     div.querySelector('.qty-ok').onclick = () => {
@@ -2049,7 +2049,7 @@ function runCustomWizard(wiz, startPath) {
       if (onDone) {
         onDone();
       } else {
-        showStep(wiz.tree, [], [], wiz.name, 1);
+        runFromStart();
       }
     };
 
@@ -2085,6 +2085,54 @@ function runCustomWizard(wiz, startPath) {
   // Unikatni ID pro tuto session wizardu
   wiz._runId = Date.now();
 
+  function runFromStart() {
+    const steps = wiz.preSteps || [];
+    const preAcc = [];
+
+    function runStep(idx) {
+      if (idx >= steps.length) {
+        showStep(wiz.tree, [...preAcc], [], wiz.name, 1);
+        return;
+      }
+      const step = steps[idx];
+      if (wizOverlay) wizOverlay.remove();
+      const container = document.createElement('div');
+      container.style.cssText = 'display:flex;flex-direction:column;height:100%;';
+      container.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-shrink:0;">
+          <h2 style="margin:0">${wiz.name}</h2>
+          <button class="btn btn-red wiz-prestep-cancel" style="font-size:13px;padding:8px 16px;">ZRUSIT</button>
+        </div>
+        <div style="text-align:center;font-size:18px;font-weight:700;margin-bottom:20px;color:var(--accent-yellow);">${step.label}</div>
+        <div style="flex:1;display:flex;align-items:center;justify-content:center;">
+          <div class="prestep-tiles" style="display:flex;gap:20px;flex-wrap:wrap;justify-content:center;max-width:900px;"></div>
+        </div>
+      `;
+      const { overlay } = openModal(container);
+      wizOverlay = overlay;
+      container.querySelector('.wiz-prestep-cancel').onclick = () => overlay.remove();
+      const tilesDiv = container.querySelector('.prestep-tiles');
+      const colors = ['#27ae60','#e74c3c','#3498db','#e67e22','#9b59b6','#1abc9c'];
+      (step.options || []).forEach((opt, oi) => {
+        const tile = document.createElement('div');
+        const bg = opt.color || colors[oi % colors.length];
+        tile.style.cssText = `background:${bg};border-radius:14px;min-width:170px;height:110px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;text-align:center;padding:16px;transition:transform 0.1s;`;
+        const priceText = opt.price ? `${opt.price > 0 ? '+' : ''}${opt.price} Kc` : '';
+        tile.innerHTML = `<div style="font-size:20px;font-weight:700;line-height:1.2;">${opt.label}</div>${priceText ? `<div style="font-size:14px;color:rgba(255,255,255,0.85);margin-top:6px;font-weight:700;">${priceText}</div>` : ''}`;
+        tile.onpointerdown = () => { tile.style.transform = 'scale(0.95)'; };
+        tile.onpointerup = () => { tile.style.transform = ''; };
+        tile.onpointerleave = () => { tile.style.transform = ''; };
+        tile.onclick = () => {
+          if (opt.price) preAcc.push({ label: opt.label, price: opt.price });
+          runStep(idx + 1);
+        };
+        tilesDiv.appendChild(tile);
+      });
+    }
+
+    runStep(0);
+  }
+
   // Pokud je zadana startPath, navigovat na uzel ve stromu
   if (startPath && startPath.length) {
     let node = wiz.tree;
@@ -2097,7 +2145,7 @@ function runCustomWizard(wiz, startPath) {
     }
     showStep(node, accumulated, startPath, node.label || wiz.name, startPath.length + 1);
   } else {
-    showStep(wiz.tree, [], [], wiz.name, 1);
+    runFromStart();
   }
 }
 
@@ -2813,6 +2861,7 @@ function renderAdminPricing(container) {
 // ---------------------------------------------------------------------------
 // Stav sbaleni uzlu stromu (persistuje mezi renderovani)
 const _treeCollapsed = new Set();
+let _wizDragState = null;
 
 function renderAdminWizards(container) {
   let selectedWizIdx = -1;
@@ -2993,6 +3042,123 @@ function renderAdminWizards(container) {
 
     renderFields();
 
+    // Pre-kroky editor
+    if (!wiz.preSteps) wiz.preSteps = [];
+    const psBox = document.createElement('div');
+    psBox.style.cssText = 'margin-bottom:16px;padding:12px;background:#1a3a1a;border-radius:8px;border:1px solid #27ae60;';
+    editorDiv.appendChild(psBox);
+
+    function renderPreSteps() {
+      psBox.innerHTML = '';
+      const hdr = document.createElement('div');
+      hdr.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;';
+      const title = document.createElement('span');
+      title.style.cssText = 'font-weight:700;color:#27ae60;';
+      title.textContent = 'Pre-kroky (otazky zobrazene pred stromem):';
+      const addPsBtn = document.createElement('button');
+      addPsBtn.className = 'btn btn-green';
+      addPsBtn.style.cssText = 'font-size:12px;padding:4px 12px;';
+      addPsBtn.textContent = '+ Pridat pre-krok';
+      addPsBtn.onclick = () => {
+        wiz.preSteps.push({ label: 'Nova otazka', options: [{ label: 'Moznost 1', price: 0, color: '#27ae60' }, { label: 'Moznost 2', price: 0, color: '#e74c3c' }] });
+        renderPreSteps();
+        saveAndRenderQuiet();
+      };
+      hdr.appendChild(title);
+      hdr.appendChild(addPsBtn);
+      psBox.appendChild(hdr);
+
+      if (!wiz.preSteps.length) {
+        const hint = document.createElement('div');
+        hint.style.cssText = 'font-size:12px;color:var(--text-muted);';
+        hint.textContent = 'Zadne pre-kroky. Wizard zacina rovnou stromem.';
+        psBox.appendChild(hint);
+        return;
+      }
+
+      wiz.preSteps.forEach((step, si) => {
+        const stepDiv = document.createElement('div');
+        stepDiv.style.cssText = 'margin-bottom:10px;padding:8px;background:#16213e;border-radius:6px;border:1px solid #444;';
+
+        const stepHdr = document.createElement('div');
+        stepHdr.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;';
+
+        const labelIn = document.createElement('input');
+        labelIn.type = 'text';
+        labelIn.value = step.label || '';
+        labelIn.placeholder = 'Nazev otazky (napr. Pneu od nas?)';
+        labelIn.style.cssText = 'flex:1;min-width:180px;padding:4px 8px;border-radius:4px;border:1px solid #444;background:#1a1a2e;color:#fff;font-size:13px;font-weight:700;';
+        labelIn.onchange = () => { step.label = labelIn.value; saveAndRenderQuiet(); };
+
+        const delStepBtn = document.createElement('button');
+        delStepBtn.style.cssText = 'background:#e74c3c;border:none;color:#fff;border-radius:4px;padding:4px 10px;cursor:pointer;font-size:12px;font-weight:700;';
+        delStepBtn.textContent = 'Smazat pre-krok';
+        delStepBtn.onclick = () => { wiz.preSteps.splice(si, 1); renderPreSteps(); saveAndRenderQuiet(); };
+
+        stepHdr.appendChild(labelIn);
+        stepHdr.appendChild(delStepBtn);
+        stepDiv.appendChild(stepHdr);
+
+        const optList = document.createElement('div');
+        optList.style.cssText = 'margin-left:12px;';
+
+        (step.options || []).forEach((opt, oi) => {
+          const optRow = document.createElement('div');
+          optRow.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:5px;flex-wrap:wrap;';
+
+          const optLabel = document.createElement('input');
+          optLabel.type = 'text';
+          optLabel.value = opt.label || '';
+          optLabel.placeholder = 'Nazev moznosti';
+          optLabel.style.cssText = 'width:150px;padding:4px 6px;border-radius:4px;border:1px solid #444;background:#1a1a2e;color:#fff;font-size:12px;';
+          optLabel.onchange = () => { opt.label = optLabel.value; saveAndRenderQuiet(); };
+
+          const optPrice = document.createElement('input');
+          optPrice.type = 'number';
+          optPrice.value = opt.price || 0;
+          optPrice.title = 'Cena (zaporná = sleva)';
+          optPrice.style.cssText = 'width:80px;padding:4px 6px;border-radius:4px;border:1px solid #444;background:#1a1a2e;color:#fff;font-size:12px;';
+          optPrice.onchange = () => { opt.price = parseInt(optPrice.value) || 0; saveAndRenderQuiet(); };
+
+          const priceLbl = document.createElement('span');
+          priceLbl.style.cssText = 'font-size:11px;color:#888;';
+          priceLbl.textContent = 'Kc';
+
+          const optColor = document.createElement('input');
+          optColor.type = 'color';
+          optColor.value = opt.color || '#27ae60';
+          optColor.style.cssText = 'width:36px;height:28px;border:none;cursor:pointer;background:none;';
+          optColor.onchange = () => { opt.color = optColor.value; saveAndRenderQuiet(); };
+
+          const delOptBtn = document.createElement('button');
+          delOptBtn.style.cssText = 'background:#e74c3c;border:none;color:#fff;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:11px;font-weight:700;';
+          delOptBtn.textContent = 'X';
+          delOptBtn.onclick = () => { step.options.splice(oi, 1); renderPreSteps(); saveAndRenderQuiet(); };
+
+          optRow.appendChild(optLabel);
+          optRow.appendChild(optPrice);
+          optRow.appendChild(priceLbl);
+          optRow.appendChild(optColor);
+          optRow.appendChild(delOptBtn);
+          optList.appendChild(optRow);
+        });
+
+        const addOptBtn = document.createElement('button');
+        addOptBtn.style.cssText = 'background:#3498db;border:none;color:#fff;border-radius:4px;padding:4px 10px;cursor:pointer;font-size:12px;margin-top:4px;';
+        addOptBtn.textContent = '+ Pridat moznost';
+        addOptBtn.onclick = () => {
+          if (!step.options) step.options = [];
+          step.options.push({ label: 'Nova moznost', price: 0, color: '#3498db' });
+          renderPreSteps();
+          saveAndRenderQuiet();
+        };
+        optList.appendChild(addOptBtn);
+        stepDiv.appendChild(optList);
+        psBox.appendChild(stepDiv);
+      });
+    }
+    renderPreSteps();
+
     // Strom - root je neviditelny, rovnou zobrazime prvni uroven
     const treeTitle = document.createElement('div');
     treeTitle.style.cssText = 'font-weight:700;margin-bottom:4px;';
@@ -3060,6 +3226,7 @@ function renderAdminWizards(container) {
 
     div.innerHTML = `
       <div class="tree-node-header">
+        <span class="drag-handle" draggable="true" style="cursor:grab;color:#555;font-size:16px;user-select:none;padding:0 4px;flex-shrink:0;" title="Pretahnout pro presunuti v ramci stejne urovne">⠿</span>
         <span class="node-toggle" style="font-size:12px;cursor:${hasChildren?'pointer':'default'};min-width:16px;user-select:none;color:${hasChildren?'#fff':'#555'};" title="${hasChildren?'Rozbalit/sbalit':''}">${toggleIcon}</span>
         <span style="font-size:10px;color:#888;min-width:20px;">${levelLabel}.</span>
         <input type="text" value="${node.label || ''}" placeholder="Nazev dlazdice" class="node-label">
@@ -3131,6 +3298,45 @@ function renderAdminWizards(container) {
     multiplyCheck.onchange = () => { node.multiply = multiplyCheck.checked; if (!node.unit) node.unit = 'ks'; saveAndRender(); };
     const unitInput = div.querySelector('.node-unit');
     if (unitInput) unitInput.onchange = () => { node.unit = unitInput.value.trim() || 'ks'; saveAndRenderQuiet(); };
+
+    // Drag & drop pro presun uzlu v ramci stejne urovne
+    const dragHandle = div.querySelector('.drag-handle');
+    dragHandle.addEventListener('dragstart', (e) => {
+      _wizDragState = { node, parentNode, idx: parentChildIdx };
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', String(parentChildIdx));
+      e.stopPropagation();
+      setTimeout(() => { div.style.opacity = '0.4'; }, 0);
+    });
+    dragHandle.addEventListener('dragend', () => {
+      div.style.opacity = '';
+      _wizDragState = null;
+    });
+
+    const nodeHeader = div.querySelector('.tree-node-header');
+    nodeHeader.addEventListener('dragover', (e) => {
+      if (!_wizDragState || _wizDragState.parentNode !== parentNode || _wizDragState.idx === parentChildIdx) return;
+      e.preventDefault();
+      e.stopPropagation();
+      nodeHeader.style.outline = '2px dashed #f39c12';
+    });
+    nodeHeader.addEventListener('dragleave', (e) => {
+      if (!nodeHeader.contains(e.relatedTarget)) nodeHeader.style.outline = '';
+    });
+    nodeHeader.addEventListener('drop', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      nodeHeader.style.outline = '';
+      if (!_wizDragState || _wizDragState.parentNode !== parentNode) return;
+      const fromIdx = _wizDragState.idx;
+      const toIdx = parentChildIdx;
+      _wizDragState = null;
+      if (fromIdx === toIdx) return;
+      const arr = parentNode.children;
+      const [moved] = arr.splice(fromIdx, 1);
+      arr.splice(toIdx, 0, moved);
+      saveAndRender();
+    });
 
     // Posun nahoru/dolu
     div.querySelector('.node-up').onclick = () => {
