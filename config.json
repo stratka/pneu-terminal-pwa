@@ -1728,6 +1728,14 @@
             "children": [],
             "final": true,
             "percent": true
+          },
+          {
+            "label": "Gumy od nás",
+            "price": -250,
+            "icon": "",
+            "color": "#2196f3",
+            "children": [],
+            "final": true
           }
         ]
       },
