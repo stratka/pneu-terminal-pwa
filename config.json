@@ -1590,7 +1590,7 @@
             "label": "Klimatizace R134a",
             "children": [
               {
-                "label": "Kompletní plnění \\n0-150g  \\nchladiva",
+                "label": "Kompletní plnění \\n0-100g  \\nchladiva",
                 "price": 500,
                 "final": true,
                 "children": [],
@@ -1598,15 +1598,22 @@
                 "color": "#2196f3"
               },
               {
-                "label": "Kompletní plnění  \\n151-400g  \\nchladiva",
+                "label": "Kompletní plnění  \\n101-250g  \\nchladiva",
                 "price": 1000,
                 "icon": "",
                 "color": "#2196f3",
                 "children": []
               },
               {
-                "label": "Kompletní plnění  \\n401-600g  \\nchladiva",
+                "label": "Kompletní plnění  \\n251-450g  \\nchladiva",
                 "price": 1500,
+                "icon": "",
+                "color": "#2196f3",
+                "children": []
+              },
+              {
+                "label": "Kompletní plnění  \\n451-600g  \\nchladiva",
+                "price": 2000,
                 "icon": "",
                 "color": "#2196f3",
                 "children": []
