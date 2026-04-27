@@ -1368,12 +1368,13 @@
                 "children": []
               },
               {
-                "label": "1ks\\nProgramovaní \\na výměna\\nTPMS",
+                "label": "1ks\\nProgramovaní\\na výměna\\nTPMS",
                 "price": 1000,
                 "final": true,
                 "children": [],
                 "icon": "",
-                "color": "#2196f3"
+                "color": "#2196f3",
+                "fontSize": 3
               }
             ],
             "color": "#9c27b0",
