@@ -1029,19 +1029,18 @@ function renderTiles() {
   const query = (searchInput ? searchInput.value : '').toLowerCase().trim();
   const filtered = query ? allTiles.filter(t => t._matchQuery(query)) : allTiles;
 
-  // Vypocitat font podle nejdelsiho nazvu
-  const maxNameLen = Math.max(1, ...filtered.map(t => Math.max(...t.name.split('\\n').map(s => s.length))));
-  // Dlazdice jsou cca 130-200px, s ikonou mame cca 2 radky pro text
-  // Zakladni velikost 14px, zmensit pokud se nejdelsi nevejde
-  let nameFontSize = 14;
-  const tileTextWidth = 120; // priblizna sirka textu v dlazdici (px)
+  const tileTextWidth = 120;
   const maxLines = 2;
-  while (nameFontSize > 9 && (maxNameLen * nameFontSize * 0.55) > tileTextWidth * maxLines) {
-    nameFontSize--;
-  }
-  let priceFontSize = Math.max(9, Math.floor(nameFontSize * 0.9));
 
   for (const t of filtered) {
+    // Vypocitat font pro tuto konkretni dlazdici
+    const maxNameLen = Math.max(1, ...t.name.split('\\n').map(s => s.length));
+    let nameFontSize = 14;
+    while (nameFontSize > 9 && (maxNameLen * nameFontSize * 0.55) > tileTextWidth * maxLines) {
+      nameFontSize--;
+    }
+    let priceFontSize = Math.max(9, Math.floor(nameFontSize * 0.9));
+
     const tile = document.createElement('div');
     tile.className = 'tile';
     tile.style.background = t.color;
