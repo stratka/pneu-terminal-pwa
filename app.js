@@ -1029,16 +1029,27 @@ function renderTiles() {
   const query = (searchInput ? searchInput.value : '').toLowerCase().trim();
   const filtered = query ? allTiles.filter(t => t._matchQuery(query)) : allTiles;
 
-  const tileTextWidth = 105;
-  const maxLines = 2;
+  // Canvas pro presne mereni textu
+  const _canvas = document.createElement('canvas');
+  const _ctx = _canvas.getContext('2d');
+  function measureTextWidth(text, fontSize) {
+    _ctx.font = `700 ${fontSize}px 'Segoe UI', system-ui, sans-serif`;
+    return _ctx.measureText(text).width;
+  }
+
+  // Sirka textu v dlazdici — zmerime az po prvnim renderu, do te doby pouzijeme odhad
+  const tileW = area.clientWidth > 0 ? (area.clientWidth / Math.max(1, Math.floor(area.clientWidth / 160))) - 20 : 120;
 
   for (const t of filtered) {
-    // Vypocitat font pro tuto konkretni dlazdici (0.65 = konzervativni odhad pro diakritiku)
-    const maxNameLen = Math.max(1, ...t.name.split('\\n').map(s => s.length));
+    // Vypocitat font pomoci canvas mereni
+    const words = t.name.split(/[\s\\n]+/);
+    const longestWord = words.reduce((a, b) => a.length > b.length ? a : b, '');
     let nameFontSize = 14;
-    while (nameFontSize > 8 && (maxNameLen * nameFontSize * 0.65) > tileTextWidth * maxLines) {
-      nameFontSize--;
+    // Zmensovat dokud se nejdelsi slovo vejde na jednu radku
+    while (nameFontSize > 7 && measureTextWidth(longestWord, nameFontSize) > tileW) {
+      nameFontSize -= 0.5;
     }
+    nameFontSize = Math.floor(nameFontSize);
     let priceFontSize = Math.max(9, Math.floor(nameFontSize * 0.9));
 
     const tile = document.createElement('div');
@@ -1066,18 +1077,6 @@ function renderTiles() {
     area.appendChild(tile);
   }
 
-  // Po renderu zkontrolovat pretekani a zmensit font
-  requestAnimationFrame(() => {
-    area.querySelectorAll('.tile').forEach(tile => {
-      const nameEl = tile.querySelector('.tile-name');
-      if (!nameEl) return;
-      let fs = parseFloat(nameEl.style.fontSize) || 14;
-      while (fs > 7 && nameEl.scrollHeight > tile.clientHeight * 0.55) {
-        fs -= 0.5;
-        nameEl.style.fontSize = fs + 'px';
-      }
-    });
-  });
 }
 
 function findNodeByPath(tree, treePath) {
