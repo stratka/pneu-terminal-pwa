@@ -1789,7 +1789,7 @@ function runCustomWizard(wiz, startPath) {
         ${level > 1 ? '<button class="btn btn-blue wiz-back" style="font-size:14px;padding:10px 20px;">← Zpět</button>' : ''}
       </div>
       <div style="justify-self:center;text-align:center;">
-        <div style="font-size:20px;font-weight:700;">${title}</div>
+        <div style="font-size:20px;font-weight:700;">${title.replace(/\\n/g, ' ')}</div>
       </div>
       <div style="justify-self:end;">
         <button class="btn btn-red wiz-cancel" style="font-size:13px;padding:10px 18px;">ZRUSIT</button>
