@@ -1152,6 +1152,51 @@ function renderCart() {
 }
 
 // ---------------------------------------------------------------------------
+function showDiscountDialog() {
+  const div = document.createElement('div');
+  div.innerHTML = `
+    <h2 style="text-align:center;margin-bottom:16px;">Zadat slevu</h2>
+    <div style="display:flex;gap:10px;justify-content:center;margin-bottom:16px;">
+      <button class="btn disc-type-btn" data-type="czk" style="background:#e67e22;font-size:16px;padding:12px 24px;">Kč</button>
+      <button class="btn disc-type-btn" data-type="pct" style="background:#555;font-size:16px;padding:12px 24px;">%</button>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:16px;">
+      <input type="number" id="disc-value" min="0" placeholder="0" style="font-size:28px;font-weight:700;text-align:center;width:140px;padding:10px;border-radius:8px;border:2px solid #555;background:#16213e;color:#fff;">
+      <span id="disc-unit" style="font-size:22px;font-weight:700;">Kč</span>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:center;">
+      <button class="btn" style="background:#555;padding:12px 24px;" id="disc-cancel">Zrušit</button>
+      <button class="btn btn-green" style="padding:12px 32px;font-size:16px;" id="disc-ok">Přidat slevu</button>
+    </div>
+  `;
+  const { overlay } = openModal(div);
+
+  let discType = 'czk';
+  const btns = div.querySelectorAll('.disc-type-btn');
+  btns.forEach(b => b.onclick = () => {
+    discType = b.dataset.type;
+    btns.forEach(x => x.style.background = '#555');
+    b.style.background = '#e67e22';
+    div.querySelector('#disc-unit').textContent = discType === 'pct' ? '%' : 'Kč';
+  });
+
+  div.querySelector('#disc-cancel').onclick = () => overlay.remove();
+  div.querySelector('#disc-ok').onclick = () => {
+    const val = parseFloat(div.querySelector('#disc-value').value);
+    if (!val || val <= 0) { alert('Zadejte hodnotu slevy.'); return; }
+    if (discType === 'pct') {
+      customItems.push({ name: `Sleva ${val}%`, price: -val, qty: 1, _percent: true });
+    } else {
+      customItems.push({ name: `Sleva ${val} Kč`, price: -val, qty: 1 });
+    }
+    renderCart();
+    overlay.remove();
+  };
+
+  div.querySelector('#disc-value').focus();
+}
+
+// ---------------------------------------------------------------------------
 // Kosik akce
 // ---------------------------------------------------------------------------
 function addToCart(idx) {
@@ -4142,6 +4187,7 @@ async function init() {
   // Event listenery
   document.getElementById('btn-clear-cart').onclick = clearCart;
   document.getElementById('btn-custom-item').onclick = showCustomItemDialog;
+  document.getElementById('btn-discount').onclick = showDiscountDialog;
   document.getElementById('btn-finish').onclick = showFinishDialog;
   document.getElementById('btn-orders').onclick = showQuickOrders;
   document.getElementById('tile-search').oninput = () => renderTiles();
