@@ -1995,10 +1995,11 @@ function runCustomWizard(wiz, startPath) {
           starHtml = `<div class="pin-star" style="position:absolute;top:4px;right:6px;font-size:16px;cursor:pointer;z-index:10;opacity:${pinned ? '1' : '0.4'};">${pinned ? '⭐' : '☆'}</div>`;
         }
 
+        const lblSz = child.fontSize || baseLblSz;
         tile.innerHTML = `
           ${starHtml}
           ${hasIcon ? `<div style="font-size:${iconSz}px;margin-bottom:4px;line-height:1;color:#fff;">${cIcon}</div>` : ''}
-          <div style="font-size:${baseLblSz}px;font-weight:700;line-height:1.2;overflow-wrap:anywhere;word-break:normal;">${cLabel.replace(/\\n/g, '<br>')}</div>
+          <div style="font-size:${lblSz}px;font-weight:700;line-height:1.2;overflow-wrap:anywhere;word-break:normal;">${cLabel.replace(/\\n/g, '<br>')}</div>
           ${cSub ? `<div style="font-size:${subSz}px;color:#e0e0e0;margin-top:4px;font-weight:700;">${child.multiply ? cPrice + (child.percent ? '%' : ' Kc') + '/' + (child.unit||'ks') : cSub}</div>` : ''}
         `;
 
@@ -3539,6 +3540,7 @@ function renderAdminWizards(container) {
           <span class="node-icon-preview" style="font-size:18px;line-height:1;display:flex;align-items:center;">${node.icon ? iconChar(node.icon) : '<span style=\'color:#555;\'>—</span>'}</span>
         </button>
         <input type="color" value="${node.color || '#2196F3'}" class="node-color" style="width:36px;height:30px;">
+        <input type="number" value="${node.fontSize || ''}" placeholder="px" class="node-fontsize" min="7" max="20" style="width:46px;" title="Velikost fontu (prazdne = auto)">
         <label style="font-size:11px;color:#f39c12;cursor:pointer;display:flex;align-items:center;gap:3px;" title="Po kliknuti ukonci wizard a prida do kosiku">
           <input type="checkbox" class="node-final" ${node.final?'checked':''}> Koncove
         </label>
@@ -3580,12 +3582,15 @@ function renderAdminWizards(container) {
     const iconValInput = div.querySelector('.node-icon-val');
     const iconBtn = div.querySelector('.node-icon-btn');
     const colorInput = div.querySelector('.node-color');
+    const fontsizeInput = div.querySelector('.node-fontsize');
 
     function syncNode() {
       node.label = labelInput.value;
       node.price = parseInt(priceInput.value) || 0;
       node.icon = iconValInput.value || '';
       node.color = colorInput.value;
+      const fs = parseInt(fontsizeInput.value);
+      node.fontSize = fs > 0 ? fs : undefined;
     }
 
     if (iconBtn) {
@@ -3604,6 +3609,7 @@ function renderAdminWizards(container) {
     labelInput.onchange = () => { syncNode(); saveAndRenderQuiet(); };
     priceInput.onchange = () => { syncNode(); saveAndRenderQuiet(); };
     colorInput.onchange = () => { syncNode(); saveAndRenderQuiet(); };
+    fontsizeInput.onchange = () => { syncNode(); saveAndRenderQuiet(); };
     finalCheck.onchange = () => { node.final = finalCheck.checked; saveAndRender(); };
     const percentCheck = div.querySelector('.node-percent');
     percentCheck.onchange = () => { node.percent = percentCheck.checked; saveAndRender(); };
