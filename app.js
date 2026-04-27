@@ -52,7 +52,7 @@ async function pushConfigToGitHub() {
     localStorage.setItem('github_token', GITHUB_TOKEN);
   }
 
-  const cfg = JSON.stringify({ services, settings, pricing, customWizards, pinnedItems }, null, 2);
+  const cfg = JSON.stringify({ services, settings, pricing, customWizards, pinnedItems, customSvgIcons }, null, 2);
   const content = btoa(unescape(encodeURIComponent(cfg)));
 
   // Ziskat aktualni SHA souboru a ulozit zalohu
@@ -194,19 +194,31 @@ async function backupPendingOrders() {
 // ---------------------------------------------------------------------------
 // Ikony
 // ---------------------------------------------------------------------------
-const SERVICE_ICONS = {
-  pneumatika: "\u2B24",
-  vyvazeni:   "\u2696",
-  geometrie:  "\u2B21",
-  olej:       "\uD83D\uDEE2",
-  brzdy:      "\u26D4",
-  diagnostika:"\uD83D\uDD0D",
-  klima:      "\u2744",
-  vymena:     "\uD83D\uDD27",
-  uskladneni: "\uD83D\uDCE6",
-  myti:       "\uD83D\uDEBF",
-  default:    "\u2699",
+const BUILTIN_SVG_ICONS = {
+  pneumatika:  `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="12" y1="8" x2="12" y2="2"/><line x1="12" y1="16" x2="12" y2="22"/><line x1="8" y1="12" x2="2" y2="12"/><line x1="16" y1="12" x2="22" y2="12"/><line x1="9.2" y1="9.2" x2="5.2" y2="5.2"/><line x1="14.8" y1="14.8" x2="18.8" y2="18.8"/><line x1="14.8" y1="9.2" x2="18.8" y2="5.2"/><line x1="9.2" y1="14.8" x2="5.2" y2="18.8"/></svg>`,
+  vyvazeni:    `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="3" x2="12" y2="21"/><line x1="4" y1="21" x2="20" y2="21"/><line x1="3" y1="7" x2="21" y2="7"/><polyline points="3,7 6,14 9,7"/><polyline points="15,7 18,14 21,7"/></svg>`,
+  geometrie:   `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="22" x2="22" y2="22"/><line x1="2" y1="22" x2="12" y2="2"/><line x1="12" y1="2" x2="22" y2="22"/><path d="M16 22 A8 8 0 0 0 8 22"/></svg>`,
+  olej:        `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12l-1.5 6H7.5z"/><path d="M7.5 9 Q6 13 8 16 Q9.5 19 12 19 Q14.5 19 16 16 Q18 13 16.5 9"/><line x1="12" y1="3" x2="12" y2="1"/><line x1="10" y1="1" x2="14" y2="1"/></svg>`,
+  olej2:       `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>`,
+  brzdy:       `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="5"/><rect x="10.5" y="2" width="3" height="4" rx="1" fill="currentColor" stroke="none"/><rect x="10.5" y="18" width="3" height="4" rx="1" fill="currentColor" stroke="none"/><rect x="2" y="10.5" width="4" height="3" rx="1" fill="currentColor" stroke="none"/><rect x="18" y="10.5" width="4" height="3" rx="1" fill="currentColor" stroke="none"/></svg>`,
+  diagnostika: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="7"/><line x1="15.5" y1="15.5" x2="21" y2="21"/></svg>`,
+  klima:       `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="4.9" y1="4.9" x2="19.1" y2="19.1"/><line x1="19.1" y1="4.9" x2="4.9" y2="19.1"/><circle cx="12" cy="12" r="2.5" fill="currentColor"/></svg>`,
+  vymena:      `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>`,
+  uskladneni:  `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><line x1="3.27" y1="6.96" x2="12" y2="12.01"/><line x1="12" y1="22.08" x2="12" y2="12"/><line x1="20.73" y1="6.96" x2="12" y2="12.01"/></svg>`,
+  myti:        `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 14 Q4 8 12 6 Q20 8 20 14"/><line x1="4" y1="14" x2="20" y2="14"/><line x1="8" y1="14" x2="7" y2="19"/><line x1="12" y1="14" x2="12" y2="20"/><line x1="16" y1="14" x2="17" y2="19"/></svg>`,
+  baterie:     `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="7" width="18" height="11" rx="1.5"/><line x1="23" y1="11" x2="23" y2="14"/><line x1="7" y1="7" x2="7" y2="5"/><line x1="5" y1="5" x2="9" y2="5"/><line x1="14" y1="7" x2="14" y2="5"/><line x1="6" y1="12" x2="10" y2="12"/><line x1="14" y1="10" x2="14" y2="15"/><line x1="12" y1="12" x2="16" y2="12"/></svg>`,
+  vzduch:      `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9.59 4.59A2 2 0 1 1 11 8H2"/><path d="M10.59 19.41A2 2 0 1 0 12 16H2"/><path d="M15.73 7.73A2.5 2.5 0 1 1 17.5 12H2"/></svg>`,
+  svetla:      `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13,2 3,14 12,14 11,22 21,10 12,10" fill="currentColor" fill-opacity="0.3"/></svg>`,
+  motor:       `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="13" height="9" rx="1"/><rect x="7" y="5" width="5" height="4" rx="1"/><line x1="16" y1="11" x2="21" y2="11"/><line x1="16" y1="14" x2="21" y2="14"/><line x1="3" y1="11" x2="0" y2="11"/><line x1="3" y1="14" x2="0" y2="14"/><line x1="9" y1="17" x2="9" y2="20"/><line x1="13" y1="17" x2="13" y2="20"/></svg>`,
+  kapalina:    `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>`,
+  filtr:       `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="22,3 2,3 10,12.46 10,19 14,21 14,12.46" fill="currentColor" fill-opacity="0.3"/></svg>`,
+  kolo:        `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="5.5"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><line x1="12" y1="6.5" x2="12" y2="10.5"/><line x1="12" y1="13.5" x2="12" y2="17.5"/><line x1="6.5" y1="12" x2="10.5" y2="12"/><line x1="13.5" y1="12" x2="17.5" y2="12"/><line x1="8.1" y1="8.1" x2="10.9" y2="10.9"/><line x1="13.1" y1="13.1" x2="15.9" y2="15.9"/><line x1="15.9" y1="8.1" x2="13.1" y2="10.9"/><line x1="10.9" y1="13.1" x2="8.1" y2="15.9"/></svg>`,
+  klice:       `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="4"/><line x1="9" y1="12" x2="22" y2="12"/><line x1="19" y1="9" x2="19" y2="15"/><line x1="22" y1="9" x2="22" y2="15"/></svg>`,
+  naraz:       `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17H3a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h11l5 3 1 4H3"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>`,
+  default:     `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`,
 };
+let customSvgIcons = {};
+let wizardBackStack = []; // stack funkci pro tlacitko Zpet
 
 const TILE_COLORS = [
   "#2196F3","#4CAF50","#FF9800","#9C27B0",
@@ -774,7 +786,111 @@ function getTotal() {
 }
 
 function iconChar(key) {
-  return SERVICE_ICONS[key] || SERVICE_ICONS.default;
+  if (!key) return BUILTIN_SVG_ICONS.default;
+  if (BUILTIN_SVG_ICONS[key]) return BUILTIN_SVG_ICONS[key];
+  if (customSvgIcons[key]) return customSvgIcons[key].svg;
+  return BUILTIN_SVG_ICONS.default;
+}
+
+function showIconPicker(currentIcon, callback) {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:99999;display:flex;align-items:center;justify-content:center;';
+
+  const modal = document.createElement('div');
+  modal.style.cssText = 'background:#1a1a2e;border-radius:12px;padding:20px;width:90%;max-width:640px;max-height:80vh;display:flex;flex-direction:column;gap:12px;';
+
+  const head = document.createElement('div');
+  head.style.cssText = 'display:flex;justify-content:space-between;align-items:center;flex-shrink:0;';
+  head.innerHTML = `<h3 style="margin:0;color:#fff;">Vybrat ikonu</h3>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <label class="btn btn-blue" style="cursor:pointer;font-size:13px;padding:6px 12px;">
+        + Nahrát SVG <input type="file" accept=".svg,image/svg+xml" id="icon-upload-input" style="display:none;">
+      </label>
+      <button class="btn" style="background:#555;" id="icon-picker-close">✕</button>
+    </div>`;
+  modal.appendChild(head);
+
+  const grid = document.createElement('div');
+  grid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:8px;overflow-y:auto;';
+
+  function buildGrid() {
+    grid.innerHTML = '';
+    const allIcons = [
+      ...Object.entries(BUILTIN_SVG_ICONS).map(([k, svg]) => ({ key: k, svg, name: k })),
+      ...Object.entries(customSvgIcons).map(([k, v]) => ({ key: k, svg: v.svg, name: v.name })),
+    ];
+    for (const { key, svg, name } of allIcons) {
+      const isCustom = key.startsWith('custom:');
+      const selected = key === currentIcon;
+      const wrap = document.createElement('div');
+      wrap.style.cssText = 'position:relative;';
+      const btn = document.createElement('div');
+      btn.style.cssText = `background:${selected ? '#2196F3' : '#16213e'};border:2px solid ${selected ? '#fff' : 'transparent'};border-radius:8px;padding:8px 4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;`;
+      btn.innerHTML = `<span style="font-size:32px;line-height:1;display:flex;align-items:center;justify-content:center;color:#fff;">${svg}</span><span style="font-size:9px;color:#aaa;text-align:center;word-break:break-all;max-width:64px;">${name}</span>`;
+      btn.onclick = () => { callback(key); document.body.removeChild(overlay); };
+      wrap.appendChild(btn);
+      if (isCustom) {
+        const del = document.createElement('button');
+        del.textContent = '✕';
+        del.style.cssText = 'position:absolute;top:2px;left:2px;background:#e74c3c;color:#fff;border:none;border-radius:4px;font-size:10px;padding:1px 4px;cursor:pointer;z-index:1;';
+        del.onclick = async (e) => {
+          e.stopPropagation();
+          if (!confirm(`Smazat ikonu "${name}"?`)) return;
+          delete customSvgIcons[key];
+          await db.setKV('customSvgIcons', customSvgIcons);
+          buildGrid();
+        };
+        wrap.appendChild(del);
+      }
+      grid.appendChild(wrap);
+    }
+  }
+  buildGrid();
+  modal.appendChild(grid);
+
+  head.querySelector('#icon-picker-close').onclick = () => document.body.removeChild(overlay);
+  head.querySelector('#icon-upload-input').onchange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    let svg = await file.text();
+    // Odstranit XML deklarace a DOCTYPE ktere blokuji inline rendering
+    svg = svg.replace(/<\?xml[^?]*\?>/gi, '').replace(/<!DOCTYPE[^>]*>/gi, '').trim();
+    // Normalizace: nahradit pevnou width/height za 1em, zachovat nebo vytvorit viewBox
+    svg = svg.replace(/<svg([^>]*)>/i, (match, attrs) => {
+      const vbMatch = attrs.match(/viewBox\s*=\s*["']([^"']+)["']/i);
+      const wMatch  = attrs.match(/\bwidth\s*=\s*["']([0-9.]+)["']/i);
+      const hMatch  = attrs.match(/\bheight\s*=\s*["']([0-9.]+)["']/i);
+      let viewBox = '';
+      if (vbMatch) {
+        viewBox = ` viewBox="${vbMatch[1]}"`;
+      } else if (wMatch && hMatch) {
+        viewBox = ` viewBox="0 0 ${wMatch[1]} ${hMatch[1]}"`;
+      }
+      let cleaned = attrs
+        .replace(/\s*width\s*=\s*["'][^"']*["']/gi, '')
+        .replace(/\s*height\s*=\s*["'][^"']*["']/gi, '')
+        .replace(/\s*viewBox\s*=\s*["'][^"']*["']/gi, '');
+      return `<svg width="1em" height="1em"${viewBox}${cleaned}>`;
+    });
+    // Nahradit cerne a tmave barvy za currentColor
+    svg = svg.replace(/fill\s*=\s*["'](#000(000)?|black|#1[0-9a-f]{5}|#0[0-9a-f]{5})["']/gi, 'fill="currentColor"');
+    svg = svg.replace(/stroke\s*=\s*["'](#000(000)?|black)["']/gi, 'stroke="currentColor"');
+    svg = svg.replace(/fill\s*:\s*(#000(000)?|black)\s*;?/gi, 'fill:currentColor;');
+    svg = svg.replace(/stroke\s*:\s*(#000(000)?|black)\s*;?/gi, 'stroke:currentColor;');
+    // Pokud SVG neobsahuje zadne barvy, pridat fill:currentColor
+    if (!svg.includes('currentColor') && !svg.includes('fill=') && !svg.includes('stroke=')) {
+      svg = svg.replace(/<svg/, '<svg style="fill:currentColor"');
+    }
+    const name = file.name.replace(/\.svg$/i, '');
+    const key = 'custom:' + name.replace(/[^a-zA-Z0-9_-]/g, '_');
+    customSvgIcons[key] = { name, svg };
+    await db.setKV('customSvgIcons', customSvgIcons);
+    currentIcon = key;
+    buildGrid();
+  };
+  overlay.onclick = (e) => { if (e.target === overlay) document.body.removeChild(overlay); };
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
 }
 
 // ---------------------------------------------------------------------------
@@ -876,9 +992,20 @@ function renderTiles() {
 
   // Pripnute polozky z wizardu
   pinnedItems.forEach(pin => {
+    // Dynamicky dohledat aktualni ikonu z wizardu (pin mohl byt ulozeny pred nastavenim ikony)
+    let resolvedIcon = pin.icon;
+    if (pin.source && pin.source.startsWith('custom:') && pin.treePath) {
+      const wizName = pin.source.replace('custom:', '');
+      const wiz = customWizards.find(w => w.name === wizName);
+      if (wiz) {
+        const node = findNodeByPath(wiz.tree, pin.treePath);
+        if (node && node.icon) resolvedIcon = node.icon;
+        else if (!resolvedIcon && wiz.icon) resolvedIcon = wiz.icon;
+      }
+    }
     allTiles.push({
       name: pin.name,
-      icon: pin.icon ? iconChar(pin.icon) : '\u2B50',
+      icon: iconChar(resolvedIcon || 'default'),
       color: pin.color || '#607D8B',
       priceText: pin.price ? `${pin.price}${pin.percent ? '%' : ' Kc'}` : '',
       pinned: true,
@@ -903,7 +1030,7 @@ function renderTiles() {
   const filtered = query ? allTiles.filter(t => t._matchQuery(query)) : allTiles;
 
   // Vypocitat font podle nejdelsiho nazvu
-  const maxNameLen = Math.max(1, ...filtered.map(t => t.name.length));
+  const maxNameLen = Math.max(1, ...filtered.map(t => Math.max(...t.name.split('\\n').map(s => s.length))));
   // Dlazdice jsou cca 130-200px, s ikonou mame cca 2 radky pro text
   // Zakladni velikost 14px, zmensit pokud se nejdelsi nevejde
   let nameFontSize = 14;
@@ -921,7 +1048,7 @@ function renderTiles() {
     tile.innerHTML = `
       ${t.pinned ? '<div class="pin-badge" style="position:absolute;top:4px;right:6px;font-size:12px;cursor:pointer;z-index:10;">⭐</div>' : ''}
       <div class="tile-icon">${t.icon}</div>
-      <div class="tile-name" style="font-size:${nameFontSize}px;">${t.name}</div>
+      <div class="tile-name" style="font-size:${nameFontSize}px;">${t.name.replace(/\\n/g, '<br>')}</div>
       <div class="tile-price" style="font-size:${priceFontSize}px;">${t.priceText}</div>
     `;
     if (t.pinned) {
@@ -939,6 +1066,17 @@ function renderTiles() {
     tile.onclick = t.onclick;
     area.appendChild(tile);
   }
+}
+
+function findNodeByPath(tree, treePath) {
+  if (!treePath || treePath.length === 0) return null;
+  let node = tree;
+  for (const label of treePath) {
+    if (!node.children) return null;
+    node = node.children.find(c => c.label === label);
+    if (!node) return null;
+  }
+  return node;
 }
 
 function collectTreePrices(node) {
@@ -975,7 +1113,7 @@ function renderCart() {
     subtotal += lineTotal;
     const div = document.createElement('div');
     div.className = 'cart-item';
-    div.innerHTML = `<span class="cart-item-name">${item.name}</span><span class="cart-item-price">${lineTotal} Kc</span>`;
+    div.innerHTML = `<span class="cart-item-name">${item.name.replace(/\\n/g, ' ')}</span><span class="cart-item-price">${lineTotal} Kc</span>`;
     div.onclick = () => { customItems.splice(i, 1); renderCart(); };
     list.appendChild(div);
   });
@@ -986,7 +1124,7 @@ function renderCart() {
     subtotal += lineTotal;
     const div = document.createElement('div');
     div.className = 'cart-item';
-    div.innerHTML = `<span class="cart-item-name">${svc.name} x${qty}</span><span class="cart-item-price">${lineTotal} Kc</span>`;
+    div.innerHTML = `<span class="cart-item-name">${svc.name.replace(/\\n/g, ' ')} x${qty}</span><span class="cart-item-price">${lineTotal} Kc</span>`;
     div.onclick = () => {
       if (cart[idx] > 1) cart[idx]--;
       else delete cart[idx];
@@ -1004,7 +1142,7 @@ function renderCart() {
     const div = document.createElement('div');
     div.className = 'cart-item';
     div.style.color = '#e74c3c';
-    div.innerHTML = `<span class="cart-item-name">${item.name} (${item.price}%)</span><span class="cart-item-price">${discount} Kc</span>`;
+    div.innerHTML = `<span class="cart-item-name">${item.name.replace(/\\n/g, ' ')} (${item.price}%)</span><span class="cart-item-price">${discount} Kc</span>`;
     div.onclick = () => { customItems.splice(i, 1); renderCart(); };
     list.appendChild(div);
   });
@@ -1041,8 +1179,11 @@ function showCustomItemDialog() {
       </div>
       <div style="margin-bottom:16px;">
         <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:4px;">Cena (Kc):</label>
-        <input type="number" id="ci-price" placeholder="0"
-          style="width:100%;padding:10px;border-radius:6px;border:1px solid #444;background:#16213e;color:#fff;font-size:16px;">
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input type="number" id="ci-price" placeholder="0"
+            style="flex:1;padding:10px;border-radius:6px;border:1px solid #444;background:#16213e;color:#fff;font-size:16px;">
+          <button id="ci-minus" style="padding:10px 16px;border-radius:6px;background:#e74c3c;color:#fff;border:none;font-size:20px;font-weight:700;cursor:pointer;flex-shrink:0;">−</button>
+        </div>
       </div>
       <div style="display:flex;gap:10px;justify-content:center;">
         <button class="btn btn-green ci-ok" style="padding:12px 30px;font-size:15px;">PRIDAT</button>
@@ -1051,6 +1192,12 @@ function showCustomItemDialog() {
     </div>
   `;
   const { overlay } = openModal(div);
+  div.querySelector('#ci-minus').onclick = () => {
+    const inp = div.querySelector('#ci-price');
+    const val = parseFloat(inp.value) || 0;
+    inp.value = val === 0 ? '-' : (val > 0 ? -val : Math.abs(val));
+    inp.focus();
+  };
   div.querySelector('.ci-cancel').onclick = () => overlay.remove();
   div.querySelector('.ci-ok').onclick = () => {
     const name = div.querySelector('#ci-name').value.trim();
@@ -1104,14 +1251,21 @@ function wizardTileSelect(title, subtitle, options, big, callback, pinConfig) {
   const container = document.createElement('div');
   container.style.cssText = 'display:flex;flex-direction:column;height:100%;';
 
-  // Header with cancel button (right corner only)
-  let html = `<div style="display:flex;justify-content:flex-end;margin-bottom:4px;flex-shrink:0;">
-    <button class="btn btn-red wizard-cancel" style="font-size:13px;padding:8px 16px;">ZRUSIT</button>
+  // Header: back vlevo, nazev uprostred, cancel vpravo
+  const hasBack = wizardBackStack.length > 0;
+  let html = `<div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;flex-shrink:0;padding:10px 10px 6px;gap:8px;">
+    <div style="justify-self:start;">
+      ${hasBack ? '<button class="btn btn-blue wizard-back" style="font-size:14px;padding:10px 20px;">← Zpět</button>' : ''}
+    </div>
+    <div style="text-align:center;">
+      <div style="font-size:20px;font-weight:700;">${title}</div>
+      ${subtitle ? `<div style="font-size:13px;color:var(--text-muted);margin-top:2px;">${subtitle}</div>` : ''}
+    </div>
+    <div style="justify-self:end;">
+      <button class="btn btn-red wizard-cancel" style="font-size:13px;padding:10px 18px;">ZRUSIT</button>
+    </div>
   </div>`;
-  // Title + subtitle directly above tiles
   html += `<div class="wizard-grid-auto" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;">
-    <h2 style="margin:0 0 4px;text-align:center;">${title}</h2>
-    ${subtitle ? `<div class="modal-subtitle" style="margin:0 0 10px;">${subtitle}</div>` : ''}
     <div class="wizard-tiles-container"></div>
   </div>`;
   container.innerHTML = html;
@@ -1124,7 +1278,19 @@ function wizardTileSelect(title, subtitle, options, big, callback, pinConfig) {
   modal.style.display = 'flex';
   modal.style.flexDirection = 'column';
 
-  container.querySelector('.wizard-cancel').onclick = () => overlay.remove();
+  container.querySelector('.wizard-cancel').onclick = () => {
+    overlay.remove();
+    wizardBackStack = [];
+  };
+
+  const backBtn = container.querySelector('.wizard-back');
+  if (backBtn) {
+    backBtn.onclick = () => {
+      overlay.remove();
+      const goBack = wizardBackStack.pop();
+      if (goBack) goBack();
+    };
+  }
 
   const gridWrap = container.querySelector('.wizard-tiles-container');
 
@@ -1226,7 +1392,16 @@ function wizardTileSelect(title, subtitle, options, big, callback, pinConfig) {
       tile.onpointerdown = () => { tile.style.transform = 'scale(0.95)'; };
       tile.onpointerup = () => { tile.style.transform = ''; };
       tile.onpointerleave = () => { tile.style.transform = ''; };
-      tile.onclick = () => { overlay.remove(); callback(opt.value); };
+      tile.onclick = () => {
+        // Ulozit funkci pro navrat na tento krok
+        wizardBackStack.push(() => wizardTileSelect(title, subtitle, options, big, callback, pinConfig));
+        overlay.remove();
+        callback(opt.value);
+        // Pokud callback neotevrel dalsi wizard krok, vymazat stack
+        setTimeout(() => {
+          if (!document.querySelector('.modal-overlay')) wizardBackStack = [];
+        }, 0);
+      };
       grid.appendChild(tile);
     }
     gridWrap.appendChild(grid);
@@ -1709,7 +1884,7 @@ function runCustomWizard(wiz, startPath) {
         const cPrice = child.price || 0;
         const cIcon = child.icon ? iconChar(child.icon) : '';
         const hasIcon = !!cIcon;
-        const cSub = cPrice ? `${cPrice}${child.percent ? '%' : ' Kc'}` : (child.children && child.children.length ? `${child.children.length} moznosti` : '');
+        const cSub = cPrice ? `${cPrice}${child.percent ? '%' : ' Kc'}` : '';
         if (child.multiply && cPrice) {
           // Zobrazit jednotkovou cenu
         }
@@ -1738,8 +1913,8 @@ function runCustomWizard(wiz, startPath) {
 
         tile.innerHTML = `
           ${starHtml}
-          ${hasIcon ? `<div style="font-size:${iconSz}px;margin-bottom:4px;line-height:1;">${cIcon}</div>` : ''}
-          <div style="font-size:${baseLblSz}px;font-weight:700;line-height:1.2;overflow-wrap:anywhere;word-break:normal;">${cLabel}</div>
+          ${hasIcon ? `<div style="font-size:${iconSz}px;margin-bottom:4px;line-height:1;color:#fff;">${cIcon}</div>` : ''}
+          <div style="font-size:${baseLblSz}px;font-weight:700;line-height:1.2;overflow-wrap:anywhere;word-break:normal;">${cLabel.replace(/\\n/g, '<br>')}</div>
           ${cSub ? `<div style="font-size:${subSz}px;color:#e0e0e0;margin-top:4px;font-weight:700;">${child.multiply ? cPrice + (child.percent ? '%' : ' Kc') + '/' + (child.unit||'ks') : cSub}</div>` : ''}
         `;
 
@@ -1748,7 +1923,7 @@ function runCustomWizard(wiz, startPath) {
         if (starEl) {
           starEl.onclick = (e) => {
             e.stopPropagation();
-            togglePin(pinSource, pinName, pinPrice, child.icon || wiz.icon, tileColor, pinTreePath, child.percent);
+            togglePin(pinSource, pinName, pinPrice, child.icon || wiz.icon || 'default', tileColor, pinTreePath, child.percent);
             const nowPinned = isPinned(pinSource, pinName);
             starEl.textContent = nowPinned ? '⭐' : '☆';
             starEl.style.opacity = nowPinned ? '1' : '0.4';
@@ -2202,7 +2377,7 @@ function showFinishDialog() {
       </div>
     </div>
     <div>
-      <label><input type="checkbox" id="finish-print" checked> Vygenerovat fakturu (PDF)</label>
+      <label><input type="checkbox" id="finish-print"> Vygenerovat fakturu (PDF)</label>
     </div>
     <div style="margin:8px 0;">
       <div style="font-size:13px;margin-bottom:4px;">QR kod pro platbu:</div>
@@ -2888,7 +3063,7 @@ function renderAdminWizards(container) {
     customWizards.forEach((wiz, i) => {
       const el = document.createElement('div');
       el.className = 'admin-svc-item' + (i === selectedWizIdx ? ' selected' : '');
-      el.textContent = `${iconChar(wiz.icon)} ${wiz.name}`;
+      el.innerHTML = `<span style="font-size:16px;vertical-align:middle;display:inline-flex;align-items:center;">${iconChar(wiz.icon)}</span> ${wiz.name}`;
       el.onclick = () => { selectedWizIdx = i; render(); };
       list.appendChild(el);
     });
@@ -2940,14 +3115,16 @@ function renderAdminWizards(container) {
     header.style.cssText = 'margin-bottom:16px;padding:12px;background:#16213e;border-radius:8px;';
     header.innerHTML = `
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-        <div class="admin-field" style="margin:0;"><label>Nazev dlazdice:</label><input type="text" id="wiz-name" value="${wiz.name}" style="width:180px;"></div>
+        <div class="admin-field" style="margin:0;"><label>Nazev dlazdice:</label><input type="text" id="wiz-name" value="${wiz.name}" style="width:500px;"></div>
         <div class="admin-field" style="margin:0;"><label>Cena (text na dlazdici):</label><input type="text" id="wiz-price-label" value="${wiz.priceLabel || ''}" placeholder="napr. od 800 Kc" style="width:140px;"></div>
         <div class="admin-field" style="margin:0;"><label>Barva:</label><input type="color" id="wiz-color" value="${wiz.color}" style="width:50px;height:34px;"></div>
         <div class="admin-field" style="margin:0;">
           <label>Ikona:</label>
-          <select id="wiz-icon" style="width:120px;">
-            ${Object.entries(SERVICE_ICONS).map(([k,v]) => `<option value="${k}" ${k===wiz.icon?'selected':''}>${v} ${k}</option>`).join('')}
-          </select>
+          <input type="hidden" id="wiz-icon" value="${wiz.icon||'default'}">
+          <button id="wiz-icon-btn" class="btn" style="background:#16213e;border:1px solid #444;padding:4px 10px;display:flex;align-items:center;gap:6px;">
+            <span id="wiz-icon-preview" style="font-size:24px;line-height:1;display:flex;align-items:center;color:#fff;">${iconChar(wiz.icon||'default')}</span>
+            <span id="wiz-icon-name" style="font-size:11px;color:#aaa;">${wiz.icon||'default'}</span>
+          </button>
         </div>
         <label style="font-size:12px;color:#27ae60;cursor:pointer;display:flex;align-items:center;gap:4px;">
           <input type="checkbox" id="wiz-protocol" ${wiz.protocol?'checked':''}> Predavaci protokol
@@ -2959,6 +3136,14 @@ function renderAdminWizards(container) {
       </div>
     `;
     editorDiv.appendChild(header);
+
+    header.querySelector('#wiz-icon-btn').onclick = () => {
+      showIconPicker(header.querySelector('#wiz-icon').value || 'default', (key) => {
+        header.querySelector('#wiz-icon').value = key;
+        header.querySelector('#wiz-icon-preview').innerHTML = iconChar(key);
+        header.querySelector('#wiz-icon-name').textContent = key;
+      });
+    };
 
     header.querySelector('#wiz-save-header').onclick = async () => {
       wiz.name = header.querySelector('#wiz-name').value.trim() || 'Wizard';
@@ -3182,6 +3367,33 @@ function renderAdminWizards(container) {
     };
     editorDiv.appendChild(addRootBtn);
 
+    // Tlacitka rozbalit/sbalit vse
+    const expandBtns = document.createElement('div');
+    expandBtns.style.cssText = 'margin-bottom:8px;display:flex;gap:8px;';
+    expandBtns.innerHTML = `
+      <button class="btn" style="background:#555;font-size:12px;padding:4px 10px;">▼ Rozbalit vše</button>
+      <button class="btn" style="background:#555;font-size:12px;padding:4px 10px;">▶ Sbalit vše</button>
+    `;
+    expandBtns.children[0].onclick = () => {
+      _treeCollapsed.clear();
+      if (!_treeCollapsed._initialized) _treeCollapsed._initialized = new Set();
+      function markAllInitialized(node, wizName, level) {
+        if (node.children) {
+          node.children.forEach((child, i) => {
+            _treeCollapsed._initialized.add(`${wizName}_${i}_${level}_${child.label}`);
+            markAllInitialized(child, wizName, level + 1);
+          });
+        }
+      }
+      markAllInitialized(wiz.tree, wiz.name, 1);
+      renderWizardEditor(editorDiv, wiz);
+    };
+    expandBtns.children[1].onclick = () => {
+      if (_treeCollapsed._initialized) _treeCollapsed._initialized.clear();
+      renderWizardEditor(editorDiv, wiz);
+    };
+    editorDiv.appendChild(expandBtns);
+
     const treeDiv = document.createElement('div');
     treeDiv.className = 'tree-builder';
     editorDiv.appendChild(treeDiv);
@@ -3229,13 +3441,13 @@ function renderAdminWizards(container) {
         <span class="drag-handle" draggable="true" style="cursor:grab;color:#555;font-size:16px;user-select:none;padding:0 4px;flex-shrink:0;" title="Pretahnout pro presunuti v ramci stejne urovne">⠿</span>
         <span class="node-toggle" style="font-size:12px;cursor:${hasChildren?'pointer':'default'};min-width:16px;user-select:none;color:${hasChildren?'#fff':'#555'};" title="${hasChildren?'Rozbalit/sbalit':''}">${toggleIcon}</span>
         <span style="font-size:10px;color:#888;min-width:20px;">${levelLabel}.</span>
-        <input type="text" value="${node.label || ''}" placeholder="Nazev dlazdice" class="node-label">
+        <input type="text" value="${node.label || ''}" placeholder="Nazev dlazdice" class="node-label" style="width:350px;min-width:350px;">
         <input type="number" value="${node.price || 0}" placeholder="Cena" class="node-price" style="width:80px;" title="Cena pri kliknuti (scita se)">
         <span style="font-size:11px;color:var(--text-muted);">Kc</span>
-        <select class="node-icon" style="width:80px;">
-          <option value="">--</option>
-          ${Object.entries(SERVICE_ICONS).map(([k,v]) => `<option value="${k}" ${k===node.icon?'selected':''}>${v}</option>`).join('')}
-        </select>
+        <input type="hidden" class="node-icon-val" value="${node.icon||''}">
+        <button class="node-icon-btn" style="background:#16213e;border:1px solid #444;border-radius:6px;padding:3px 7px;cursor:pointer;display:inline-flex;align-items:center;gap:4px;color:#fff;" title="Vybrat ikonu">
+          <span class="node-icon-preview" style="font-size:18px;line-height:1;display:flex;align-items:center;">${node.icon ? iconChar(node.icon) : '<span style=\'color:#555;\'>—</span>'}</span>
+        </button>
         <input type="color" value="${node.color || '#2196F3'}" class="node-color" style="width:36px;height:30px;">
         <label style="font-size:11px;color:#f39c12;cursor:pointer;display:flex;align-items:center;gap:3px;" title="Po kliknuti ukonci wizard a prida do kosiku">
           <input type="checkbox" class="node-final" ${node.final?'checked':''}> Koncove
@@ -3275,21 +3487,32 @@ function renderAdminWizards(container) {
     // Auto-save pri zmene
     const labelInput = div.querySelector('.node-label');
     const priceInput = div.querySelector('.node-price');
-    const iconSelect = div.querySelector('.node-icon');
+    const iconValInput = div.querySelector('.node-icon-val');
+    const iconBtn = div.querySelector('.node-icon-btn');
     const colorInput = div.querySelector('.node-color');
 
     function syncNode() {
       node.label = labelInput.value;
       node.price = parseInt(priceInput.value) || 0;
-      node.icon = iconSelect.value || '';
+      node.icon = iconValInput.value || '';
       node.color = colorInput.value;
+    }
+
+    if (iconBtn) {
+      iconBtn.onclick = () => {
+        showIconPicker(iconValInput.value || 'default', (key) => {
+          iconValInput.value = key;
+          node.icon = key;
+          iconBtn.querySelector('.node-icon-preview').innerHTML = iconChar(key);
+          saveAndRenderQuiet();
+        });
+      };
     }
 
     const finalCheck = div.querySelector('.node-final');
 
     labelInput.onchange = () => { syncNode(); saveAndRenderQuiet(); };
     priceInput.onchange = () => { syncNode(); saveAndRenderQuiet(); };
-    iconSelect.onchange = () => { syncNode(); saveAndRenderQuiet(); };
     colorInput.onchange = () => { syncNode(); saveAndRenderQuiet(); };
     finalCheck.onchange = () => { node.final = finalCheck.checked; saveAndRender(); };
     const percentCheck = div.querySelector('.node-percent');
@@ -3796,39 +4019,54 @@ async function init() {
   await db.open();
 
   // Nacist konfiguraci:
-  // 1) Zkusit stahnout config.json z GitHubu (jeden zdroj pravdy)
-  // 2) Pokud neni internet (offline tablet), pouzit IndexedDB cache
-  // 3) Pokud neni ani cache, pouzit vychozi defaulty
+  // 1) Pokud IndexedDB obsahuje data, pouzit je (lokalni zmeny maji prednost)
+  // 2) Pokud IndexedDB je prazdna (prvni spusteni), stahnout config.json z GitHubu
+  // 3) Pokud neni ani GitHub, pouzit vychozi defaulty
+  const cachedServices = await db.getKV('services');
   let configLoaded = false;
-  try {
-    const resp = await fetch(`https://raw.githubusercontent.com/${GITHUB_REPO}/master/${GITHUB_CONFIG_PATH}?v=${Date.now()}`);
-    if (resp.ok) {
-      const cfg = await resp.json();
-      services = cfg.services || DEFAULT_SERVICES;
-      settings = cfg.settings || DEFAULT_SETTINGS;
-      pricing  = cfg.pricing || DEFAULT_PRICING;
-      customWizards = cfg.customWizards || [];
-      var sharedPins = cfg.pinnedItems || [];
-      configLoaded = true;
-      // Ulozit do IndexedDB jako offline cache
-      await Promise.all([
-        db.setKV('services', services),
-        db.setKV('settings', settings),
-        db.setKV('pricing', pricing),
-        db.setKV('customWizards', customWizards),
-      ]);
-    }
-  } catch(e) { /* offline nebo chyba site */ }
-
-  if (!configLoaded) {
-    // Offline fallback — pouzit IndexedDB cache
-    services = await db.getKV('services', DEFAULT_SERVICES);
+  var sharedPins = [];
+  if (cachedServices) {
+    // IndexedDB ma data — pouzit je
+    services = cachedServices;
     settings = await db.getKV('settings', DEFAULT_SETTINGS);
     pricing  = await db.getKV('pricing', DEFAULT_PRICING);
     customWizards = await db.getKV('customWizards', []);
+    configLoaded = true;
+  } else {
+    // Prvni spusteni — stahnout z GitHubu
+    try {
+      const resp = await fetch(`https://raw.githubusercontent.com/${GITHUB_REPO}/master/${GITHUB_CONFIG_PATH}?v=${Date.now()}`);
+      if (resp.ok) {
+        const cfg = await resp.json();
+        services = cfg.services || DEFAULT_SERVICES;
+        settings = cfg.settings || DEFAULT_SETTINGS;
+        pricing  = cfg.pricing || DEFAULT_PRICING;
+        customWizards = cfg.customWizards || [];
+        sharedPins = cfg.pinnedItems || [];
+        if (cfg.customSvgIcons) {
+          customSvgIcons = cfg.customSvgIcons;
+        }
+        configLoaded = true;
+        await Promise.all([
+          db.setKV('services', services),
+          db.setKV('settings', settings),
+          db.setKV('pricing', pricing),
+          db.setKV('customWizards', customWizards),
+          db.setKV('customSvgIcons', customSvgIcons),
+        ]);
+      }
+    } catch(e) { /* offline nebo chyba site */ }
+  }
+
+  if (!configLoaded) {
+    services = DEFAULT_SERVICES;
+    settings = DEFAULT_SETTINGS;
+    pricing  = DEFAULT_PRICING;
+    customWizards = [];
   }
 
   // Pripnute polozky: lokalni + sdilene z GitHubu
+  customSvgIcons = await db.getKV('customSvgIcons', {});
   const localPins = await db.getKV('pinnedItems', []);
   pinnedItems = [...localPins];
   if (configLoaded && sharedPins.length) {
