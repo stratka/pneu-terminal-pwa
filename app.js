@@ -1784,10 +1784,15 @@ function runCustomWizard(wiz, startPath) {
     container.style.cssText = 'display:flex;flex-direction:column;height:100%;';
 
     // Header
-    let headerHtml = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-shrink:0;">
-      <h2 style="margin:0">${title}</h2>
-      <div style="display:flex;gap:8px;">
-        <button class="btn btn-red wiz-cancel" style="font-size:13px;padding:8px 16px;">ZRUSIT</button>
+    let headerHtml = `<div style="width:100%;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;flex-shrink:0;padding:10px 10px 6px;gap:8px;box-sizing:border-box;">
+      <div style="justify-self:start;">
+        ${level > 1 ? '<button class="btn btn-blue wiz-back" style="font-size:14px;padding:10px 20px;">← Zpět</button>' : ''}
+      </div>
+      <div style="justify-self:center;text-align:center;">
+        <div style="font-size:20px;font-weight:700;">${title}</div>
+      </div>
+      <div style="justify-self:end;">
+        <button class="btn btn-red wiz-cancel" style="font-size:13px;padding:10px 18px;">ZRUSIT</button>
       </div>
     </div>`;
 
@@ -1832,8 +1837,21 @@ function runCustomWizard(wiz, startPath) {
     modal.style.maxHeight = '100vh';
     modal.style.display = 'flex';
     modal.style.flexDirection = 'column';
+    modal.style.padding = '0';
 
     container.querySelector('.wiz-cancel').onclick = () => { wizOverlay.remove(); wizOverlay = null; };
+
+    const backBtn = container.querySelector('.wiz-back');
+    if (backBtn) {
+      backBtn.onclick = () => {
+        if (wizardBackStack.length > 0) {
+          wizOverlay.remove();
+          wizOverlay = null;
+          const goBack = wizardBackStack.pop();
+          if (goBack) goBack();
+        }
+      };
+    }
 
     const gridWrap = container.querySelector('.wizard-grid-auto');
 
@@ -1956,6 +1974,7 @@ function runCustomWizard(wiz, startPath) {
           if (cPrice) newAcc.push({ label: cLabel, price: cPrice, percent: !!child.percent });
 
           if (child.children && child.children.length && !child.final) {
+            wizardBackStack.push(() => showStep(node, accumulated, path, title, level));
             showStep(child, newAcc, newPath, cLabel, level + 1);
           } else {
             if (child.final) {
@@ -2275,16 +2294,18 @@ function runCustomWizard(wiz, startPath) {
       const container = document.createElement('div');
       container.style.cssText = 'display:flex;flex-direction:column;height:100%;';
       container.innerHTML = `
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-shrink:0;">
-          <h2 style="margin:0">${wiz.name}</h2>
-          <button class="btn btn-red wiz-prestep-cancel" style="font-size:13px;padding:8px 16px;">ZRUSIT</button>
+        <div style="width:100%;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;flex-shrink:0;padding:10px 10px 6px;gap:8px;box-sizing:border-box;">
+          <div></div>
+          <div style="justify-self:center;text-align:center;font-size:20px;font-weight:700;">${wiz.name}</div>
+          <div style="justify-self:end;"><button class="btn btn-red wiz-prestep-cancel" style="font-size:13px;padding:10px 18px;">ZRUSIT</button></div>
         </div>
         <div style="text-align:center;font-size:18px;font-weight:700;margin-bottom:20px;color:var(--accent-yellow);">${step.label}</div>
         <div style="flex:1;display:flex;align-items:center;justify-content:center;">
           <div class="prestep-tiles" style="display:flex;gap:20px;flex-wrap:wrap;justify-content:center;max-width:900px;"></div>
         </div>
       `;
-      const { overlay } = openModal(container);
+      const { overlay, modal: preModal } = openModal(container);
+      preModal.style.padding = '0';
       wizOverlay = overlay;
       container.querySelector('.wiz-prestep-cancel').onclick = () => overlay.remove();
       const tilesDiv = container.querySelector('.prestep-tiles');
