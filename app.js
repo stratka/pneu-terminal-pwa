@@ -1164,6 +1164,9 @@ function showDiscountDialog() {
       <input type="number" id="disc-value" min="0" placeholder="0" style="font-size:28px;font-weight:700;text-align:center;width:140px;padding:10px;border-radius:8px;border:2px solid #555;background:#16213e;color:#fff;">
       <span id="disc-unit" style="font-size:22px;font-weight:700;">Kč</span>
     </div>
+    <div style="margin-bottom:16px;">
+      <input type="text" id="disc-reason" placeholder="Důvod slevy (nepovinné)" style="width:100%;font-size:15px;padding:10px;border-radius:8px;border:2px solid #555;background:#16213e;color:#fff;">
+    </div>
     <div style="display:flex;gap:8px;justify-content:center;">
       <button class="btn" style="background:#555;padding:12px 24px;" id="disc-cancel">Zrušit</button>
       <button class="btn btn-green" style="padding:12px 32px;font-size:16px;" id="disc-ok">Přidat slevu</button>
@@ -1184,10 +1187,12 @@ function showDiscountDialog() {
   div.querySelector('#disc-ok').onclick = () => {
     const val = parseFloat(div.querySelector('#disc-value').value);
     if (!val || val <= 0) { alert('Zadejte hodnotu slevy.'); return; }
+    const reason = div.querySelector('#disc-reason').value.trim();
+    const label = reason ? `Sleva - ${reason}` : (discType === 'pct' ? `Sleva ${val}%` : `Sleva ${val} Kč`);
     if (discType === 'pct') {
-      customItems.push({ name: `Sleva ${val}%`, price: -val, qty: 1, _percent: true });
+      customItems.push({ name: label, price: -val, qty: 1, _percent: true });
     } else {
-      customItems.push({ name: `Sleva ${val} Kč`, price: -val, qty: 1 });
+      customItems.push({ name: label, price: -val, qty: 1 });
     }
     renderCart();
     overlay.remove();
