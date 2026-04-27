@@ -1045,11 +1045,20 @@ function renderTiles() {
     if (t.fontSize) {
       nameFontSize = t.fontSize;
     } else {
-      // Vypocitat font pomoci canvas mereni
-      const words = t.name.split(/[\s\\n]+/);
-      const longestWord = words.reduce((a, b) => a.length > b.length ? a : b, '');
+      // Rozdelit na explicitni radky (\n) a slova
+      const lines = t.name.split('\\n');
+      const numLines = lines.length;
+      // Nejdelsi radek nebo nejdelsi slovo
+      const longestLine = lines.reduce((a, b) => a.length > b.length ? a : b, '');
+      const longestWord = longestLine.split(/\s+/).reduce((a, b) => a.length > b.length ? a : b, longestLine);
       nameFontSize = 14;
+      // Zmensovat dokud se nejdelsi slovo vejde na sirku dlazdice
       while (nameFontSize > 7 && measureTextWidth(longestWord, nameFontSize) > tileW) {
+        nameFontSize -= 0.5;
+      }
+      // Zmensovat pokud je prilis mnoho radku (odhadnuta vyska dlazdice ~130px, ikona ~30px, cena ~15px)
+      const availH = 130 - 30 - 15;
+      while (nameFontSize > 7 && (nameFontSize * 1.3 * numLines) > availH) {
         nameFontSize -= 0.5;
       }
       nameFontSize = Math.floor(nameFontSize);
