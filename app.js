@@ -1029,14 +1029,14 @@ function renderTiles() {
   const query = (searchInput ? searchInput.value : '').toLowerCase().trim();
   const filtered = query ? allTiles.filter(t => t._matchQuery(query)) : allTiles;
 
-  const tileTextWidth = 120;
+  const tileTextWidth = 105;
   const maxLines = 2;
 
   for (const t of filtered) {
-    // Vypocitat font pro tuto konkretni dlazdici
+    // Vypocitat font pro tuto konkretni dlazdici (0.65 = konzervativni odhad pro diakritiku)
     const maxNameLen = Math.max(1, ...t.name.split('\\n').map(s => s.length));
     let nameFontSize = 14;
-    while (nameFontSize > 9 && (maxNameLen * nameFontSize * 0.55) > tileTextWidth * maxLines) {
+    while (nameFontSize > 8 && (maxNameLen * nameFontSize * 0.65) > tileTextWidth * maxLines) {
       nameFontSize--;
     }
     let priceFontSize = Math.max(9, Math.floor(nameFontSize * 0.9));
