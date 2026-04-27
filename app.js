@@ -986,7 +986,7 @@ function renderTiles() {
         priceText = priceText ? `${priceText} / ${pctText}` : pctText;
       }
     }
-    allTiles.push({ name: wiz.name, icon: iconChar(wiz.icon), color: wiz.color || '#607D8B', priceText, onclick: () => runCustomWizard(wiz),
+    allTiles.push({ name: wiz.name, icon: iconChar(wiz.icon), color: wiz.color || '#607D8B', priceText, fontSize: wiz.fontSize, onclick: () => runCustomWizard(wiz),
       _matchQuery: q => wiz.name.toLowerCase().includes(q) || treeContains(wiz.tree, q) });
   });
 
@@ -1041,15 +1041,19 @@ function renderTiles() {
   const tileW = area.clientWidth > 0 ? (area.clientWidth / Math.max(1, Math.floor(area.clientWidth / 160))) - 20 : 120;
 
   for (const t of filtered) {
-    // Vypocitat font pomoci canvas mereni
-    const words = t.name.split(/[\s\\n]+/);
-    const longestWord = words.reduce((a, b) => a.length > b.length ? a : b, '');
-    let nameFontSize = 14;
-    // Zmensovat dokud se nejdelsi slovo vejde na jednu radku
-    while (nameFontSize > 7 && measureTextWidth(longestWord, nameFontSize) > tileW) {
-      nameFontSize -= 0.5;
+    let nameFontSize;
+    if (t.fontSize) {
+      nameFontSize = t.fontSize;
+    } else {
+      // Vypocitat font pomoci canvas mereni
+      const words = t.name.split(/[\s\\n]+/);
+      const longestWord = words.reduce((a, b) => a.length > b.length ? a : b, '');
+      nameFontSize = 14;
+      while (nameFontSize > 7 && measureTextWidth(longestWord, nameFontSize) > tileW) {
+        nameFontSize -= 0.5;
+      }
+      nameFontSize = Math.floor(nameFontSize);
     }
-    nameFontSize = Math.floor(nameFontSize);
     let priceFontSize = Math.max(9, Math.floor(nameFontSize * 0.9));
 
     const tile = document.createElement('div');
@@ -3201,6 +3205,7 @@ function renderAdminWizards(container) {
         <div class="admin-field" style="margin:0;"><label>Nazev dlazdice:</label><input type="text" id="wiz-name" value="${wiz.name}" style="width:500px;"></div>
         <div class="admin-field" style="margin:0;"><label>Cena (text na dlazdici):</label><input type="text" id="wiz-price-label" value="${wiz.priceLabel || ''}" placeholder="napr. od 800 Kc" style="width:140px;"></div>
         <div class="admin-field" style="margin:0;"><label>Barva:</label><input type="color" id="wiz-color" value="${wiz.color}" style="width:50px;height:34px;"></div>
+        <div class="admin-field" style="margin:0;"><label>Velikost fontu:</label><input type="number" id="wiz-fontsize" value="${wiz.fontSize || ''}" placeholder="auto" min="7" max="20" style="width:70px;"></div>
         <div class="admin-field" style="margin:0;">
           <label>Ikona:</label>
           <input type="hidden" id="wiz-icon" value="${wiz.icon||'default'}">
@@ -3235,6 +3240,8 @@ function renderAdminWizards(container) {
       wiz.signature = header.querySelector('#wiz-signature').checked;
       wiz.color = header.querySelector('#wiz-color').value;
       wiz.icon = header.querySelector('#wiz-icon').value;
+      const fs = parseInt(header.querySelector('#wiz-fontsize').value);
+      wiz.fontSize = fs > 0 ? fs : undefined;
       await saveAndRender();
     };
 
