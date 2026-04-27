@@ -1253,11 +1253,11 @@ function wizardTileSelect(title, subtitle, options, big, callback, pinConfig) {
 
   // Header: back vlevo, nazev uprostred, cancel vpravo
   const hasBack = wizardBackStack.length > 0;
-  let html = `<div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;flex-shrink:0;padding:10px 10px 6px;gap:8px;">
+  let html = `<div style="width:100%;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;flex-shrink:0;padding:10px 10px 6px;gap:8px;box-sizing:border-box;">
     <div style="justify-self:start;">
       ${hasBack ? '<button class="btn btn-blue wizard-back" style="font-size:14px;padding:10px 20px;">← Zpět</button>' : ''}
     </div>
-    <div style="text-align:center;">
+    <div style="justify-self:center;text-align:center;">
       <div style="font-size:20px;font-weight:700;">${title}</div>
       ${subtitle ? `<div style="font-size:13px;color:var(--text-muted);margin-top:2px;">${subtitle}</div>` : ''}
     </div>
@@ -1277,6 +1277,7 @@ function wizardTileSelect(title, subtitle, options, big, callback, pinConfig) {
   modal.style.maxHeight = '100vh';
   modal.style.display = 'flex';
   modal.style.flexDirection = 'column';
+  modal.style.padding = '0';
 
   container.querySelector('.wizard-cancel').onclick = () => {
     overlay.remove();
