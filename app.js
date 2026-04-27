@@ -4031,6 +4031,7 @@ async function init() {
     settings = await db.getKV('settings', DEFAULT_SETTINGS);
     pricing  = await db.getKV('pricing', DEFAULT_PRICING);
     customWizards = await db.getKV('customWizards', []);
+    customSvgIcons = await db.getKV('customSvgIcons', {});
     configLoaded = true;
   } else {
     // Prvni spusteni — stahnout z GitHubu
@@ -4064,6 +4065,18 @@ async function init() {
     pricing  = DEFAULT_PRICING;
     customWizards = [];
   }
+
+  // Vzdy stahnout customSvgIcons z GitHubu na pozadi (aby se aktualizovaly i bez reset IndexedDB)
+  fetch(`https://raw.githubusercontent.com/${GITHUB_REPO}/master/${GITHUB_CONFIG_PATH}?v=${Date.now()}`)
+    .then(r => r.ok ? r.json() : null)
+    .then(cfg => {
+      if (cfg && cfg.customSvgIcons) {
+        customSvgIcons = cfg.customSvgIcons;
+        db.setKV('customSvgIcons', customSvgIcons);
+        renderTiles();
+      }
+    })
+    .catch(() => {});
 
   // Pripnute polozky: lokalni + sdilene z GitHubu
   customSvgIcons = await db.getKV('customSvgIcons', {});
