@@ -1065,6 +1065,19 @@ function renderTiles() {
     tile.onclick = t.onclick;
     area.appendChild(tile);
   }
+
+  // Po renderu zkontrolovat pretekani a zmensit font
+  requestAnimationFrame(() => {
+    area.querySelectorAll('.tile').forEach(tile => {
+      const nameEl = tile.querySelector('.tile-name');
+      if (!nameEl) return;
+      let fs = parseFloat(nameEl.style.fontSize) || 14;
+      while (fs > 7 && nameEl.scrollHeight > tile.clientHeight * 0.55) {
+        fs -= 0.5;
+        nameEl.style.fontSize = fs + 'px';
+      }
+    });
+  });
 }
 
 function findNodeByPath(tree, treePath) {
