@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pneuservis-v22';
+const CACHE_NAME = 'pneuservis-v23';
 const ASSETS = [
   './',
   './index.html',
@@ -33,12 +33,14 @@ self.addEventListener('activate', event => {
 
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
-  const isNetworkFirst = NETWORK_FIRST.some(f => url.pathname.endsWith(f));
+  // Start appky ('./') se taky bere ze serveru, jinak tablet drzel stary index.html
+  const isNetworkFirst = url.pathname.endsWith('/') || NETWORK_FIRST.some(f => url.pathname.endsWith(f));
 
   if (isNetworkFirst) {
     // Network-first: zkus server, pri chybe pouzij cache (offline)
     event.respondWith(
-      fetch(event.request)
+      // no-store: obejit HTTP cache GitHub Pages (max-age 10 min), jinak 🔄 nacetl starou verzi
+      fetch(event.request, { cache: 'no-store' })
         .then(response => {
           const clone = response.clone();
           caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));

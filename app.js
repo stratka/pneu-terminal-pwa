@@ -4800,11 +4800,27 @@ document.addEventListener('DOMContentLoaded', init);
 
 // Klimatizace R134a -> Klimatizace / R134a + R1234yf (17. 10. 2026)
 async function migraceKlimatizace() {
-  const w = (customWizards || []).find(x => x.tree && Array.isArray(x.tree.children) &&
-    x.tree.children.some(c => c.label === 'Klimatizace R134a'));
-  if (!w) return;
-  const ch = w.tree.children;
-  const i = ch.findIndex(c => c.label === 'Klimatizace R134a');
+  // Nazev uzlu se v tabletu muze lisit od config.json (zalomeni, mezery,
+  // diakritika), proto se hleda volne: uzel s „klimatizace" v nazvu, ktery
+  // ma podrizene polozky a jeste nema vetev R1234yf.
+  const norm = t => String(t || '').split('\\n').join(' ').replace(/\s+/g, ' ')
+    .normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toLowerCase();
+  // Hleda se v celem strome pruvodce, ne jen v prvni urovni
+  const najdi = uzel => {
+    const deti = Array.isArray(uzel && uzel.children) ? uzel.children : [];
+    const k = deti.findIndex(c => norm(c.label).includes('klimatizace') &&
+      Array.isArray(c.children) && c.children.some(d => norm(d.label).includes('chladiv')) &&
+      !c.children.some(d => norm(d.label).includes('r1234')));
+    if (k >= 0) return [deti, k];
+    for (const c of deti) { const r = najdi(c); if (r) return r; }
+    return null;
+  };
+  let ch = null, i = -1;
+  for (const x of (customWizards || [])) {
+    const r = najdi(x.tree);
+    if (r) { [ch, i] = r; break; }
+  }
+  if (!ch) return;
   const stary = ch[i];
   const list = (label, price, extra) => Object.assign(
     { label, price, icon: '', color: '#2196f3', children: [] }, extra || {});
