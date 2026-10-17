@@ -4672,6 +4672,12 @@ async function init() {
     customWizards = [];
   }
 
+  // Jednorazova migrace (17. 10. 2026): klimatizace se deli na dve chladiva.
+  // Konfigurace v tabletu ma prednost pred config.json na GitHubu, takze
+  // samotna zmena config.json by se do tabletu nedostala. Uzel se proto
+  // prestavi tady — R134a si ponecha lokalni ceny, R1234yf dostane ceny z ceniku.
+  await migraceKlimatizace();
+
   // Vzdy stahnout customSvgIcons z GitHubu na pozadi (aby se aktualizovaly i bez reset IndexedDB)
   fetch(`https://raw.githubusercontent.com/${GITHUB_REPO}/master/${GITHUB_CONFIG_PATH}?v=${Date.now()}`)
     .then(r => r.ok ? r.json() : null)
@@ -4791,3 +4797,31 @@ async function init() {
 }
 
 document.addEventListener('DOMContentLoaded', init);
+
+// Klimatizace R134a -> Klimatizace / R134a + R1234yf (17. 10. 2026)
+async function migraceKlimatizace() {
+  const w = (customWizards || []).find(x => x.tree && Array.isArray(x.tree.children) &&
+    x.tree.children.some(c => c.label === 'Klimatizace R134a'));
+  if (!w) return;
+  const ch = w.tree.children;
+  const i = ch.findIndex(c => c.label === 'Klimatizace R134a');
+  const stary = ch[i];
+  const list = (label, price, extra) => Object.assign(
+    { label, price, icon: '', color: '#2196f3', children: [] }, extra || {});
+  const r1234 = [
+    list('Kompletní plnění \\n0-100g  \\nchladiva', 1000, { final: true }),
+    list('Kompletní plnění  \\n101-250g  \\nchladiva', 2000),
+    list('Kompletní plnění  \\n251-450g  \\nchladiva', 3000),
+    list('Kompletní plnění  \\n451-600g  \\nchladiva', 4000),
+    list('1g chladiva \\nnad 600g', 6, { multiply: true, unit: 'ks' }),
+    list('Zapojení \\n a kontrola  \\ntěsnosti  \\nklimatizace', 300),
+  ];
+  ch[i] = {
+    label: 'Klimatizace', price: 0, icon: 'klima', color: stary.color || '#00bcd4',
+    children: [
+      { label: 'R134a \\nklasické', price: 0, icon: 'klima', color: '#ff9800', children: stary.children || [] },
+      { label: 'R1234yf \\nekologické', price: 0, icon: 'klima', color: '#8bc34a', children: r1234 },
+    ],
+  };
+  await db.setKV('customWizards', customWizards);
+}

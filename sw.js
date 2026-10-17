@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pneuservis-v21';
+const CACHE_NAME = 'pneuservis-v22';
 const ASSETS = [
   './',
   './index.html',

@@ -1588,52 +1588,113 @@
             "icon": "custom:cleaning-clean-rag-housekeeping-svgrepo-com"
           },
           {
-            "label": "Klimatizace R134a",
+            "label": "Klimatizace",
             "children": [
               {
-                "label": "Kompletní plnění \\n0-100g  \\nchladiva",
-                "price": 500,
-                "final": true,
-                "children": [],
-                "icon": "",
-                "color": "#2196f3"
+                "label": "R134a \\nklasické",
+                "children": [
+                  {
+                    "label": "Kompletní plnění \\n0-100g  \\nchladiva",
+                    "price": 500,
+                    "final": true,
+                    "children": [],
+                    "icon": "",
+                    "color": "#2196f3"
+                  },
+                  {
+                    "label": "Kompletní plnění  \\n101-250g  \\nchladiva",
+                    "price": 1000,
+                    "icon": "",
+                    "color": "#2196f3",
+                    "children": []
+                  },
+                  {
+                    "label": "Kompletní plnění  \\n251-450g  \\nchladiva",
+                    "price": 1500,
+                    "icon": "",
+                    "color": "#2196f3",
+                    "children": []
+                  },
+                  {
+                    "label": "Kompletní plnění  \\n451-600g  \\nchladiva",
+                    "price": 2000,
+                    "icon": "",
+                    "color": "#2196f3",
+                    "children": []
+                  },
+                  {
+                    "label": "1g chladiva",
+                    "price": 3,
+                    "icon": "",
+                    "color": "#2196f3",
+                    "children": [],
+                    "multiply": true,
+                    "unit": "ks"
+                  },
+                  {
+                    "label": "Zapojení \\n a kontrola  \\ntěsnosti  \\nklimatizace",
+                    "price": 300,
+                    "icon": "",
+                    "color": "#2196f3",
+                    "children": []
+                  }
+                ],
+                "color": "#ff9800",
+                "price": 0,
+                "icon": "klima"
               },
               {
-                "label": "Kompletní plnění  \\n101-250g  \\nchladiva",
-                "price": 1000,
-                "icon": "",
-                "color": "#2196f3",
-                "children": []
-              },
-              {
-                "label": "Kompletní plnění  \\n251-450g  \\nchladiva",
-                "price": 1500,
-                "icon": "",
-                "color": "#2196f3",
-                "children": []
-              },
-              {
-                "label": "Kompletní plnění  \\n451-600g  \\nchladiva",
-                "price": 2000,
-                "icon": "",
-                "color": "#2196f3",
-                "children": []
-              },
-              {
-                "label": "1g chladiva",
-                "price": 3,
-                "icon": "",
-                "color": "#2196f3",
-                "children": [],
-                "multiply": true,
-                "unit": "ks"
-              },
-              {
-                "label": "Zapojení \\n a kontrola  \\ntěsnosti  \\nklimatizace",
-                "price": 300,
-                "icon": "",
-                "color": "#2196f3",
-                "children": []
+                "label": "R1234yf \\nekologické",
+                "children": [
+                  {
+                    "label": "Kompletní plnění \\n0-100g  \\nchladiva",
+                    "price": 1000,
+                    "icon": "",
+                    "color": "#2196f3",
+                    "children": [],
+                    "final": true
+                  },
+                  {
+                    "label": "Kompletní plnění  \\n101-250g  \\nchladiva",
+                    "price": 2000,
+                    "icon": "",
+                    "color": "#2196f3",
+                    "children": []
+                  },
+                  {
+                    "label": "Kompletní plnění  \\n251-450g  \\nchladiva",
+                    "price": 3000,
+                    "icon": "",
+                    "color": "#2196f3",
+                    "children": []
+                  },
+                  {
+                    "label": "Kompletní plnění  \\n451-600g  \\nchladiva",
+                    "price": 4000,
+                    "icon": "",
+                    "color": "#2196f3",
+                    "children": []
+                  },
+                  {
+                    "label": "1g chladiva \\nnad 600g",
+                    "price": 6,
+                    "icon": "",
+                    "color": "#2196f3",
+                    "children": [],
+                    "multiply": true,
+                    "unit": "ks"
+                  },
+                  {
+                    "label": "Zapojení \\n a kontrola  \\ntěsnosti  \\nklimatizace",
+                    "price": 300,
+                    "icon": "",
+                    "color": "#2196f3",
+                    "children": []
+                  }
+                ],
+                "color": "#8bc34a",
+                "price": 0,
+                "icon": "klima"
               }
             ],
             "color": "#00bcd4",
