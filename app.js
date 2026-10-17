@@ -1405,6 +1405,48 @@ async function togglePin(source, name, price, icon, color, treePath, percent) {
   renderTiles();
 }
 
+// Pripnuti dlouhym podrzenim dlazdice (17. 10. 2026) — hvezdicka uz jen ukazuje stav.
+// Volat az po nastaveni tile.onclick: kratky klik zustava, po dlouhem se klik spolkne.
+function naDlouhyStisk(tile, akce) {
+  let timer = null, sx = 0, sy = 0;
+  const zrus = () => { clearTimeout(timer); timer = null; };
+  tile.addEventListener('pointerdown', e => {
+    sx = e.clientX; sy = e.clientY;
+    zrus();
+    timer = setTimeout(() => {
+      timer = null;
+      tile._dlouhyStisk = true;
+      tile.style.transform = '';
+      if (navigator.vibrate) navigator.vibrate(40);
+      akce();
+    }, 600);
+  });
+  tile.addEventListener('pointermove', e => {
+    if (timer && Math.hypot(e.clientX - sx, e.clientY - sy) > 10) zrus();
+  });
+  ['pointerup', 'pointerleave', 'pointercancel'].forEach(t => tile.addEventListener(t, zrus));
+  tile.addEventListener('contextmenu', e => e.preventDefault());
+  const puvodni = tile.onclick;
+  tile.onclick = e => {
+    if (tile._dlouhyStisk) { tile._dlouhyStisk = false; return; }
+    if (puvodni) puvodni.call(tile, e);
+  };
+}
+
+function hlaseniPinu(text) {
+  const el = document.createElement('div');
+  el.textContent = text;
+  el.style.cssText = 'position:fixed;left:50%;bottom:40px;transform:translateX(-50%);background:#333;color:#fff;' +
+    'padding:12px 22px;border-radius:24px;font-size:18px;font-weight:700;z-index:99999;box-shadow:0 4px 12px rgba(0,0,0,.4);';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1600);
+}
+
+function starHtmlPin(pinned) {
+  // Jen ukazatel: pripnute = hvezdicka, nepripnute nic
+  return pinned ? '<div class="pin-star" style="position:absolute;top:4px;right:6px;font-size:16px;z-index:10;pointer-events:none;">⭐</div>' : '';
+}
+
 // ---------------------------------------------------------------------------
 // Rendering
 // ---------------------------------------------------------------------------
@@ -1545,24 +1587,20 @@ function renderTiles() {
     tile.className = 'tile';
     tile.style.background = t.color;
     tile.innerHTML = `
-      ${t.pinned ? '<div class="pin-badge" style="position:absolute;top:4px;right:6px;font-size:12px;cursor:pointer;z-index:10;">⭐</div>' : ''}
+      ${t.pinned ? '<div class="pin-badge" style="position:absolute;top:4px;right:6px;font-size:12px;z-index:10;pointer-events:none;">⭐</div>' : ''}
       <div class="tile-icon">${t.icon}</div>
       <div class="tile-name" style="font-size:${nameFontSize}px;">${t.name.replace(/\\n/g, '<br>')}</div>
       <div class="tile-price" style="font-size:${priceFontSize}px;">${t.priceText}</div>
     `;
+    tile.onclick = t.onclick;
     if (t.pinned) {
       tile.style.position = 'relative';
-      const badge = tile.querySelector('.pin-badge');
-      if (badge) {
-        badge.onclick = (e) => {
-          e.stopPropagation();
-          if (confirm(`Odepnout "${t.name}" z hlavni strany?`)) {
-            togglePin(t.pinSource, t.name, 0, '', '');
-          }
-        };
-      }
+      // Dlouhe podrzeni pripnute dlazdice = odepnout z hlavni strany
+      naDlouhyStisk(tile, () => {
+        togglePin(t.pinSource, t.name, 0, '', '');
+        hlaseniPinu('Odepnuto z hlavní strany');
+      });
     }
-    tile.onclick = t.onclick;
     area.appendChild(tile);
   }
 
@@ -1918,8 +1956,7 @@ function wizardTileSelect(title, subtitle, options, big, callback, pinConfig) {
       let starHtml = '';
       if (pinConfig && opt.pinnable !== false) {
         const pin = pinConfig.getPin(opt);
-        const pinned = isPinned(pinConfig.source, pin.name);
-        starHtml = `<div class="pin-star" style="position:absolute;top:4px;right:6px;font-size:16px;cursor:pointer;z-index:10;opacity:${pinned ? '1' : '0.4'};">${pinned ? '⭐' : '☆'}</div>`;
+        starHtml = starHtmlPin(isPinned(pinConfig.source, pin.name));
       }
 
       tile.innerHTML = `
@@ -1928,19 +1965,6 @@ function wizardTileSelect(title, subtitle, options, big, callback, pinConfig) {
         <div style="font-size:${baseLabelSize}px;font-weight:700;line-height:1.2;overflow-wrap:anywhere;word-break:normal;">${opt.label}</div>
         ${opt.sublabel ? `<div style="font-size:${subSize}px;color:#e0e0e0;margin-top:4px;font-weight:700;white-space:pre-line;">${opt.sublabel}</div>` : ''}
       `;
-
-      // Klik na hvezdicku = pin/unpin
-      const starEl = tile.querySelector('.pin-star');
-      if (starEl) {
-        starEl.onclick = (e) => {
-          e.stopPropagation();
-          const pin = pinConfig.getPin(opt);
-          togglePin(pinConfig.source, pin.name, pin.price, pin.icon, pin.color);
-          const nowPinned = isPinned(pinConfig.source, pin.name);
-          starEl.textContent = nowPinned ? '⭐' : '☆';
-          starEl.style.opacity = nowPinned ? '1' : '0.4';
-        };
-      }
 
       tile.onpointerdown = () => { tile.style.transform = 'scale(0.95)'; };
       tile.onpointerup = () => { tile.style.transform = ''; };
@@ -1955,6 +1979,18 @@ function wizardTileSelect(title, subtitle, options, big, callback, pinConfig) {
           if (!document.querySelector('.modal-overlay')) wizardBackStack = [];
         }, 0);
       };
+      // Dlouhe podrzeni = pripnout / odepnout z hlavni strany
+      if (pinConfig && opt.pinnable !== false) {
+        naDlouhyStisk(tile, () => {
+          const pin = pinConfig.getPin(opt);
+          togglePin(pinConfig.source, pin.name, pin.price, pin.icon, pin.color);
+          const nowPinned = isPinned(pinConfig.source, pin.name);
+          const old = tile.querySelector('.pin-star');
+          if (old) old.remove();
+          if (nowPinned) tile.insertAdjacentHTML('afterbegin', starHtmlPin(true));
+          hlaseniPinu(nowPinned ? '⭐ Připnuto na hlavní stranu' : 'Odepnuto z hlavní strany');
+        });
+      }
       grid.appendChild(tile);
     }
     gridWrap.appendChild(grid);
@@ -2486,10 +2522,7 @@ function runCustomWizard(wiz, startPath, opts) {
         const pinPrice = accTotal > 0 ? accTotal : cPrice;
         const pinTreePath = [...path, cLabel];
         let starHtml = '';
-        if (canPin) {
-          const pinned = isPinned(pinSource, pinName);
-          starHtml = `<div class="pin-star" style="position:absolute;top:4px;right:6px;font-size:16px;cursor:pointer;z-index:10;opacity:${pinned ? '1' : '0.4'};">${pinned ? '⭐' : '☆'}</div>`;
-        }
+        if (canPin) starHtml = starHtmlPin(isPinned(pinSource, pinName));
 
         const lblSz = child.fontSize || baseLblSz;
         tile.innerHTML = `
@@ -2498,18 +2531,6 @@ function runCustomWizard(wiz, startPath, opts) {
           <div style="font-size:${lblSz}px;font-weight:700;line-height:1.2;overflow-wrap:anywhere;word-break:normal;">${cLabel.replace(/\\n/g, '<br>')}</div>
           ${cSub ? `<div style="font-size:${subSz}px;color:#e0e0e0;margin-top:4px;font-weight:700;">${child.multiply ? cPrice + (child.percent ? '%' : ' Kc') + '/' + (child.unit||'ks') : cSub}</div>` : ''}
         `;
-
-        // Klik na hvezdicku
-        const starEl = tile.querySelector('.pin-star');
-        if (starEl) {
-          starEl.onclick = (e) => {
-            e.stopPropagation();
-            togglePin(pinSource, pinName, pinPrice, child.icon || wiz.icon || 'default', tileColor, pinTreePath, child.percent);
-            const nowPinned = isPinned(pinSource, pinName);
-            starEl.textContent = nowPinned ? '⭐' : '☆';
-            starEl.style.opacity = nowPinned ? '1' : '0.4';
-          };
-        }
 
         tile.onpointerdown = () => { tile.style.transform = 'scale(0.95)'; };
         tile.onpointerup = () => { tile.style.transform = ''; };
@@ -2578,6 +2599,17 @@ function runCustomWizard(wiz, startPath, opts) {
             }
           }
         };
+        // Dlouhe podrzeni = pripnout / odepnout z hlavni strany
+        if (canPin) {
+          naDlouhyStisk(tile, () => {
+            togglePin(pinSource, pinName, pinPrice, child.icon || wiz.icon || 'default', tileColor, pinTreePath, child.percent);
+            const nowPinned = isPinned(pinSource, pinName);
+            const old = tile.querySelector('.pin-star');
+            if (old) old.remove();
+            if (nowPinned) tile.insertAdjacentHTML('afterbegin', starHtmlPin(true));
+            hlaseniPinu(nowPinned ? '⭐ Připnuto na hlavní stranu' : 'Odepnuto z hlavní strany');
+          });
+        }
         grid.appendChild(tile);
       }
       gridWrap.appendChild(grid);
