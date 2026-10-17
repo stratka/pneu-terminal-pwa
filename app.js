@@ -14,8 +14,15 @@ let GITHUB_TOKEN = localStorage.getItem('github_token') || '';
 // ---------------------------------------------------------------------------
 const GDRIVE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyGUTDLoGN9L7Mi-quYLT3cb-DvpIiMAXVocMUkvga1b7GxBY4pmL_ft0E8_iNHMF_eoQ/exec';
 
+// Lokalni testovani (python -m http.server apod.) — nic neposilat na Drive ani do data repa
+const IS_LOCAL_TEST = ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
+
 async function uploadToDrive(blob, filename, type) {
   // type: 'faktura' nebo 'protokol'
+  if (IS_LOCAL_TEST) {
+    console.log(`Drive upload (${type}): ${filename} PRESKOCENO (lokalni test)`);
+    return false;
+  }
   try {
     const base64 = await blobToBase64(blob);
     const payload = JSON.stringify({ file: base64, name: filename, type: type, mime: 'application/pdf' });
@@ -147,7 +154,7 @@ async function revertConfigOnGitHub() {
 const GITHUB_DATA_REPO = 'stratka/pneu-terminal-data';
 
 async function backupOrderToGitHub(order) {
-  if (!GITHUB_TOKEN) return; // bez tokenu nezalohujeme
+  if (!GITHUB_TOKEN || IS_LOCAL_TEST) return; // bez tokenu (a pri lokalnim testu) nezalohujeme
 
   try {
     const date = new Date();
@@ -177,7 +184,7 @@ async function backupOrderToGitHub(order) {
 }
 
 async function backupPendingOrders() {
-  if (!GITHUB_TOKEN) return;
+  if (!GITHUB_TOKEN || IS_LOCAL_TEST) return;
   const orders = await db.getOrders();
   for (const order of orders) {
     if (!order._backed_up) {
@@ -520,6 +527,13 @@ async function nextProtocolNumber() {
   const year = new Date().getFullYear();
   const key = `protocol_counter_${year}`;
   let counter = await db.getKV(key, 0);
+  // Pojistka: po resetu/vymene tabletu nezacinat znovu od 001, kdyz evidence uskladneni zna vyssi cislo
+  try {
+    for (const r of await uskladneniNacti()) {
+      const k = uskladneniCisloKlic(r.cislo);
+      if (k[0] === year && k[1] > counter) counter = k[1];
+    }
+  } catch(e) {}
   counter++;
   await db.setKV(key, counter);
   return `${year}-${String(counter).padStart(3,'0')}`;
@@ -592,8 +606,9 @@ function showSignaturePad(onDone) {
   };
 }
 
-async function generateProtocolPDF(wizName, items, formData, signatureDataUrl) {
-  const protoNo = await nextProtocolNumber();
+async function generateProtocolPDF(wizName, items, formData, signatureDataUrl, forcedProtoNo) {
+  // forcedProtoNo: znovu-uskladneni po vydeji — stejne evidencni cislo, citac se nezvysuje
+  const protoNo = forcedProtoNo || await nextProtocolNumber();
   const s = settings;
   const today = todayStr();
 
@@ -729,12 +744,14 @@ async function generateProtocolPDF(wizName, items, formData, signatureDataUrl) {
   return { doc, protoNo };
 }
 
-function showProtocol(doc, protoNo) {
+function showProtocol(doc, protoNo, opts) {
+  // opts (nepovinne): { filename, title, closeLabel, onClose } — pouziva evidence uskladneni
+  opts = opts || {};
   const pdfBlob = doc.output('blob');
   const url = URL.createObjectURL(pdfBlob);
 
   // Ulozit do IndexedDB
-  const protoFilename = `protokol_${protoNo}.pdf`;
+  const protoFilename = opts.filename || `protokol_${protoNo}.pdf`;
   db.saveProtocol(protoFilename, pdfBlob);
 
   // Odeslat na Google Drive
@@ -742,18 +759,19 @@ function showProtocol(doc, protoNo) {
 
   const div = document.createElement('div');
   div.innerHTML = `
-    <h2 style="text-align:center;margin-bottom:12px;">Predavaci protokol ${protoNo}</h2>
+    <h2 style="text-align:center;margin-bottom:12px;">${opts.title || `Predavaci protokol ${protoNo}`}</h2>
     <div style="text-align:center;margin-bottom:12px;">
       <iframe src="${url}" style="width:100%;height:55vh;border:1px solid #444;border-radius:8px;"></iframe>
     </div>
     <div style="display:flex;gap:10px;justify-content:center;">
       <button class="btn btn-blue proto-print" style="padding:12px 30px;font-size:15px;">TISK</button>
       <button class="btn btn-green proto-download" style="padding:12px 30px;font-size:15px;">STAHNOUT</button>
-      <button class="btn btn-red proto-close" style="padding:12px 20px;font-size:15px;">ZAVRIT</button>
+      <button class="btn ${opts.onClose ? 'btn-green' : 'btn-red'} proto-close" style="padding:12px 20px;font-size:15px;">${opts.closeLabel || 'ZAVRIT'}</button>
     </div>
   `;
 
-  const { overlay } = openModal(div, 'admin-modal');
+  // S onClose nejde modal zavrit klikem vedle — navazujici krok nesmi propadnout
+  const { overlay } = openModal(div, 'admin-modal', { noOutsideClose: !!opts.onClose });
 
   div.querySelector('.proto-print').onclick = () => {
     const win = window.open(url, '_blank');
@@ -761,13 +779,471 @@ function showProtocol(doc, protoNo) {
   };
   div.querySelector('.proto-download').onclick = () => {
     const a = document.createElement('a');
-    a.href = url; a.download = `protokol_${protoNo}.pdf`;
+    a.href = url; a.download = protoFilename;
     a.click();
   };
   div.querySelector('.proto-close').onclick = () => {
     URL.revokeObjectURL(url);
     overlay.remove();
+    if (opts.onClose) opts.onClose();
   };
+}
+
+// ---------------------------------------------------------------------------
+// Evidence uskladnenych pneu (Prijem / Vydej)
+// Hlavni kopie v IndexedDB (kv 'uskladneni_evidence'), synchronizace do
+// privatniho data repa jako uskladneni.json. Zaznam = jedna sada pod jednim
+// evidencnim cislem; klic pro slouceni = cislo + datum prijmu.
+// ---------------------------------------------------------------------------
+const USKLADNENI_KV = 'uskladneni_evidence';
+const USKLADNENI_DATA_PATH = 'uskladneni.json';
+let uskladneniSyncStav = ''; // posledni stav synchronizace pro zobrazeni v seznamu
+
+function isUskladneniWizard(wiz) {
+  if (!wiz || !wiz.protocol) return false;
+  return wiz.icon === 'uskladneni' || normText(wiz.name).includes('uskladn');
+}
+
+// Mala pismena bez diakritiky — pro porovnani nazvu poli a hledani
+function normText(s) {
+  return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+}
+
+function escHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+}
+
+// "17.10.2026 15:32" -> "20261017-1532" (do nazvu PDF)
+function uskladneniRazitko(datum) {
+  const m = String(datum).match(/(\d{1,2})\.(\d{1,2})\.(\d{4})(?:\s+(\d{1,2}):(\d{2}))?/);
+  if (!m) return String(Date.now());
+  return `${m[3]}${m[2].padStart(2,'0')}${m[1].padStart(2,'0')}` + (m[4] ? `-${m[4].padStart(2,'0')}${m[5]}` : '');
+}
+
+// Prevest formular wizardu na pole zaznamu (nazvy poli se porovnavaji bez diakritiky)
+function uskladneniZFormulare(formData) {
+  const out = { jmeno: '', telefon: '', spz: '', vyrobce_rozmer: '', pocet_kusu: '', alu: false, plech: false, gumy: false };
+  for (const [k, v] of Object.entries(formData || {})) {
+    const n = normText(k);
+    if (n.includes('jmeno') || n.includes('prijmeni')) out.jmeno = v;
+    else if (n.includes('telefon')) out.telefon = v;
+    else if (n.includes('spz')) out.spz = String(v).toUpperCase();
+    else if (n.includes('vyrobce') || n.includes('rozmer')) out.vyrobce_rozmer = v;
+    else if (n.includes('pocet')) out.pocet_kusu = v;
+    else if (n === 'alu') out.alu = v === 'Ano';
+    else if (n === 'plech') out.plech = v === 'Ano';
+    else if (n === 'gumy') out.gumy = v === 'Ano';
+  }
+  return out;
+}
+
+// Opacny smer — predvyplnit jmeno, telefon a SPZ do formulare wizardu
+function uskladneniPrefill(wiz, rec) {
+  const prefill = {};
+  for (const f of (wiz.fields || [])) {
+    const n = normText(f.label);
+    if (n.includes('jmeno') || n.includes('prijmeni')) prefill[f.label] = rec.jmeno || '';
+    else if (n.includes('telefon')) prefill[f.label] = rec.telefon || '';
+    else if (n.includes('spz')) prefill[f.label] = rec.spz || '';
+  }
+  return prefill;
+}
+
+function uskladneniKlic(r) { return `${r.cislo}|${r.datum_prijmu}`; }
+
+// Razeni podle evidencniho cisla "2026-015" (rok, poradi), pak podle data prijmu
+function uskladneniCisloKlic(cislo) {
+  const m = String(cislo || '').match(/^(\d{4})-(\d+)/);
+  return m ? [parseInt(m[1]), parseInt(m[2])] : [99999, 0];
+}
+function uskladneniDatumMs(datum) {
+  const m = String(datum || '').match(/(\d{1,2})\.(\d{1,2})\.(\d{4})(?:\s+(\d{1,2}):(\d{2}))?/);
+  return m ? new Date(+m[3], +m[2] - 1, +m[1], +(m[4] || 0), +(m[5] || 0)).getTime() : 0;
+}
+function uskladneniRadit(list) {
+  return list.sort((a, b) => {
+    const ka = uskladneniCisloKlic(a.cislo), kb = uskladneniCisloKlic(b.cislo);
+    return (ka[0] - kb[0]) || (ka[1] - kb[1]) || (uskladneniDatumMs(a.datum_prijmu) - uskladneniDatumMs(b.datum_prijmu));
+  });
+}
+
+// Slouceni dvou seznamu: podle klice, vyhrava novejsi 'zmeneno'; pri shode vydany zaznam
+function uskladneniSluc(a, b) {
+  const map = new Map();
+  for (const r of [...(a || []), ...(b || [])]) {
+    if (!r || !r.cislo) continue;
+    const k = uskladneniKlic(r);
+    const old = map.get(k);
+    if (!old) { map.set(k, r); continue; }
+    const to = old.zmeneno || '', tn = r.zmeneno || '';
+    if (tn > to || (tn === to && r.stav === 'vydano' && old.stav !== 'vydano')) map.set(k, r);
+  }
+  return uskladneniRadit([...map.values()]);
+}
+
+// Jednoduchy zamek, aby se zapisy do kv neprekryvaly (cteni-uprava-zapis)
+let _uskZamek = Promise.resolve();
+function uskladneniZamek(fn) {
+  const p = _uskZamek.then(fn, fn);
+  _uskZamek = p.catch(() => {});
+  return p;
+}
+
+async function uskladneniNacti() {
+  const list = await db.getKV(USKLADNENI_KV, []);
+  return Array.isArray(list) ? list : [];
+}
+
+// Ulozit/aktualizovat jeden zaznam (oznaci se jako nezalohovany) a spustit synchronizaci
+async function uskladneniUpsert(rec) {
+  rec.zmeneno = new Date().toISOString();
+  rec._sync = false;
+  await uskladneniZamek(async () => {
+    const list = await uskladneniNacti();
+    const k = uskladneniKlic(rec);
+    const idx = list.findIndex(r => uskladneniKlic(r) === k);
+    if (idx >= 0) list[idx] = rec; else list.push(rec);
+    await db.setKV(USKLADNENI_KV, uskladneniRadit(list));
+  });
+  uskladneniSync(); // async, nezdrzuje UI
+  return rec;
+}
+
+async function uskladneniPrijem(cislo, datum, formData, acc, filename, znovu) {
+  const f = uskladneniZFormulare(formData);
+  const velikost = (acc || []).map(a => a.label).join(' ');
+  const cena = (acc || []).reduce((s, a) => s + (a.price || 0), 0);
+  return uskladneniUpsert({
+    cislo,
+    datum_prijmu: datum,
+    ...f,
+    velikost,
+    cena,
+    stav: 'ulozeno',
+    datum_vydani: null,
+    protokol_prijem: filename,
+    protokol_vydej: null,
+    znovu_uskladneno: !!znovu,
+    zdroj: 'tablet',
+  });
+}
+
+// --- Synchronizace s data repem ---------------------------------------------
+function b64ToUtf8(b64) { return decodeURIComponent(escape(atob(String(b64).replace(/\s/g, '')))); }
+function utf8ToB64(text) { return btoa(unescape(encodeURIComponent(text))); }
+
+async function uskladneniStahni() {
+  const headers = { 'Authorization': `token ${GITHUB_TOKEN}`, 'Accept': 'application/vnd.github+json' };
+  const resp = await fetch(`https://api.github.com/repos/${GITHUB_DATA_REPO}/contents/${USKLADNENI_DATA_PATH}`, { headers, cache: 'no-store' });
+  if (resp.status === 404) return { zaznamy: [], sha: null };
+  if (!resp.ok) throw new Error(`GitHub ${resp.status}`);
+  const meta = await resp.json();
+  let b64 = meta.content;
+  if (!b64 && meta.sha) {
+    // Soubor nad 1 MB — contents API obsah nevraci, nacist pres blob
+    const blob = await fetch(`https://api.github.com/repos/${GITHUB_DATA_REPO}/git/blobs/${meta.sha}`, { headers, cache: 'no-store' }).then(r => r.json());
+    b64 = blob.content;
+  }
+  const data = b64 ? JSON.parse(b64ToUtf8(b64)) : [];
+  return { zaznamy: Array.isArray(data) ? data : (data.zaznamy || []), sha: meta.sha };
+}
+
+function uskladneniBezInternich(list) {
+  return list.map(r => { const c = { ...r }; delete c._sync; return c; });
+}
+
+let _uskSyncBezi = false, _uskSyncZnovu = false;
+async function uskladneniSync() {
+  if (IS_LOCAL_TEST) { uskladneniSyncStav = 'lokalni test – synchronizace vypnuta'; return false; }
+  if (!GITHUB_TOKEN) { uskladneniSyncStav = 'vypnuta – chybi GitHub token'; return false; }
+  if (_uskSyncBezi) { _uskSyncZnovu = true; return false; }
+  _uskSyncBezi = true;
+  let ok = false;
+  try {
+    for (let pokus = 0; pokus < 3 && !ok; pokus++) {
+      const remote = await uskladneniStahni();
+      const local = await uskladneniNacti();
+      const remoteMap = new Map(remote.zaznamy.map(r => [uskladneniKlic(r), r]));
+      const merged = uskladneniBezInternich(uskladneniSluc(local, remote.zaznamy));
+      // Prazdnou evidenci nezapisovat (nezakladat prazdny soubor pred pocatecnim importem)
+      const potrebaPush = merged.length > 0 && merged.some(m => {
+        const r = remoteMap.get(uskladneniKlic(m));
+        return !r || (r.zmeneno || '') !== (m.zmeneno || '') || r.stav !== m.stav;
+      });
+
+      if (potrebaPush) {
+        const body = { message: `Uskladneni: ${merged.length} zaznamu`, content: utf8ToB64(JSON.stringify({ verze: 1, aktualizovano: new Date().toISOString(), zaznamy: merged }, null, 2)) };
+        if (remote.sha) body.sha = remote.sha;
+        const resp = await fetch(`https://api.github.com/repos/${GITHUB_DATA_REPO}/contents/${USKLADNENI_DATA_PATH}`, {
+          method: 'PUT',
+          headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        if (resp.status === 409 || resp.status === 422) continue; // nekdo zapsal mezitim — znovu nacist a sloucit
+        if (!resp.ok) { uskladneniSyncStav = `chyba GitHub ${resp.status}`; break; }
+      }
+
+      // Lokalne ulozit vysledek slouceni (vcetne zaznamu z jineho zarizeni / importu).
+      // Znovu nacist — mezitim mohl pribyt zaznam; zalohovane jsou jen verze, ktere odesly.
+      const odeslano = new Map(merged.map(m => [uskladneniKlic(m), m.zmeneno || '']));
+      await uskladneniZamek(async () => {
+        const now = uskladneniSluc(await uskladneniNacti(), merged);
+        for (const r of now) r._sync = odeslano.get(uskladneniKlic(r)) === (r.zmeneno || '');
+        await db.setKV(USKLADNENI_KV, now);
+      });
+      ok = true;
+      uskladneniSyncStav = `zalohovano ${new Date().toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' })}`;
+    }
+  } catch(e) {
+    console.warn('Synchronizace uskladneni selhala:', e);
+    uskladneniSyncStav = 'ceka na sit';
+  } finally {
+    _uskSyncBezi = false;
+    if (_uskSyncZnovu) { _uskSyncZnovu = false; setTimeout(uskladneniSync, 1000); }
+  }
+  return ok;
+}
+
+// --- UI: volba Prijem / Vydej -------------------------------------------------
+async function showUskladneniVolba(wiz) {
+  const list = await uskladneniNacti();
+  const pocet = list.filter(r => r.stav === 'ulozeno').length;
+  wizardBackStack = [];
+  wizardTileSelect(wiz.name.replace(/\\n/g, ' '), 'Příjem nebo výdej uskladněných kol / pneu', [
+    { label: 'PŘÍJEM', value: 'prijem', icon: iconChar('uskladneni'), color: '#27ae60', sublabel: 'naskladnit sadu' },
+    { label: 'VÝDEJ', value: 'vydej', icon: iconChar('uskladneni'), color: '#e67e22', sublabel: `uloženo: ${pocet}` },
+  ], true, (val) => {
+    wizardBackStack = [];
+    if (val === 'prijem') runCustomWizard(wiz, null, { prijem: true });
+    else showUskladneniSeznam(wiz);
+  });
+}
+
+// --- UI: seznam ulozenych sad -------------------------------------------------
+async function showUskladneniSeznam(wiz) {
+  const div = document.createElement('div');
+  div.innerHTML = `
+    <h2 style="text-align:center;margin-bottom:10px;">VÝDEJ – USKLADNĚNÉ PNEU</h2>
+    <div style="display:flex;gap:10px;align-items:center;justify-content:center;margin-bottom:10px;flex-wrap:wrap;">
+      <input type="text" id="usk-filter" placeholder="Hledat SPZ, jméno, telefon, číslo..." style="padding:10px;border-radius:6px;border:1px solid #444;background:#16213e;color:#fff;font-size:16px;width:360px;max-width:100%;">
+      <button class="btn btn-red usk-close" style="padding:10px 18px;font-size:14px;">ZAVRIT</button>
+    </div>
+    <div id="usk-info" style="text-align:center;font-size:12px;color:var(--text-muted);margin-bottom:8px;"></div>
+    <div id="usk-list" style="max-height:60vh;overflow-y:auto;"></div>
+  `;
+  const { overlay } = openModal(div, 'admin-modal');
+  div.querySelector('.usk-close').onclick = () => overlay.remove();
+
+  let all = await uskladneniNacti();
+  const filterInput = div.querySelector('#usk-filter');
+
+  function renderList() {
+    const listDiv = div.querySelector('#usk-list');
+    const q = normText(filterInput.value);
+    const qCompact = q.replace(/\s+/g, '');
+    const ulozene = all.filter(r => r.stav === 'ulozeno');
+    const filtered = ulozene.filter(r => {
+      if (!q) return true;
+      const text = normText([r.cislo, r.spz, r.jmeno, r.telefon].join(' '));
+      return text.includes(q) || text.replace(/\s+/g, '').includes(qCompact);
+    });
+    let tokenBtn = '';
+    if (!GITHUB_TOKEN && !IS_LOCAL_TEST) tokenBtn = ' <button class="btn btn-blue usk-token" style="font-size:11px;padding:3px 8px;margin-left:6px;">Nastavit token</button>';
+    div.querySelector('#usk-info').innerHTML = `Uloženo: ${ulozene.length}${q ? ` · nalezeno: ${filtered.length}` : ''} · záloha evidence: ${escHtml(uskladneniSyncStav || '...')}${tokenBtn}`;
+    const tb = div.querySelector('.usk-token');
+    if (tb) tb.onclick = async () => {
+      const t = prompt('Zadej GitHub token (ulozi se do prohlizece, zadavas jen jednou):');
+      if (!t) return;
+      GITHUB_TOKEN = t.trim();
+      localStorage.setItem('github_token', GITHUB_TOKEN);
+      await obnovit();
+    };
+
+    listDiv.innerHTML = '';
+    if (!filtered.length) {
+      listDiv.innerHTML = `<p style="text-align:center;color:var(--text-muted);padding:20px;">${ulozene.length ? 'Nic nenalezeno' : 'Zadne uskladnene sady'}</p>`;
+      return;
+    }
+    for (const r of filtered) {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;gap:14px;padding:10px 14px;margin-bottom:6px;background:#16213e;border-radius:8px;cursor:pointer;';
+      const typ = [r.alu ? 'Alu' : '', r.plech ? 'Plech' : '', r.gumy ? 'Gumy' : ''].filter(Boolean).join(', ');
+      row.innerHTML = `
+        <div style="font-size:20px;font-weight:700;min-width:100px;">${escHtml(r.cislo)}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:700;font-size:15px;"><span style="color:var(--accent-yellow);">${escHtml(r.spz || '?')}</span> &nbsp;${escHtml(r.jmeno)} <span style="color:var(--text-muted);font-weight:400;font-size:13px;">${escHtml(r.telefon)}</span></div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">${escHtml(r.vyrobce_rozmer)}${r.pocet_kusu ? ` · ${escHtml(r.pocet_kusu)} ks` : ''}${typ ? ` · ${escHtml(typ)}` : ''}${r.velikost ? ` · ${escHtml(r.velikost)}` : ''}</div>
+        </div>
+        <div style="text-align:right;font-size:12px;color:var(--text-muted);white-space:nowrap;">prijato<br>${escHtml(String(r.datum_prijmu || '').split(' ')[0])}</div>
+      `;
+      row.onclick = () => showUskladneniDetail(wiz, r, overlay);
+      listDiv.appendChild(row);
+    }
+  }
+
+  async function obnovit() {
+    renderList();
+    const ok = await uskladneniSync();
+    if (ok && document.body.contains(overlay)) { all = await uskladneniNacti(); }
+    if (document.body.contains(overlay)) renderList();
+  }
+
+  filterInput.oninput = renderList;
+  obnovit();
+}
+
+// --- UI: detail zaznamu + tlacitko Vydej -------------------------------------
+function showUskladneniDetail(wiz, r, listOverlay) {
+  const radek = (k, v) => `<div style="color:var(--text-muted);">${k}</div><div style="font-weight:700;">${escHtml(v) || '—'}</div>`;
+  const div = document.createElement('div');
+  div.innerHTML = `
+    <h2 style="text-align:center;margin-bottom:4px;">Uskladnění č. ${escHtml(r.cislo)}</h2>
+    <div style="text-align:center;font-size:13px;color:var(--text-muted);margin-bottom:14px;">${r.zdroj === 'import' ? 'nacteno z puvodniho protokolu' : 'prijato na tabletu'}${r.znovu_uskladneno ? ' · znovu uskladneno po vydeji' : ''}</div>
+    <div style="display:grid;grid-template-columns:auto 1fr;gap:8px 18px;max-width:560px;margin:0 auto 18px;font-size:16px;">
+      ${radek('Jméno a příjmení', r.jmeno)}
+      ${radek('Telefon', r.telefon)}
+      ${radek('SPZ', r.spz)}
+      ${radek('Výrobce a rozměr', r.vyrobce_rozmer)}
+      ${radek('Počet kusů', r.pocet_kusu)}
+      ${radek('Alu / Plech / Gumy', [r.alu ? 'Alu' : '', r.plech ? 'Plech' : '', r.gumy ? 'Gumy' : ''].filter(Boolean).join(', '))}
+      ${radek('Velikost / cena', `${r.velikost || ''}${r.cena ? ` · ${r.cena} Kč` : ''}`)}
+      ${radek('Datum příjmu', r.datum_prijmu)}
+      ${r.pozn ? radek('Poznámka', r.pozn) : ''}
+    </div>
+    <div style="display:flex;gap:12px;justify-content:center;">
+      <button class="btn btn-green usk-vydat" style="padding:14px 46px;font-size:18px;">VÝDEJ</button>
+      <button class="btn btn-blue usk-back" style="padding:14px 24px;font-size:15px;">ZPĚT</button>
+    </div>
+  `;
+  const { overlay } = openModal(div, 'admin-modal');
+  div.querySelector('.usk-back').onclick = () => overlay.remove();
+  div.querySelector('.usk-vydat').onclick = async () => {
+    // Overit aktualni stav (mohl se mezitim zmenit synchronizaci)
+    const akt = (await uskladneniNacti()).find(x => uskladneniKlic(x) === uskladneniKlic(r));
+    if (!akt || akt.stav !== 'ulozeno') {
+      alert('Tato sada uz je vydana.');
+      overlay.remove();
+      return;
+    }
+    overlay.remove();
+    if (listOverlay) listOverlay.remove();
+    showSignaturePad((sigDataUrl) => uskladneniProvedVydej(wiz, akt, sigDataUrl));
+  };
+}
+
+async function uskladneniProvedVydej(wiz, rec, sigDataUrl) {
+  const datumVydani = nowStr();
+  const doc = generateVydejPDF(rec, sigDataUrl, datumVydani);
+  const filename = `vydani_${rec.cislo}_${uskladneniRazitko(datumVydani)}.pdf`;
+  const vydany = { ...rec, stav: 'vydano', datum_vydani: datumVydani, protokol_vydej: filename };
+  try {
+    await uskladneniUpsert(vydany);
+  } catch(e) {
+    console.warn('Evidence uskladneni — vydej se nepodarilo zapsat:', e);
+    alert('Pozor: vydej se nepodarilo zapsat do evidence. Protokol o vydani je ulozen.');
+  }
+  showProtocol(doc, rec.cislo, {
+    filename,
+    title: `Protokol o vydání ${rec.cislo}`,
+    closeLabel: 'POKRAČOVAT',
+    onClose: () => showUskladneniOtazkaNove(wiz, vydany),
+  });
+}
+
+// Posledni krok vydeje: uskladni klient nove pneu? Ano = prijem pod stejnym cislem
+function showUskladneniOtazkaNove(wiz, rec) {
+  wizardBackStack = [];
+  wizardTileSelect('Uskladní klient nové pneu?', `${escHtml(rec.jmeno)} · ${escHtml(rec.spz)} · č. ${escHtml(rec.cislo)}`, [
+    { label: 'ANO', value: 'ano', color: '#27ae60', sublabel: `příjem pod č. ${rec.cislo}` },
+    { label: 'NE', value: 'ne', color: '#e74c3c', sublabel: 'konec' },
+  ], true, (val) => {
+    wizardBackStack = [];
+    if (val === 'ano') {
+      runCustomWizard(wiz, null, { prijem: true, evidCislo: rec.cislo, prefill: uskladneniPrefill(wiz, rec) });
+    }
+  });
+}
+
+// Protokol o vydani — stejny styl jako predavaci protokol, stejne evidencni cislo
+function generateVydejPDF(rec, signatureDataUrl, datumVydani) {
+  const s = settings;
+  const doc = createPDF();
+
+  doc.setFont(undefined, 'bold');
+  doc.setFontSize(36);
+  doc.text(String(rec.cislo), 196, 22, { align: 'right' });
+
+  doc.setFont(undefined, 'bold');
+  doc.setFontSize(18);
+  doc.text('PROTOKOL O VYDÁNÍ', 14, 20);
+  doc.setFont(undefined, 'normal');
+  doc.setFontSize(11);
+  doc.text('Uskladnění kol / pneu', 14, 28);
+  doc.setFontSize(10);
+  doc.text(`Datum výdeje: ${datumVydani}`, 14, 36);
+  doc.text(`Datum příjmu: ${String(rec.datum_prijmu || '').split(' ')[0]}`, 14, 42);
+
+  let y = 54;
+  doc.setFont(undefined, 'bold');
+  doc.setFontSize(11);
+  doc.text('Provozovatel:', 14, y);
+  doc.setFont(undefined, 'normal');
+  doc.setFontSize(10);
+  y += 7;
+  doc.text(s.firma || '', 14, y); y += 6;
+  doc.text(`ICO: ${s.ico || ''}  DIC: ${s.dic || ''}`, 14, y); y += 6;
+  doc.text(s.adresa || '', 14, y); y += 6;
+  doc.text(`Tel: ${s.telefon || ''}  Email: ${s.email || ''}`, 14, y); y += 12;
+
+  doc.setFont(undefined, 'bold');
+  doc.setFontSize(11);
+  doc.text('Zákazník:', 14, y);
+  doc.setFont(undefined, 'normal');
+  doc.setFontSize(10);
+  y += 7;
+  doc.text(`Jméno a příjmení: ${rec.jmeno || ''}`, 14, y); y += 6;
+  doc.text(`Telefon: ${rec.telefon || ''}`, 14, y); y += 6;
+  doc.text(`SPZ: ${rec.spz || ''}`, 14, y); y += 12;
+
+  doc.setFont(undefined, 'bold');
+  doc.setFontSize(11);
+  doc.text('Vydaný předmět uskladnění:', 14, y);
+  doc.setFont(undefined, 'normal');
+  doc.setFontSize(10);
+  y += 7;
+  doc.text(`Počet kusů: ${rec.pocet_kusu || ''}`, 14, y); y += 6;
+  doc.text(`Alu: ${rec.alu ? 'Ano' : 'Ne'}`, 14, y); y += 6;
+  doc.text(`Plech: ${rec.plech ? 'Ano' : 'Ne'}`, 14, y); y += 6;
+  doc.text(`Gumy: ${rec.gumy ? 'Ano' : 'Ne'}`, 14, y); y += 6;
+  doc.text(`Výrobce a rozměr: ${rec.vyrobce_rozmer || ''}`, 14, y); y += 6;
+  if (rec.velikost) { doc.text(`Velikost: ${rec.velikost}`, 14, y); y += 6; }
+  y += 8;
+
+  doc.text('Zákazník svým podpisem potvrzuje převzetí výše uvedených kol / pneumatik.', 14, y);
+  y += 16;
+
+  // Podpisy — zakaznik prebira, servis predava
+  doc.setFont(undefined, 'normal');
+  doc.setFontSize(10);
+  doc.text('Přebírající (zákazník):', 14, y);
+  doc.text('Předávající (servis):', 110, y);
+  y += 4;
+  if (signatureDataUrl) {
+    try { doc.addImage(signatureDataUrl, 'PNG', 14, y, 70, 28); } catch(e) {}
+  }
+  y += 30;
+  doc.line(14, y, 85, y);
+  doc.line(110, y, 196, y);
+  y += 5;
+  doc.setFontSize(9);
+  doc.text('Podpis', 45, y, { align: 'center' });
+  doc.text('Podpis', 150, y, { align: 'center' });
+
+  doc.setFont(undefined, 'italic');
+  doc.setFontSize(8);
+  doc.text(`${s.firma || ''} | ${s.adresa || ''} | Tel: ${s.telefon || ''}`, 105, 285, { align: 'center' });
+
+  return doc;
 }
 
 function getTotal() {
@@ -1299,7 +1775,7 @@ function clearCart() {
 // ---------------------------------------------------------------------------
 // Modaly
 // ---------------------------------------------------------------------------
-function openModal(content, extraClass) {
+function openModal(content, extraClass, opts) {
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
   const modal = document.createElement('div');
@@ -1308,8 +1784,10 @@ function openModal(content, extraClass) {
   else modal.appendChild(content);
   overlay.appendChild(modal);
   document.body.appendChild(overlay);
-  // Klik na overlay = zavrit
-  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+  // Klik na overlay = zavrit (pokud to volajici nezakaze)
+  if (!(opts && opts.noOutsideClose)) {
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+  }
   return { overlay, modal };
 }
 
@@ -1751,12 +2229,21 @@ function showDilciWizard() {
 // ---------------------------------------------------------------------------
 // Custom Wizard - pruchod stromem (scitani cen)
 // ---------------------------------------------------------------------------
-function runCustomWizard(wiz, startPath) {
+function runCustomWizard(wiz, startPath, opts) {
+  // opts (nepovinne, jen uskladneni): { prijem: true, evidCislo, prefill }
+  // Uskladneni: nejdriv volba Prijem / Vydej (pripnuta polozka s cestou jde rovnou na prijem)
+  if (isUskladneniWizard(wiz) && !(startPath && startPath.length) && !(opts && opts.prijem)) {
+    showUskladneniVolba(wiz);
+    return;
+  }
+
   // Persistent overlay pro cely wizard
   let wizOverlay = null;
 
   const formScreen = wiz.formScreen || 0; // 0 = na konci, 1+ = cislo obrazovky
-  const collectedFormData = { ...(wiz._formData || {}) };  // zachovat data z predchoziho behu
+  // zachovat data z predchoziho behu; pri znovu-uskladneni predvyplnit zakaznika
+  const collectedFormData = (opts && opts.prefill) ? { ...opts.prefill } : { ...(wiz._formData || {}) };
+  const evidCislo = (opts && opts.evidCislo) || null;
   let pendingMultiply = 1;  // mnozstvi z uzlu s multiply, aplikuje se na konci
 
   function showMultiplyInput(node, accumulated, path) {
@@ -2061,8 +2548,20 @@ function runCustomWizard(wiz, startPath) {
                 function afterSignature(sigDataUrl) {
                   if (wiz.protocol) {
                     const protoItems = newAcc.map(a => ({ name: a.label, price: a.price }));
-                    generateProtocolPDF(wiz.name, protoItems, collectedFormData, sigDataUrl).then(({ doc, protoNo }) => {
-                      showProtocol(doc, protoNo);
+                    const uskladneni = isUskladneniWizard(wiz);
+                    generateProtocolPDF(wiz.name, protoItems, collectedFormData, sigDataUrl, uskladneni ? evidCislo : null).then(async ({ doc, protoNo }) => {
+                      if (!uskladneni) { showProtocol(doc, protoNo); return; }
+                      // Zapis do evidence uskladneni
+                      const datum = nowStr();
+                      // Znovu-uskladneni pod stejnym cislem — jine jmeno PDF, at se neprepise puvodni protokol
+                      const filename = evidCislo ? `protokol_${protoNo}_${uskladneniRazitko(datum)}.pdf` : `protokol_${protoNo}.pdf`;
+                      try {
+                        await uskladneniPrijem(protoNo, datum, collectedFormData, newAcc, filename, !!evidCislo);
+                      } catch(e) {
+                        console.warn('Evidence uskladneni — zapis selhal:', e);
+                        alert('Pozor: zaznam se nepodarilo ulozit do evidence uskladneni. Protokol je ulozen.');
+                      }
+                      showProtocol(doc, protoNo, { filename });
                     });
                   }
                 }
@@ -2361,7 +2860,9 @@ function runCustomWizard(wiz, startPath) {
 
     function runStep(idx) {
       if (idx >= steps.length) {
-        showStep(wiz.tree, [...preAcc], [], wiz.name, 1);
+        let rootTitle = wiz.name;
+        if (isUskladneniWizard(wiz)) rootTitle += evidCislo ? ` – PŘÍJEM pod č. ${evidCislo}` : ' – PŘÍJEM';
+        showStep(wiz.tree, [...preAcc], [], rootTitle, 1);
         return;
       }
       const step = steps[idx];
@@ -4221,6 +4722,10 @@ async function init() {
 
   // Dozalohovat nezalohovane objednavky (offline fronta)
   backupPendingOrders();
+
+  // Evidence uskladneni: nacist/dohnat zapis do data repa, po navratu site znovu
+  uskladneniSync();
+  window.addEventListener('online', () => uskladneniSync());
 
   // Event listenery
   document.getElementById('btn-clear-cart').onclick = clearCart;
