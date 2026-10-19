@@ -1,18 +1,19 @@
 {
   "services": [],
   "settings": {
-    "firma": "Tomáš Stratil",
-    "ico": "70620555",
-    "dic": "",
-    "adresa": "U nové školy 1215/81",
+    "firma": "SPORTISTIKA s.r.o.",
+    "ico": "04886879",
+    "dic": "CZ04886879",
+    "adresa": "U Nové školy 1215/81, 700 30 Ostrava-Hrabůvka",
     "telefon": "+420 605 289 774",
     "email": "ovapneu@gmail.com",
-    "banka_iban": "CZ7855000000001804781003",
-    "banka_bic": "RZBCCZPP",
+    "banka_iban": "CZ5020100000002300970139",
+    "banka_bic": "FIOBCZPPXXX",
     "mena": "CZK",
     "dph_sazba": 21,
     "admin_password_hash": "c74dfc766e05ec9c8aea31b62d06171e959c727100423917d2f52943dc81ca3b",
-    "camera_url": ""
+    "camera_url": "",
+    "rejstrik": "C 65486 vedená u Krajského soudu v Ostravě"
   },
   "pricing": {
     "komplet": {

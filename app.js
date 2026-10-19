@@ -516,11 +516,14 @@ function createPDF() {
 }
 
 async function nextInvoiceNumber() {
-  let counter = await db.getKV('invoice_counter', 0);
+  // Kazda firma ma vlastni ciselnou radu: FO (FA-) a Sportistika (SP-) se nesmi michat
+  const fo = !settings.ico || settings.ico === '70620555';
+  const key = fo ? 'invoice_counter' : `invoice_counter_${settings.ico}`;
+  let counter = await db.getKV(key, 0);
   counter++;
-  await db.setKV('invoice_counter', counter);
+  await db.setKV(key, counter);
   const year = new Date().getFullYear();
-  return `FA-${year}-${String(counter).padStart(4,'0')}`;
+  return `${fo ? 'FA' : 'SP'}-${year}-${String(counter).padStart(4,'0')}`;
 }
 
 async function nextProtocolNumber() {
@@ -3216,7 +3219,7 @@ async function generateInvoicePDF(spz, total, items, customer) {
 
   // Hlavicka
   doc.setFontSize(20);
-  doc.text('FAKTURA', 105, 20, { align: 'center' });
+  doc.text(isVatPayer ? 'FAKTURA – DAŇOVÝ DOKLAD' : 'FAKTURA', 105, 20, { align: 'center' });
   doc.setFontSize(11);
   doc.text(`Číslo: ${invoiceNo}`, 105, 28, { align: 'center' });
 
@@ -3250,6 +3253,17 @@ async function generateInvoicePDF(spz, total, items, customer) {
   // Datumy
   doc.text(`Datum vystavení: ${today}`, 14, y);
   doc.text(`Datum splatnosti: ${due}`, 100, y);
+  if (isVatPayer) {
+    // DUZP je povinna nalezitost danoveho dokladu; sluzba se dela na miste, takze je to den vystaveni
+    y += 6;
+    doc.text(`Datum uskutečnění plnění: ${today}`, 14, y);
+  }
+  if (s.rejstrik) {
+    y += 6;
+    doc.setFontSize(8);
+    doc.text(`Zapsáno v obchodním rejstříku, spisová značka ${s.rejstrik}`, 14, y);
+    doc.setFontSize(10);
+  }
   y += 10;
 
   // Tabulka
@@ -3588,6 +3602,7 @@ function renderAdminFirm(container) {
   const fields = [
     ['Nazev firmy','firma'],['ICO','ico'],['DIC','dic'],
     ['Adresa','adresa'],['Telefon','telefon'],['Email','email'],
+    ['Zapis v rejstriku','rejstrik'],
     ['IBAN (banka)','banka_iban'],['BIC/SWIFT','banka_bic'],
     ['Mena','mena'],['Sazba DPH (%)','dph_sazba'],
     ['URL kamery','camera_url'],
@@ -4709,6 +4724,7 @@ async function init() {
   // samotna zmena config.json by se do tabletu nedostala. Uzel se proto
   // prestavi tady — R134a si ponecha lokalni ceny, R1234yf dostane ceny z ceniku.
   await migraceKlimatizace();
+  await migraceSportistika();
 
   // Vzdy stahnout customSvgIcons z GitHubu na pozadi (aby se aktualizovaly i bez reset IndexedDB)
   fetch(`https://raw.githubusercontent.com/${GITHUB_REPO}/master/${GITHUB_CONFIG_PATH}?v=${Date.now()}`)
@@ -4872,4 +4888,21 @@ async function migraceKlimatizace() {
     ],
   };
   await db.setKV('customWizards', customWizards);
+}
+
+// Pneuservis prechazi pod Sportistiku (19. 10. 2026) — jednorazove prepnuti udaju na dokladech.
+// Udaje firmy si drzi kazdy tablet u sebe, samotna zmena config.json by se do nich nedostala.
+// Prepina jen tablet, ktery ma jeste udaje FO; rucne zmenene udaje nechava byt.
+async function migraceSportistika() {
+  if (await db.getKV('migrace_sportistika_2026_10', false)) return;
+  if (settings && settings.ico === '70620555') {
+    Object.assign(settings, {
+      firma: 'SPORTISTIKA s.r.o.', ico: '04886879', dic: 'CZ04886879',
+      adresa: 'U Nové školy 1215/81, 700 30 Ostrava-Hrabůvka',
+      rejstrik: 'C 65486 vedená u Krajského soudu v Ostravě',
+      banka_iban: 'CZ5020100000002300970139', banka_bic: 'FIOBCZPPXXX',
+    });
+    await db.setKV('settings', settings);
+  }
+  await db.setKV('migrace_sportistika_2026_10', true);
 }
