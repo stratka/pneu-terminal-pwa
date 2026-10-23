@@ -57,6 +57,7 @@ async function pushConfigToGitHub() {
     GITHUB_TOKEN = prompt('Zadej GitHub token (ulozi se do prohlizece, zadavas jen jednou):');
     if (!GITHUB_TOKEN) return false;
     localStorage.setItem('github_token', GITHUB_TOKEN);
+    setTimeout(backupPendingOrders, 0); // dohnat zakazky porizene bez tokenu
   }
 
   const cfg = JSON.stringify({ services, settings, pricing, customWizards, pinnedItems, customSvgIcons }, null, 2);
@@ -115,6 +116,7 @@ async function revertConfigOnGitHub() {
     GITHUB_TOKEN = prompt('Zadej GitHub token:');
     if (!GITHUB_TOKEN) return false;
     localStorage.setItem('github_token', GITHUB_TOKEN);
+    setTimeout(backupPendingOrders, 0); // dohnat zakazky porizene bez tokenu
   }
 
   const content = btoa(unescape(encodeURIComponent(backup)));
@@ -153,8 +155,15 @@ async function revertConfigOnGitHub() {
 // ---------------------------------------------------------------------------
 const GITHUB_DATA_REPO = 'stratka/pneu-terminal-data';
 
+// Zakazky, ktere se prave nahravaji — at se jedna zakazka nenahraje dvakrat,
+// kdyz se potka zaloha hned po dokonceni s dohanenim fronty.
+const _zakazkyVZaloze = new Set();
+
 async function backupOrderToGitHub(order) {
   if (!GITHUB_TOKEN || IS_LOCAL_TEST) return; // bez tokenu (a pri lokalnim testu) nezalohujeme
+  const klic = order.id != null ? order.id : order.datum + '|' + order.spz;
+  if (_zakazkyVZaloze.has(klic)) return;
+  _zakazkyVZaloze.add(klic);
 
   try {
     const date = new Date();
@@ -180,21 +189,36 @@ async function backupOrderToGitHub(order) {
     }
   } catch(e) {
     order._backed_up = false;
+  } finally {
+    _zakazkyVZaloze.delete(klic);
   }
 }
 
+// Dohnat nezalohovane zakazky. Driv se to delo JEN pri spusteni aplikace —
+// zakazky z mobilu porizene pred zadanim tokenu (nebo bez internetu) pak
+// lezely v telefonu, dokud se pokladna nezavrela a neotevrela, a pocitani aut
+// je hlasilo jako auta bez uctenky (23. 10. 2026). Ted i po zadani tokenu,
+// po navratu internetu a kazdych 5 minut.
+let _dohanimZalohu = false;
 async function backupPendingOrders() {
-  if (!GITHUB_TOKEN || IS_LOCAL_TEST) return;
-  const orders = await db.getOrders();
-  for (const order of orders) {
-    if (!order._backed_up) {
-      await backupOrderToGitHub(order);
-      if (order._backed_up && order.id) {
-        // Aktualizovat v IndexedDB
-        const tx = db._db.transaction('orders', 'readwrite');
-        tx.objectStore('orders').put(order);
+  if (!GITHUB_TOKEN || IS_LOCAL_TEST || _dohanimZalohu) return;
+  _dohanimZalohu = true;
+  try {
+    const orders = await db.getOrders();
+    for (const order of orders) {
+      if (!order._backed_up) {
+        await backupOrderToGitHub(order);
+        if (order._backed_up && order.id) {
+          // Aktualizovat v IndexedDB
+          const tx = db._db.transaction('orders', 'readwrite');
+          tx.objectStore('orders').put(order);
+        }
       }
     }
+  } catch(e) {
+    console.warn('Dohnani zalohy zakazek selhalo:', e);
+  } finally {
+    _dohanimZalohu = false;
   }
 }
 
@@ -1059,6 +1083,7 @@ async function showUskladneniSeznam(wiz) {
       if (!t) return;
       GITHUB_TOKEN = t.trim();
       localStorage.setItem('github_token', GITHUB_TOKEN);
+    setTimeout(backupPendingOrders, 0); // dohnat zakazky porizene bez tokenu
       await obnovit();
     };
 
@@ -3122,6 +3147,7 @@ function showFinishDialog() {
       faktura: invoiceNo,
       customer: (customer.name || customer.ico) ? customer : undefined,
       stav: 'dokoncena',
+      vs,   // variabilni symbol QR platby — at jde platbu z banky priradit k zakazce
       _backed_up: false,
     };
     const orderId = await db.addOrder(order);
@@ -4774,8 +4800,11 @@ async function init() {
   renderTiles();
   renderCart();
 
-  // Dozalohovat nezalohovane objednavky (offline fronta)
+  // Dozalohovat nezalohovane objednavky (offline fronta) — hned, po navratu
+  // site a kazdych 5 minut
   backupPendingOrders();
+  window.addEventListener('online', () => backupPendingOrders());
+  setInterval(backupPendingOrders, 5 * 60 * 1000);
 
   // Evidence uskladneni: nacist/dohnat zapis do data repa, po navratu site znovu
   uskladneniSync();
