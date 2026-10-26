@@ -2987,24 +2987,65 @@ function runCustomWizard(wiz, startPath, opts) {
 // ---------------------------------------------------------------------------
 // Dokonceni objednavky
 // ---------------------------------------------------------------------------
-function showFinishDialog() {
+// Variabilni symbol prideluje jedno spolecne pocitadlo v datovem repu (zadal Tomas
+// 26. 10. 2026): tablet i mobil si cislo vzdy vezmou odtud, takze jedna rada
+// 9026100001, 9026100002… bez dvou stejnych cisel. Soucasny zapis dvou zarizeni
+// pozna GitHub podle sha (409/422) a druhe si vezme dalsi cislo.
+// Bez internetu (nebo bez tokenu) vraci null a objednavka se dokoncit neda —
+// technik ji udela mobilem.
+const VS_DATA_PATH = 'vs_counter.json';
+const VS_PRVNI = 9026100001;
+
+async function pridelitVS() {
+  if (IS_LOCAL_TEST) {
+    const n = parseInt(localStorage.getItem('vs_test') || String(VS_PRVNI - 1)) + 1;
+    localStorage.setItem('vs_test', n);
+    return String(n);
+  }
+  if (!GITHUB_TOKEN || !navigator.onLine) return null;
+  const headers = { 'Authorization': `token ${GITHUB_TOKEN}`, 'Accept': 'application/vnd.github+json' };
+  const url = `https://api.github.com/repos/${GITHUB_DATA_REPO}/contents/${VS_DATA_PATH}`;
+  try {
+    for (let pokus = 0; pokus < 5; pokus++) {
+      const meta = await fetch(url, { headers, cache: 'no-store' });
+      let posledni = VS_PRVNI - 1, sha = null;
+      if (meta.ok) {
+        const m = await meta.json();
+        sha = m.sha;
+        posledni = Math.max(posledni, parseInt(JSON.parse(decodeURIComponent(escape(atob(m.content.replace(/\s/g, ''))))).posledni) || 0);
+      } else if (meta.status !== 404) {
+        return null;
+      }
+      const vs = posledni + 1;
+      const body = { message: `VS ${vs}`, content: utf8ToB64(JSON.stringify({ posledni: vs, zmeneno: new Date().toISOString() }) + '\n') };
+      if (sha) body.sha = sha;
+      const resp = await fetch(url, { method: 'PUT', headers: { ...headers, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      if (resp.ok) return String(vs);
+      if (resp.status !== 409 && resp.status !== 422) return null;
+    }
+  } catch (e) {
+    console.warn('Prideleni VS selhalo:', e);
+  }
+  return null;
+}
+
+async function showFinishDialog() {
   if (!Object.keys(cart).length && !customItems.length) {
     alert('Pridejte nejprve sluzby do kosiku.');
     return;
   }
 
   const total = getTotal();
-  // VS = 90 + rok (2 cifry) + zarizeni (1 tablet, 2 mobil) + poradove cislo (5 cifer),
-  // prvni na tabletu 9026100001 (zadal Tomas 26. 10. 2026). Kazde zarizeni pocita samo,
-  // vlastni cislice zarizeni brani tomu, aby tablet a mobil vydaly stejny VS.
-  const vsCounter = parseInt(localStorage.getItem('vs_counter_90') || '0') + 1;
-  localStorage.setItem('vs_counter_90', vsCounter);
-  let zarizeni = localStorage.getItem('vs_zarizeni');
-  if (!zarizeni) {
-    zarizeni = /Mobile/i.test(navigator.userAgent) ? '2' : '1';
-    localStorage.setItem('vs_zarizeni', zarizeni);
+  const tlacitko = document.getElementById('btn-finish');
+  if (tlacitko) tlacitko.disabled = true;
+  const vs = await pridelitVS();
+  if (tlacitko) tlacitko.disabled = false;
+  if (!vs) {
+    alert(GITHUB_TOKEN
+      ? 'Bez internetu nejde objednavku dokoncit — cislo platby se prideluje pres internet.\n\nDokoncete ji na mobilu.'
+      : 'Chybi GitHub token, objednavku nejde dokoncit (cislo platby se prideluje pres internet).\n\nZadejte token v Uskladneni, nebo ji dokoncete na mobilu.');
+    return;
   }
-  const vs = `90${new Date().getFullYear() % 100}${zarizeni}${String(vsCounter).padStart(5, '0')}`;
 
   const div = document.createElement('div');
   div.className = 'finish-dialog';
