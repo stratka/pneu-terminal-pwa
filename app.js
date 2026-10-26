@@ -540,14 +540,16 @@ function createPDF() {
 }
 
 async function nextInvoiceNumber() {
-  // Kazda firma ma vlastni ciselnou radu: FO (FA-) a Sportistika (SP-) se nesmi michat
+  // Kazda firma ma vlastni ciselnou radu: FO Stratil (FA-), Sportistika (SP-)
+  // a FO Baar (OB-) se nesmi michat
   const fo = !settings.ico || settings.ico === '70620555';
   const key = fo ? 'invoice_counter' : `invoice_counter_${settings.ico}`;
   let counter = await db.getKV(key, 0);
   counter++;
   await db.setKV(key, counter);
   const year = new Date().getFullYear();
-  return `${fo ? 'FA' : 'SP'}-${year}-${String(counter).padStart(4,'0')}`;
+  const rada = fo ? 'FA' : settings.ico === '87162296' ? 'OB' : 'SP';
+  return `${rada}-${year}-${String(counter).padStart(4,'0')}`;
 }
 
 async function nextProtocolNumber() {
@@ -3265,7 +3267,7 @@ async function generateInvoicePDF(spz, total, items, customer) {
   doc.text(`IČO: ${s.ico || ''}`, 14, y);
   if (cust.ico) doc.text(`IČO: ${cust.ico}`, 110, y);
   y += 6;
-  if (s.dic) doc.text(`DIČ: ${s.dic}`, 14, y);
+  doc.text(s.dic ? `DIČ: ${s.dic}` : 'Neplátce DPH', 14, y);
   if (cust.dic) doc.text(`DIČ: ${cust.dic}`, 110, y);
   y += 6;
   doc.text(s.adresa || '', 14, y);
@@ -4751,6 +4753,7 @@ async function init() {
   // prestavi tady — R134a si ponecha lokalni ceny, R1234yf dostane ceny z ceniku.
   await migraceKlimatizace();
   await migraceSportistika();
+  await migraceBaar();
 
   // Vzdy stahnout customSvgIcons z GitHubu na pozadi (aby se aktualizovaly i bez reset IndexedDB)
   fetch(`https://raw.githubusercontent.com/${GITHUB_REPO}/master/${GITHUB_CONFIG_PATH}?v=${Date.now()}`)
@@ -4934,4 +4937,21 @@ async function migraceSportistika() {
     await db.setKV('settings', settings);
   }
   await db.setKV('migrace_sportistika_2026_10', true);
+}
+
+// Pneuservis prechazi na FO Ondreje Baara, neplatce DPH (26. 10. 2026) — at se tuhle
+// sezonu nemusi zdrazovat o DPH. Stejne jako u Sportistiky jednorazove prepne udaje
+// v tabletu; prepina jen tablet s udaji Sportistiky nebo FO Stratil.
+async function migraceBaar() {
+  if (await db.getKV('migrace_baar_2026_10', false)) return;
+  if (settings && (settings.ico === '04886879' || settings.ico === '70620555')) {
+    Object.assign(settings, {
+      firma: 'Ondřej Baar', ico: '87162296', dic: '',
+      adresa: 'Václava Jiřikovského 145/40, 700 30 Ostrava-Dubina',
+      rejstrik: '',
+      banka_iban: 'CZ8655000000009195549001', banka_bic: 'RZBCCZPP',
+    });
+    await db.setKV('settings', settings);
+  }
+  await db.setKV('migrace_baar_2026_10', true);
 }

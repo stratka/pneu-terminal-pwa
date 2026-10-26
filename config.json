@@ -1,19 +1,19 @@
 {
   "services": [],
   "settings": {
-    "firma": "SPORTISTIKA s.r.o.",
-    "ico": "04886879",
-    "dic": "CZ04886879",
-    "adresa": "U Nové školy 1215/81, 700 30 Ostrava-Hrabůvka",
+    "firma": "Ondřej Baar",
+    "ico": "87162296",
+    "dic": "",
+    "adresa": "Václava Jiřikovského 145/40, 700 30 Ostrava-Dubina",
     "telefon": "+420 605 289 774",
     "email": "ovapneu@gmail.com",
-    "banka_iban": "CZ5020100000002300970139",
-    "banka_bic": "FIOBCZPPXXX",
+    "banka_iban": "CZ8655000000009195549001",
+    "banka_bic": "RZBCCZPP",
     "mena": "CZK",
     "dph_sazba": 21,
     "admin_password_hash": "c74dfc766e05ec9c8aea31b62d06171e959c727100423917d2f52943dc81ca3b",
     "camera_url": "",
-    "rejstrik": "C 65486 vedená u Krajského soudu v Ostravě"
+    "rejstrik": ""
   },
   "pricing": {
     "komplet": {
