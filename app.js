@@ -2989,16 +2989,23 @@ function runCustomWizard(wiz, startPath, opts) {
 // ---------------------------------------------------------------------------
 // Variabilni symbol prideluje jedno spolecne pocitadlo v datovem repu (zadal Tomas
 // 26. 10. 2026): tablet i mobil si cislo vzdy vezmou odtud, takze jedna rada
-// 9026100001, 9026100002… bez dvou stejnych cisel. Soucasny zapis dvou zarizeni
-// pozna GitHub podle sha (409/422) a druhe si vezme dalsi cislo.
+// bez dvou stejnych cisel. Soucasny zapis dvou zarizeni pozna GitHub podle sha
+// (409/422) a druhe si vezme dalsi cislo.
+// Tvar: 90 + rok (2) + mesic (2) + poradi v mesici (4), tedy rijen 2026 od
+// 9026100001, listopad od 9026110001 — mesic je i v cisle faktury.
 // Bez internetu (nebo bez tokenu) vraci null a objednavka se dokoncit neda —
 // technik ji udela mobilem.
 const VS_DATA_PATH = 'vs_counter.json';
-const VS_PRVNI = 9026100001;
+
+function vsZakladMesice() {
+  const d = new Date();
+  return Number(`90${String(d.getFullYear() % 100).padStart(2, '0')}${String(d.getMonth() + 1).padStart(2, '0')}0000`);
+}
 
 async function pridelitVS() {
+  const zaklad = vsZakladMesice();
   if (IS_LOCAL_TEST) {
-    const n = parseInt(localStorage.getItem('vs_test') || String(VS_PRVNI - 1)) + 1;
+    const n = Math.max(zaklad, parseInt(localStorage.getItem('vs_test') || '0')) + 1;
     localStorage.setItem('vs_test', n);
     return String(n);
   }
@@ -3008,7 +3015,7 @@ async function pridelitVS() {
   try {
     for (let pokus = 0; pokus < 5; pokus++) {
       const meta = await fetch(url, { headers, cache: 'no-store' });
-      let posledni = VS_PRVNI - 1, sha = null;
+      let posledni = zaklad, sha = null;
       if (meta.ok) {
         const m = await meta.json();
         sha = m.sha;
