@@ -2994,10 +2994,17 @@ function showFinishDialog() {
   }
 
   const total = getTotal();
-  // VS = rok (2 cifry) + poradove cislo z counteru
-  const vsCounter = parseInt(localStorage.getItem('vs_counter') || '0') + 1;
-  localStorage.setItem('vs_counter', vsCounter);
-  const vs = `${new Date().getFullYear() % 100}${String(vsCounter).padStart(6, '0')}`;
+  // VS = 90 + rok (2 cifry) + zarizeni (1 tablet, 2 mobil) + poradove cislo (5 cifer),
+  // prvni na tabletu 9026100001 (zadal Tomas 26. 10. 2026). Kazde zarizeni pocita samo,
+  // vlastni cislice zarizeni brani tomu, aby tablet a mobil vydaly stejny VS.
+  const vsCounter = parseInt(localStorage.getItem('vs_counter_90') || '0') + 1;
+  localStorage.setItem('vs_counter_90', vsCounter);
+  let zarizeni = localStorage.getItem('vs_zarizeni');
+  if (!zarizeni) {
+    zarizeni = /Mobile/i.test(navigator.userAgent) ? '2' : '1';
+    localStorage.setItem('vs_zarizeni', zarizeni);
+  }
+  const vs = `90${new Date().getFullYear() % 100}${zarizeni}${String(vsCounter).padStart(5, '0')}`;
 
   const div = document.createElement('div');
   div.className = 'finish-dialog';
