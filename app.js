@@ -279,12 +279,12 @@ const DEFAULT_SETTINGS = {
 
 const DEFAULT_PRICING = {
   komplet:{
-    "Osobni (plech)":{"R16":1000,"R17":1100},
-    "Osobni (ALU)":{"R16":1200,"R17":1300,"R18":1400,"R19":1500,"R20":1700},
-    "RunFlat / Profil < 50":{"R16":2000,"R17":2200,"R18":2400,"R19":2600,"R20":2700},
+    "Osobni (plech)":{"R16":1100,"R17":1200},
+    "Osobni (ALU)":{"R16":1300,"R17":1400,"R18":1500,"R19":1600,"R20":1800},
+    "RunFlat / Profil < 50":{"R16":2000,"R17":2200,"R18":2400,"R19":2600,"R20":2800},
   },
   sada:{
-    "Standardni":{"R16":800,"R17":900,"R18":1000,"R19":1100,"R20":1200,"R21":1300,"R22":1400},
+    "Standardni":{"R16":1000,"R17":1100,"R18":1200,"R19":1300,"R20":1400,"R21":1500,"R22":1600},
   },
   defekt:{
     "Defekt do 6mm":300,
@@ -4809,6 +4809,7 @@ async function init() {
   await migraceKlimatizace();
   await migraceSportistika();
   await migraceBaar();
+  await migraceCenik2026_10();
 
   // Vzdy stahnout customSvgIcons z GitHubu na pozadi (aby se aktualizovaly i bez reset IndexedDB)
   fetch(`https://raw.githubusercontent.com/${GITHUB_REPO}/master/${GITHUB_CONFIG_PATH}?v=${Date.now()}`)
@@ -5009,4 +5010,60 @@ async function migraceBaar() {
     await db.setKV('settings', settings);
   }
   await db.setKV('migrace_baar_2026_10', true);
+}
+
+// Cenik prezuti podle webu ovapneu.cz (28. 10. 2026, Tomas): plech a ALU +100,
+// RunFlat R20 2 800, sada za sadu 1 000–1 600, bez vymeny brzdove kapaliny. Tablet si pruvodce drzi
+// u sebe, proto se ceny prepisi jednorazove tady.
+const CENIK_2026_10 = {
+  komplet: {
+    plech:   { R16: 1100, R17: 1200 },
+    alu:     { R16: 1300, R17: 1400, R18: 1500, R19: 1600, R20: 1800 },
+    runflat: { R16: 2000, R17: 2200, R18: 2400, R19: 2600, R20: 2800 },
+  },
+  sada: { R16: 1000, R17: 1100, R18: 1200, R19: 1300, R20: 1400, R21: 1500, R22: 1600 },
+};
+async function migraceCenik2026_10() {
+  if (await db.getKV('migrace_cenik_2026_10', false)) return;
+  const norm = t => String(t || '').split('\\n').join(' ').replace(/\s+/g, ' ')
+    .normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toLowerCase();
+  const rozmer = t => (norm(t).match(/r\s*(\d\d)/) || [])[1];
+  const nastav = (uzly, ceny) => {
+    for (const u of (uzly || [])) {
+      const r = rozmer(u.label);
+      if (r && ceny['R' + r] != null) u.price = ceny['R' + r];
+    }
+  };
+  for (const w of (customWizards || [])) {
+    const nazev = norm(w.name), deti = (w.tree && w.tree.children) || [];
+    if (nazev.includes('komplet')) {
+      for (const typ of deti) {
+        const t = norm(typ.label);
+        const ceny = t.includes('plech') ? CENIK_2026_10.komplet.plech
+          : t.includes('runflat') || t.includes('profil') ? CENIK_2026_10.komplet.runflat
+          : t.includes('alu') ? CENIK_2026_10.komplet.alu : null;
+        if (ceny) nastav(typ.children, ceny);
+      }
+    } else if (nazev.includes('sada za sadu')) {
+      nastav(deti, CENIK_2026_10.sada);
+    }
+  }
+  // Vymena brzdove kapaliny mela misto ceny 100 000 000 — Tomas ji vypnul
+  const bezKapaliny = uzel => {
+    if (!uzel || !Array.isArray(uzel.children)) return;
+    uzel.children = uzel.children.filter(c => !(norm(c.label).includes('brzdove kapaliny') &&
+      norm(c.label).includes('vymena') && Number(c.price) >= 1000000));
+    uzel.children.forEach(bezKapaliny);
+  };
+  for (const w of (customWizards || [])) bezKapaliny(w.tree);
+  if (pricing && pricing.komplet) {
+    const k = pricing.komplet;
+    if (k['Osobni (plech)']) Object.assign(k['Osobni (plech)'], CENIK_2026_10.komplet.plech);
+    if (k['Osobni (ALU)']) Object.assign(k['Osobni (ALU)'], CENIK_2026_10.komplet.alu);
+    if (k['RunFlat / Profil < 50']) Object.assign(k['RunFlat / Profil < 50'], CENIK_2026_10.komplet.runflat);
+  }
+  if (pricing && pricing.sada && pricing.sada.Standardni) Object.assign(pricing.sada.Standardni, CENIK_2026_10.sada);
+  await db.setKV('customWizards', customWizards);
+  await db.setKV('pricing', pricing);
+  await db.setKV('migrace_cenik_2026_10', true);
 }

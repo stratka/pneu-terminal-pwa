@@ -18,33 +18,33 @@
   "pricing": {
     "komplet": {
       "Osobni (plech)": {
-        "R16": 1000,
-        "R17": 1100
+        "R16": 1100,
+        "R17": 1200
       },
       "Osobni (ALU)": {
-        "R16": 1200,
-        "R17": 1300,
-        "R18": 1400,
-        "R19": 1500,
-        "R20": 1700
+        "R16": 1300,
+        "R17": 1400,
+        "R18": 1500,
+        "R19": 1600,
+        "R20": 1800
       },
       "RunFlat / Profil < 50": {
         "R16": 2000,
         "R17": 2200,
         "R18": 2400,
         "R19": 2600,
-        "R20": 2700
+        "R20": 2800
       }
     },
     "sada": {
       "Standardni": {
-        "R16": 800,
-        "R17": 900,
-        "R18": 1000,
-        "R19": 1100,
-        "R20": 1200,
-        "R21": 1300,
-        "R22": 1400
+        "R16": 1000,
+        "R17": 1100,
+        "R18": 1200,
+        "R19": 1300,
+        "R20": 1400,
+        "R21": 1500,
+        "R22": 1600
       }
     },
     "defekt": {
@@ -240,7 +240,7 @@
             "children": [
               {
                 "label": "R16",
-                "price": 1000,
+                "price": 1100,
                 "children": [
                   {
                     "label": "Osobni \\nvůz",
@@ -262,7 +262,7 @@
               },
               {
                 "label": "R17",
-                "price": 1100,
+                "price": 1200,
                 "children": [
                   {
                     "label": "Osobni \\nvůz",
@@ -292,28 +292,6 @@
             "children": [
               {
                 "label": "R16",
-                "price": 1200,
-                "children": [
-                  {
-                    "label": "Osobni \\nvůz",
-                    "price": 0,
-                    "children": [],
-                    "color": "#27ae60",
-                    "icon": "",
-                    "final": true
-                  },
-                  {
-                    "label": "SUV / VAN / EV",
-                    "price": 200,
-                    "children": [],
-                    "color": "#e67e22",
-                    "icon": "",
-                    "final": true
-                  }
-                ]
-              },
-              {
-                "label": "R17",
                 "price": 1300,
                 "children": [
                   {
@@ -335,7 +313,7 @@
                 ]
               },
               {
-                "label": "R18",
+                "label": "R17",
                 "price": 1400,
                 "children": [
                   {
@@ -357,7 +335,7 @@
                 ]
               },
               {
-                "label": "R19",
+                "label": "R18",
                 "price": 1500,
                 "children": [
                   {
@@ -379,8 +357,30 @@
                 ]
               },
               {
+                "label": "R19",
+                "price": 1600,
+                "children": [
+                  {
+                    "label": "Osobni \\nvůz",
+                    "price": 0,
+                    "children": [],
+                    "color": "#27ae60",
+                    "icon": "",
+                    "final": true
+                  },
+                  {
+                    "label": "SUV / VAN / EV",
+                    "price": 200,
+                    "children": [],
+                    "color": "#e67e22",
+                    "icon": "",
+                    "final": true
+                  }
+                ]
+              },
+              {
                 "label": "R20",
-                "price": 1700,
+                "price": 1800,
                 "children": [
                   {
                     "label": "Osobni \\nvůz",
@@ -498,7 +498,7 @@
               },
               {
                 "label": "R20",
-                "price": 2700,
+                "price": 2800,
                 "children": [
                   {
                     "label": "Osobni \\nvůz",
@@ -542,7 +542,7 @@
         "children": [
           {
             "label": "R16",
-            "price": 800,
+            "price": 1000,
             "children": [
               {
                 "label": "Osobni \\nvůz",
@@ -596,7 +596,7 @@
           },
           {
             "label": "R17",
-            "price": 900,
+            "price": 1100,
             "children": [
               {
                 "label": "Osobni \\nvůz",
@@ -650,7 +650,7 @@
           },
           {
             "label": "R18",
-            "price": 1000,
+            "price": 1200,
             "children": [
               {
                 "label": "Osobni \\nvůz",
@@ -704,7 +704,7 @@
           },
           {
             "label": "R19",
-            "price": 1100,
+            "price": 1300,
             "children": [
               {
                 "label": "Osobni \\nvůz",
@@ -758,7 +758,7 @@
           },
           {
             "label": "R20",
-            "price": 1200,
+            "price": 1400,
             "children": [
               {
                 "label": "Osobni \\nvůz",
@@ -812,7 +812,7 @@
           },
           {
             "label": "R21",
-            "price": 1300,
+            "price": 1500,
             "children": [
               {
                 "label": "Osobni \\nvůz",
@@ -866,7 +866,7 @@
           },
           {
             "label": "R22",
-            "price": 1400,
+            "price": 1600,
             "children": [
               {
                 "label": "Osobni \\nvůz",
@@ -1497,13 +1497,6 @@
                 "children": [],
                 "icon": "",
                 "color": "#2196f3"
-              },
-              {
-                "label": "Výměna \\nbrzdové\\nkapaliny",
-                "price": 100000000,
-                "icon": "",
-                "color": "#2196f3",
-                "children": []
               },
               {
                 "label": "Výměna brzdových kotoučů včetně destiček \\n(obě nápravy)",
