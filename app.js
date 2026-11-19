@@ -539,18 +539,86 @@ function createPDF() {
   return doc;
 }
 
-async function nextInvoiceNumber() {
-  // Kazda firma ma vlastni ciselnou radu: FO Stratil (FA-), Sportistika (SP-)
-  // a FO Baar (OB-) se nesmi michat
+// Cislo faktury prideluje jedno spolecne pocitadlo v datovem repu (19. 11. 2026):
+// drive si kazdy pristroj pocital sam a tablet s mobilem od 26. 10. vydaly 15 cisel
+// OB-2026 dvakrat. Stejne jako u VS hlida soubeh GitHub podle sha (409/422) a druhy
+// pristroj si vezme dalsi cislo. Kazda firma ma vlastni radu: FO Stratil (FA-),
+// Sportistika (SP-) a FO Baar (OB-) se nesmi michat; rok je soucasti rady, takze
+// v novem roce zacne rada od 0001. Bez internetu (nebo bez tokenu) vraci null
+// a faktura se nevystavi.
+const FAKTURA_DATA_PATH = 'faktura_counter.json';
+// Nejvyssi cislo vydane pred spolecnym pocitadlem — at prvni prideleni
+// nezacne od 1 (OB-2026-0027 je posledni pouzite k 19. 11. 2026).
+const FAKTURA_RADA_MIN = { 'OB-2026': 27 };
+
+function fakturaRada() {
   const fo = !settings.ico || settings.ico === '70620555';
-  const key = fo ? 'invoice_counter' : `invoice_counter_${settings.ico}`;
-  let counter = await db.getKV(key, 0);
-  counter++;
-  await db.setKV(key, counter);
-  const year = new Date().getFullYear();
-  const rada = fo ? 'FA' : settings.ico === '87162296' ? 'OB' : 'SP';
-  return `${rada}-${year}-${String(counter).padStart(4,'0')}`;
+  const pismena = fo ? 'FA' : settings.ico === '87162296' ? 'OB' : 'SP';
+  return `${pismena}-${new Date().getFullYear()}`;
 }
+
+// Nejvyssi cislo rady, ktere zna tenhle pristroj. Stare lokalni pocitadlo (do v3.7)
+// nemelo rok a pocitalo jen v roce 2026, proto se bere jen pro rady 2026.
+async function fakturaLokalniMax(rada) {
+  let n = parseInt(await db.getKV(`invoice_posledni_${rada}`, 0)) || 0;
+  if (rada.endsWith('-2026')) {
+    const fo = !settings.ico || settings.ico === '70620555';
+    const stary = fo ? 'invoice_counter' : `invoice_counter_${settings.ico}`;
+    n = Math.max(n, parseInt(await db.getKV(stary, 0)) || 0);
+  }
+  return n;
+}
+
+async function pridelitCisloFaktury() {
+  const rada = fakturaRada();
+  const minimum = Math.max(FAKTURA_RADA_MIN[rada] || 0, await fakturaLokalniMax(rada));
+  let n = null;
+  if (IS_LOCAL_TEST) {
+    n = Math.max(minimum, parseInt(localStorage.getItem(`faktura_test_${rada}`) || '0')) + 1;
+    localStorage.setItem(`faktura_test_${rada}`, n);
+  } else {
+    if (!GITHUB_TOKEN || !navigator.onLine) return null;
+    const headers = { 'Authorization': `token ${GITHUB_TOKEN}`, 'Accept': 'application/vnd.github+json' };
+    const url = `https://api.github.com/repos/${GITHUB_DATA_REPO}/contents/${FAKTURA_DATA_PATH}`;
+    try {
+      for (let pokus = 0; pokus < 10 && n === null; pokus++) {
+        if (pokus) await new Promise(r => setTimeout(r, 150 + Math.random() * 450));
+        const meta = await fetch(url, { headers, cache: 'no-store' });
+        let data = {}, sha = null;
+        if (meta.ok) {
+          const m = await meta.json();
+          sha = m.sha;
+          data = JSON.parse(decodeURIComponent(escape(atob(m.content.replace(/\s/g, ''))))) || {};
+        } else if (meta.status !== 404) {
+          return null;
+        }
+        const nove = Math.max(minimum, parseInt(data[rada]) || 0) + 1;
+        data[rada] = nove;
+        data.zmeneno = new Date().toISOString();
+        const body = { message: `Faktura ${rada}-${String(nove).padStart(4, '0')}`, content: utf8ToB64(JSON.stringify(data, null, 2) + '\n') };
+        if (sha) body.sha = sha;
+        const resp = await fetch(url, { method: 'PUT', headers: { ...headers, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+        if (resp.ok) n = nove;
+        else if (resp.status !== 409 && resp.status !== 422) return null;
+      }
+    } catch (e) {
+      console.warn('Prideleni cisla faktury selhalo:', e);
+      return null;
+    }
+    if (n === null) return null;
+  }
+  // Lokalni zrcadlo: kdyby se soubor v datovem repu ztratil, pristroj nespadne pod sve cislo.
+  // Stare pocitadlo se drzi taky, at ani navrat na v3.7 nevyda uz pouzite cislo.
+  await db.setKV(`invoice_posledni_${rada}`, n);
+  if (rada.endsWith('-2026')) {
+    const fo = !settings.ico || settings.ico === '70620555';
+    const stary = fo ? 'invoice_counter' : `invoice_counter_${settings.ico}`;
+    if ((parseInt(await db.getKV(stary, 0)) || 0) < n) await db.setKV(stary, n);
+  }
+  return `${rada}-${String(n).padStart(4, '0')}`;
+}
+
+const FAKTURA_BEZ_CISLA = 'Fakturu nejde vystavit — cislo faktury se prideluje pres internet.\n\nZkontrolujte internet a GitHub token a zkuste to znovu.';
 
 async function nextProtocolNumber() {
   const year = new Date().getFullYear();
@@ -3192,7 +3260,11 @@ async function showFinishDialog() {
 
     let invoiceNo = '';
     if (doPrint) {
+      const potvrdit = div.querySelector('#finish-confirm');
+      potvrdit.disabled = true;   // dvojklik nesmi spotrebovat dve cisla faktury
       invoiceNo = await generateInvoicePDF(spz, total, items, customer);
+      potvrdit.disabled = false;
+      if (!invoiceNo) { alert(FAKTURA_BEZ_CISLA); return; }
     }
 
     // Ulozit zakazku
@@ -3267,7 +3339,16 @@ async function showQuickOrders() {
         btn.disabled = true;
         btn.textContent = '...';
         const items = (o.polozky || []).map(p => ({ name: p.name, price: p.price, qty: p.qty || 1 }));
-        const invoiceNo = await generateInvoicePDF(o.spz || '', o.celkem || 0, items, o.customer || {});
+        // ZNOVU vytiskne fakturu pod jejim cislem; nove cislo jen u zakazky bez faktury
+        // (nebo s fakturou ze starsi rady, napr. SP-, kdy se meni udaje firmy)
+        const stejnaRada = o.faktura && o.faktura.startsWith(fakturaRada() + '-');
+        const invoiceNo = await generateInvoicePDF(o.spz || '', o.celkem || 0, items, o.customer || {}, stejnaRada ? o.faktura : null);
+        if (!invoiceNo) {
+          alert(FAKTURA_BEZ_CISLA);
+          btn.textContent = o.faktura ? 'ZNOVU' : 'FAKTURA';
+          btn.disabled = false;
+          return;
+        }
         // Aktualizovat zakazku s cislem faktury
         if (!o.faktura) {
           o.faktura = invoiceNo;
@@ -3290,8 +3371,11 @@ async function showQuickOrders() {
 // ---------------------------------------------------------------------------
 // PDF generovani (jsPDF)
 // ---------------------------------------------------------------------------
-async function generateInvoicePDF(spz, total, items, customer) {
-  const invoiceNo = await nextInvoiceNumber();
+// cislo = uz vystavene cislo (tisk znovu); bez nej se prideli nove. Vraci null,
+// kdyz cislo nejde pridelit — PDF pak nevznikne.
+async function generateInvoicePDF(spz, total, items, customer, cislo) {
+  const invoiceNo = cislo || await pridelitCisloFaktury();
+  if (!invoiceNo) return null;
   const s = settings;
   const today = todayStr();
   const due = dueStr();
